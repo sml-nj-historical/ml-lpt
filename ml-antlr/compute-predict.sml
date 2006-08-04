@@ -122,19 +122,18 @@ debugs [" EBNF: ", Nonterm.qualName nt, "\n"];
 
     fun mkPM (grm, gla) = let
           val LLKSpec.Grammar {sortedTops, nterms, ...} = grm
-          fun doNT (nt, prodMap) = 
+          fun doNT (nt, prodMap) =
 	        NMap.insert (prodMap, nt, compute(gla, nt))
 	  fun doEBNF (nt, ebnfMap) =
-		 if Nonterm.isEBNF nt
-		 then NMap.insert (ebnfMap, nt, computeEBNF(gla, nt))
-		 else ebnfMap
+		 NMap.insert (ebnfMap, nt, computeEBNF(gla, nt))
 	(* foldr ==> do innermost predictions first *)
-	  val prodMap = foldr doNT NMap.empty (List.concat sortedTops)
-	  val ebnfMap = foldl doEBNF NMap.empty nterms
+	  val prodMapTops = foldr doNT NMap.empty (List.concat sortedTops)
+	  val prodMap = foldl doNT prodMapTops (List.filter Nonterm.isSubrule nterms)
+	  val ebnfMap = foldl doEBNF NMap.empty (List.filter Nonterm.isEBNF nterms)
 	  fun mkFn map nt = valOf (NMap.find (map, nt))
           in
             Predict.PMaps {
-	      prodPredict = mkFn prodMap, 
+	      prodPredict = mkFn prodMap,
 	      ebnfPredict = mkFn ebnfMap
             }
           end

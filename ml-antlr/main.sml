@@ -74,7 +74,7 @@ structure Main : sig
 			  " nonterminals"]
 	  val _ = debugs [" ", Int.toString (List.length prods), 
 			  " productions"]
-val _ = app (debug o Prod.toString) prods
+(* val _ = app (debug o Prod.toString) prods *)
           in
             grm
           end
