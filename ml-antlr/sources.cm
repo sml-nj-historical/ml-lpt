@@ -1,0 +1,47 @@
+Library
+
+  structure Action
+  structure CheckGrammar
+  structure ComputePredict
+  structure GLA
+  structure GrammarSyntax
+  structure Item
+  structure LLKSpec
+  structure Nonterm
+  structure Predict
+  structure Prod
+  structure Token
+
+  structure ExpandFile
+  structure ML
+  structure SMLOutput
+
+  structure Main
+
+is
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/pp-lib.cm
+  $/ml-yacc-lib.cm
+  $/regexp-lib.cm
+
+  action.sml
+  check-grammar.sml
+  compute-predict.sml
+  gla.sml
+  item.sml
+  llk-spec.sml
+  main.sml
+  nonterm.sml
+  predict.sml
+  prod.sml
+  token.sml
+  
+  FrontEnds/grammar-syntax.sml
+  FrontEnds/ml-yacc-based/spec.lex
+  FrontEnds/ml-yacc-based/spec.grm
+
+  BackEnds/expand-file.sml
+
+  BackEnds/SML/ml.sml
+  BackEnds/SML/sml-output.sml

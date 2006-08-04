@@ -1,0 +1,11 @@
+Library
+
+  structure Main
+
+is
+  $/basis.cm
+  $/smlnj-lib.cm
+
+  c.grm.sml
+  cc.lex
+  cmain.sml

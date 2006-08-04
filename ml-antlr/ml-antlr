@@ -1,0 +1,22 @@
+#!/bin/sh
+#
+# Wrapper for ml-antlr heap image
+#
+
+mlantlrdir=$0
+scripthome=${mlantlrdir%ml-antlr}
+#echo "script home:"
+#echo $scripthome
+
+case `uname -s` in
+  Darwin) heap=${scripthome}ml-antlr.ppc-darwin ;;
+  *) heap=${scripthome}ml-antlr.x86-linux ;;
+esac
+
+if test ! -r $heap ; then
+  echo "ml-antlr: no heap image!"
+  exit 1
+fi
+
+exec sml @SMLload=$heap $@
+
