@@ -79,7 +79,7 @@ structure Main : sig
             grm
           end
 
-    fun main (_, [file]) = let
+    fun process file = let
 	  val _ = anyErrors := false;
 	  val grm = checkPT (parseFile file)
 	  val gla = GLA.mkGLA grm
@@ -106,6 +106,9 @@ structure Main : sig
 	      ];
 	    List.app (fn s => errMsg ["  raised at ", s, "\n"]) (SMLofNJ.exnHistory ex);
 	    OS.Process.failure)
+
+    fun main (_, [file]) = process file
+      | main _ = (print "usage: ml-antlr grammarfile\n"; OS.Process.failure)
 
   (* these functions are for debugging in the interactive loop *)
     fun load file = let
