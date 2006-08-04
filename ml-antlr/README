@@ -7,6 +7,13 @@ The tool is invoked using the command
 The basic specification format is described in the doc directory, 
 in design.pdf.
 
+================================================================
+ NOTE: differences from the design document
+================================================================
+ - %keywords, %start, %drop, %replace, %extend, %import are 
+   unsupported at present
+================================================================
+
 The following example grammar illustrates the format:
 
   %defs ( (* SML code goes here *) )
