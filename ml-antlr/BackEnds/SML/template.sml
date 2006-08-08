@@ -135,7 +135,7 @@ functor Parser(L : LEXER) =
 
 fun todo() = raise Fail "todo"
 
-    val parser = let
+    val parse = let
           val repairCont : YY.stream option SMLofNJ.Cont.cont option ref = ref NONE
 	  val minAdvance = 1
 	  fun lex strm = let

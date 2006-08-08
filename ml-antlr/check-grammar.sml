@@ -34,7 +34,7 @@ structure CheckGrammar : sig
 	  fun addTok (name, ty, abbrev) = (case ATbl.find tokTbl name
 		 of NONE => let
 		      val id = nextGlobalID()
-		      val info = LLKSpec.T{name = name, id = id, ty = ty}
+		      val info = LLKSpec.T{name = name, id = id, ty = ty, abbrev = abbrev}
 		      in
 			ATbl.insert tokTbl (name, info);
 			Option.app (fn a => ATbl.insert tokTbl (a, info)) abbrev;

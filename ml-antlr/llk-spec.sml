@@ -19,7 +19,8 @@ structure LLKSpec =
     datatype token = T of {
 	id : Int.int,
 	name : Atom.atom,
-	ty : ty option
+	ty : ty option,
+	abbrev : Atom.atom option
       }
 
     and nonterm = NT of {

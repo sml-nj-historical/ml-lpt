@@ -19,6 +19,8 @@ structure Token =
     fun ty (T{ty, ...}) = ty
     fun hasTy (T{ty = SOME _, ...}) = true
       | hasTy _ = false
+    fun abbrev (T{abbrev = SOME a, ...}) = Atom.toString a
+      | abbrev tok = name tok
 
     fun def tok = name tok
 	  ^ (case ty tok
