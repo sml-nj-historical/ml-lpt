@@ -154,7 +154,7 @@ tyvar="'"{idchars}*;
 <CONSTR>"{"	=> (Tok.LCB	(!yylineno, !yylineno));
 <CONSTR>"}"	=> (Tok.RCB	(!yylineno, !yylineno));
 <CONSTR>"->"	=> (Tok.ARROW	(!yylineno, !yylineno));
-<CONSTR>"\""	=> (YYBEGIN STRING; clrText(); 
+<CONSTR>"\""	=> (YYBEGIN STRING; clrText(); addText yytext;
 		    ignore(continue() before YYBEGIN CONSTR);
 		    Tok.STRING (getText(), !yylineno, !yylineno));
 

@@ -36,7 +36,7 @@ structure CheckGrammar : sig
 		      val id = nextGlobalID()
 		      val info = LLKSpec.T{name = name, id = id, ty = ty, abbrev = abbrev}
 		      in
-			ATbl.insert tokTbl (name, info);
+			ATbl.insert tokTbl (name, info); 
 			Option.app (fn a => ATbl.insert tokTbl (a, info)) abbrev;
 			tokList := info :: !tokList
 		      end
