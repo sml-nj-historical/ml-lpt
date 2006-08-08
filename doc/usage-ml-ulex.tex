@@ -1,0 +1,98 @@
+\chapter[\ulex]{Usage: \ulex}
+
+\section{Overview}
+
+\section{Specification format}
+
+\Grammar{
+\GFirstB{spec}
+	{$($ declaration \T{;} $)^*$}
+
+\GFirstB{declaration}
+	{directive}
+\GNextB
+	{rule}
+
+\GFirstB{directive}
+	{\kw{charset} $($ \T{ASCII7} $|$ \T{ASCII8} $|$ \T{UTF8} $)$}
+\GNextB
+	{\kw{defs} code}
+\GNextB
+	{\kw{let} ID \T{=} re}
+\GNextB
+	{\kw{name} ID}
+\GNextB
+	{\kw{states} ID$^+$}
+	
+\GFirstB{code}
+	{ \T{(} $\dots$ \T{)} }
+	
+\GFirstB{rule}
+	{re \T{=>} code}
+	
+\GFirstB{re}
+	{{\rm any nonreserved, nonwhitespace character or escape code}}
+\GNextB
+	{re \T{*}}
+\GNextB
+	{re \T{?}}
+\GNextB
+	{re \T{+}}
+\GNextB
+	{\T{\^{ }} re}
+\GNextB
+	{re \T{|} re}
+\GNextB
+	{re \T{\&} re}
+\GNextB
+	{re \T{/} re}
+\GNextB
+	{re \T{\$}}
+\GNextB
+	{STRING}
+\GNextB
+	{\T{\{} ID \T{\}}}
+\GNextB
+	{\T{[} \T{\^{ }}$^?$ $($ char \T{-} char $|$ char $)^+$ \T{]}}
+\GNextB
+	{re re}
+\GNextB
+	{\T{(} re \T{)}}
+\GNextB
+	{\T{.}}
+\GNextB
+	{\T{\_}}
+}
+
+\section{An example}
+
+\begin{verbatim}
+calc.lex
+
+%name CalcLex;
+%charset UTF8;
+
+(* note: number and letter are predefined unicode 
+ * character classes.
+ *)
+%let int = [:number:]*;
+%let id = [:letter:]([:letter:] | [:number:])*;
+
+%defs (
+  open CalcParse.Tok
+);
+
+let     => ( KW_let );
+in      => ( KW_in );
+{id}    => ( ID (yytext()) );
+{int}   => ( NUM (valOf (Int.fromString (yytext()))) );
+"="     => ( EQ );
+"+"     => ( PLUS );
+"-"     => ( MINUS );
+"*"     => ( TIMES );
+"("     => ( LP );
+")"     => ( RP );
+[:whitespace:]
+        => ( yyignore() );
+.       => ( (* handle error *) );
+\end{verbatim}

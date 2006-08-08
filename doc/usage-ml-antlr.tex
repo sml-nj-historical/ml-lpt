@@ -1,0 +1,130 @@
+\chapter[\mlantlr]{Usage: \mlantlr}
+
+\section{Overview}
+
+\section{Specification format}
+
+\Grammar{
+\GFirstB{spec}
+	{$($ declaration \T{;} $)^*$}
+
+\GFirstB{declaration}
+	{directive}
+\GNextB
+	{nonterminal}
+
+\GFirstB{directive}
+	{\kw{defs} code}
+\GNextB
+	{\kw{import} STRING}
+\GNextB
+	{\kw{keywords} symbol$^+$}
+\GNextB
+	{\kw{name} ID}
+\GNextB
+	{\kw{start} ID}
+\GNextB
+	{\kw{tokens} \T{:} tokdef $($ \T{|} tokdef $)^*$}
+	
+\GFirstB{code}
+	{ \T{(} $\dots$ \T{)} }
+
+\GFirstB{tokdef}
+	{datacon $($ \T{(} STRING \T{)} $)^?$}
+
+\GFirstB{datacon}
+	{ID}
+\GNextB
+	{ID \T{of} monotype}
+\GFirstB{monotype}
+	{{\rm usual SML syntax}}
+
+\GFirstB{symbol}
+	{ID}
+\GNextB
+	{STRING}
+	
+\GFirstB{nonterminal}
+	{ntdef}
+\GNextB
+	{\kw{extend} ntdef}
+\GNextB
+	{\kw{replace} ntdef}
+\GNextB
+	{\kw{drop} ID$^+$}
+	
+\GFirstB{ntdef}
+	{ID formals$^?$ \T{:} prodlist}
+
+\GFirstB{formals}
+	{ \T{(} ID $($ \T{,} ID $)^*$ \T{)} }
+	
+\GFirstB{prodlist}
+	{production $($ \T{|} production $)^*$}
+	
+\GFirstB{production}
+	{\kw{try}$^?$ named-item$^*$ $($ \T{=>} code $)^?$ $($ \kw{where} code
+$)^?$}
+\GFirstB{named-item}
+	{$($ ID \T{:} $)^?$ item}
+\GFirstB{item}
+	{prim-item \T{?}}
+\GNextB
+	{prim-item \T{+}}
+\GNextB
+	{prim-item \T{*}}
+	
+\GFirstB{prim-item}
+	{symbol args$^?$}
+\GNextB
+	{ \T{(} prodlist \T{)} }
+	
+\GFirstB{args}
+	{\T{@} code}
+}
+
+
+\section{An example}
+
+\begin{verbatim}
+calc.grm
+
+%name CalcParse;
+%tokens
+  : KW_let  ("let")  | KW_in   ("in")
+  | ID of string     | NUM of Int.int
+  | EQ      ("=")    | PLUS    ("+")
+  | TIMES   ("*")    | MINUS   ("-")
+  | LP      ("(")    | RP      (")")
+  ;
+
+exp(env)
+  : "let" ID "=" exp@(env) 
+    "in" exp@(AtomMap.insert(env, Atom.atom ID, exp1))
+      => ( exp2 )
+  | addExp@(env)
+  ;
+
+addExp(env)
+  : multExp@(env) ("+" multExp@(env))*
+      => ( List.foldl op+ multExp SR1 )
+  ;
+
+multExp(env)
+  : prefixExp@(env) ("*" prefixExp@(env))*
+      => ( List.foldl op* prefixExp SR1 )
+  ;
+
+prefixExp(env)
+  : atomicExp@(env)
+  | "-" prefixExp@(env)
+      => ( ~prefixExp )
+  ;
+
+atomicExp(env)
+  : ID  
+      => ( valOf(AtomMap.find (env, Atom.atom ID)) )
+  | NUM
+  | "(" exp@(env) ")"
+  ;
+\end{verbatim}

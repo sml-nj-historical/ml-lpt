@@ -18,7 +18,7 @@ SML =			sml
 ML_BUILD =		ml-build
 ML_MAKEDEPEND =		ml-makedepend
 
-PROGRAM =	lexgen
+PROGRAM =	ml-ulex
 HEAP_IMAGE =	$(PROGRAM).$(HEAP_SUFFIX)
 
 FE = 		FrontEnds
