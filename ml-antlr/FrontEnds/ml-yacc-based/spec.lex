@@ -90,7 +90,7 @@ tyvar="'"{idchars}*;
 <INITIAL>"=>"	=> (YYBEGIN CODE; clrText();
 		    Tok.DARROW	(!yylineno, !yylineno));
 <INITIAL>"\""	
-		=> (YYBEGIN STRING; clrText(); 
+	        => (YYBEGIN STRING; clrText(); addText yytext;
 		    ignore(continue() before YYBEGIN INITIAL);
 		    Tok.STRING (getText(), !yylineno, !yylineno));
 
