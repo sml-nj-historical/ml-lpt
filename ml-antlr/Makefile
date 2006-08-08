@@ -10,7 +10,7 @@ OS =		$(shell uname -s)
 ifeq ($(shell uname -s),Darwin)
 HEAP_SUFFIX =		ppc-darwin
 else
-HEAP_SUFFIX =		x86-unix
+HEAP_SUFFIX =		x86-linux
 endif
 
 SHELL =			/bin/sh
@@ -25,13 +25,16 @@ FE = 		FrontEnds
 BE = 		BackEnds
 
 SML_SRC = 	$(wildcard $(BE)/SML/*.sml)
+LATEX_SRC =     $(wildcard $(BE)/LaTeX/*.sml)
 
 FE_SRC = 	$(wildcard $(FE)/*.sml) 
-BE_SRC = 	$(wildcard $(BE)/*.sml) $(SML_SRC)
+BE_SRC = 	$(wildcard $(BE)/*.sml) $(SML_SRC) $(LATEX_SRC)
+
+TEMPLATES =     $(BE)/SML/template.sml $(BE)/LaTeX/template.tex
 
 CORE_SRC =	$(wildcard *.sml)
 
-SOURCES =	$(CORE_SRC) $(FE_SRC) $(BE_SRC) sources.cm
+SOURCES =	$(CORE_SRC) $(FE_SRC) $(BE_SRC) $(TEMPLATES) sources.cm
 
 build:		$(HEAP_IMAGE)
 
@@ -46,3 +49,6 @@ sinclude .depend
 
 clean:
 	rm -rf .depend .cm FrontEnds/ml-yacc-based/spec.lex.sml FrontEnds/ml-yacc-based/spec.grm.sig FrontEnds/ml-yacc-based/spec.grm.sml $(HEAP_IMAGE)
+
+devclean:
+	rm -rf $(HEAP_IMAGE)

@@ -1,0 +1,68 @@
+\documentclass[11pt]{article}
+
+\usepackage{nopageno}
+\usepackage{longtable}
+%% \usepackage[top=1.25in, bottom=1.25in, left=1.33in, right=1.33in]{geometry}
+%% \usepackage{amsmath}
+%% \usepackage[all]{xy}
+%% \usepackage{graphicx}
+
+\title{A Grammar}
+\author{You\\
+\texttt{your-email-address@somewhere.com}}
+
+\newcommand{\Carat}{\^{ }}
+\newcommand{\RE}{r}
+\newcommand{\OR}{\ | \ }
+\newcommand{\AND}{\ \& \ }
+\newcommand{\CL}{\mathcal{L}}
+\newcommand{\CS}{\mathcal{S}}
+\newcommand{\CR}{\mathcal{R}}
+\newcommand{\CP}{\mathcal{P}}
+\newcommand{\Sem}[1]{[ \! [ #1 ] \! ]}
+\newcommand{\Ls}[1]{\CL\Sem{#1}}
+
+\newcommand{\eg}{{\em e.g.}}
+\newcommand{\cf}{{\em cf.}}
+\newcommand{\ie}{{\em i.e.}}
+
+\newcommand{\nm}[1]{\texttt{#1}}
+
+\newcommand{\New}[1]{\emph{\textbf{#1}}}
+
+% Grammar
+\newcommand{\Grammar}[1]{\begin{longtable}{rcll} #1 \end{longtable}}
+\newcommand{\GFirst}[3]{#1 & {\tt ::=} & #2 & \textrm{#3} \\ }
+\newcommand{\GNext}[2]{ & {\tt |} & #1 & \textrm{#2} \\ }
+
+\usepackage{amsthm}
+
+\newtheorem*{theorem}{Theorem}
+\newtheorem*{definition}{Definition}
+\newtheorem*{remark}{Remark}
+
+\usepackage{ifpdf}
+
+\usepackage{palatino}
+%\renewcommand{\ttdefault}{cmtt}
+\renewcommand{\ttdefault}{cmtt}
+
+\begin{document}
+
+\maketitle
+
+@grammar@
+
+%% some examples
+
+%% \Grammar{
+%% \GFirst{\rm RE}{\epsilon}{empty string}
+%% \GNext{\CS}{symbol set, $\CS \subseteq \Sigma$}
+%% \GNext{\rm RE\cdot RE}{concatenation}
+%% \GNext{\rm RE^*}{Kleene-closure}
+%% \GNext{\rm RE \OR RE}{alternation (union)}
+%% \GNext{\rm RE \AND RE}{intersection}
+%% \GNext{\neg \rm RE}{negation}
+%% }
+
+\end{document}

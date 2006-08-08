@@ -84,6 +84,7 @@ structure Main : sig
 	  val grm = checkPT (parseFile file)
 	  val gla = GLA.mkGLA grm
 	  val pm = ComputePredict.mkPM (grm, gla)
+	  val outspec = (grm, pm, file)
 	  in
 (*
             print "\n";
@@ -94,7 +95,8 @@ structure Main : sig
 		(Nonterm.Map.listItemsi pmap);
 *)
             GLA.dumpGraph (grm, gla);
-            SMLOutput.output ((grm, pm), file);
+            SMLOutput.output outspec;
+	    LaTeXOutput.output outspec;
 	    if !anyErrors
 	      then OS.Process.failure
 	      else OS.Process.success

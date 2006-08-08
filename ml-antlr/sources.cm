@@ -1,5 +1,7 @@
 Library
 
+  signature BACK_END
+
   structure Action
   structure CheckGrammar
   structure ComputePredict
@@ -15,15 +17,18 @@ Library
   structure ExpandFile
   structure ML
   structure SMLOutput
-
+  structure LaTeXOutput
   structure Main
 
 is
+
   $/basis.cm
   $/smlnj-lib.cm
   $/pp-lib.cm
   $/ml-yacc-lib.cm
   $/regexp-lib.cm
+
+  BackEnds/back-end-sig.sml
 
   action.sml
   check-grammar.sml
@@ -45,3 +50,5 @@ is
 
   BackEnds/SML/ml.sml
   BackEnds/SML/sml-output.sml
+
+  BackEnds/LaTeX/latex-output.sml
