@@ -24,3 +24,5 @@
  - friendlier errors for prediction tree failure
  - predicate hoisting
  - improve DOT output
+
+ - think about: EBNF predicates should only include true case?

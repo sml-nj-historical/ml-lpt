@@ -6,64 +6,42 @@ structure Tok =
 
   end
 
-signature LEXER =
-  sig
-    
-    type stream
-    val lex : stream -> Tok.token * stream
-    val subtract : stream * stream -> int
-
-  end
-
-structure ListLexer : LEXER = 
+structure Parser =
   struct
 
-    type stream = Tok.token list
+  structure YY = struct
 
-    fun lex (fst::rest) = (fst, rest)
-      | lex ([]) = (Tok.EOF, [])
+    (* "wrapped" streams, which track the number of tokens read
+     * and allow "prepending" a sequence of tokens
+     *)
+    structure WStream = struct
 
-    fun subtract (s1, s2) = (List.length s2) - (List.length s1)
-
-  end
-
-functor Parser(L : LEXER) = 
-  struct
-
-    structure SW = struct
-
-      datatype wstream = WSTREAM of {
+      datatype 'a wstream = WSTREAM of {
 	prefix : Tok.token list,
-	strm : L.stream
+	curTok : int,
+	strm : 'a
       }
 
-      fun wrap (strm) =  WSTREAM {prefix = [], strm = strm}
+      fun wrap strm =  WSTREAM {prefix = [], strm = strm, curTok = 0}
 
-      fun get1 (WSTREAM {prefix = tok::toks, strm}) = 
-	    (tok, WSTREAM {prefix = toks, strm = strm})
-	| get1 (WSTREAM {prefix = [], strm}) = let
-	    val (tok, strm') = L.lex strm
-	    in (tok, WSTREAM {prefix = [], strm = strm'})
+      fun get1 get (WSTREAM {prefix = tok::toks, strm, curTok}) = 
+	    (tok, WSTREAM {prefix = toks, strm = strm, curTok = curTok + 1})
+	| get1 get (WSTREAM {prefix = [], strm, curTok}) = let
+	    val (tok, strm') = case get strm
+				of SOME x => x
+				 | NONE => (Tok.EOF, strm)
+	    in (tok, WSTREAM {prefix = [], strm = strm', curTok = curTok + 1})
 	    end
 
-      fun prepend (toks, WSTREAM {prefix, strm}) = 
-	    WSTREAM {prefix = toks @ prefix, strm = strm}
+      fun prepend (toks, WSTREAM {prefix, strm, curTok}) = 
+	    WSTREAM {prefix = toks @ prefix, strm = strm, curTok - (List.length toks)}
 
-      fun drop1 strm = let val (_, strm') = get1 strm in strm' end
+      fun subtract (WSTREAM {curTok = p1, ...}, WSTREAM {curTok = p2, ...}) = 
+	    p1 - p2
 
-      fun subtract (WSTREAM {prefix = p1, strm = s1},
-		    WSTREAM {prefix = p2, strm = s2}) = 
-	    L.subtract (s1, s2) + ((List.length p2) - (List.length p1))
-
-      fun atEOF strm = 
-	    (case get1 strm
-	      of (Tok.EOF, _) => true
-	       | _ => false
-	     (* end case *))
-
-    end
-
-    structure YY = struct
+    end (* structure WStream *)
+    
+    structure EBNF = struct
 
       fun optional (pred, parse, strm) = 
 	    if pred strm
@@ -92,6 +70,25 @@ functor Parser(L : LEXER) =
             in
               (y::ys, strm'')
             end
+
+    end (* structure EBNF *)
+    
+    signature REPAIRABLE = sig
+      type T
+      val farEnough : (T * T) -> bool
+
+      type repairs
+      val genRepairs : (T * T) -> repairs
+      val applyRepair : (T * repairs) -> (T * (T * repairs)) option
+    end
+    functor Err(type T) : sig
+
+      val wrap : (T -> 'a) -> T -> 'a
+      val launch : (T -> 'a, T) -> 'a
+
+    end = struct
+
+      fun wrap f e = 
 
       type stream = SW.wstream
 
@@ -132,8 +129,6 @@ functor Parser(L : LEXER) =
     end
 
 @defs@
-
-fun todo() = raise Fail "todo"
 
     val parse = let
           val repairCont : YY.stream option SMLofNJ.Cont.cont option ref = ref NONE

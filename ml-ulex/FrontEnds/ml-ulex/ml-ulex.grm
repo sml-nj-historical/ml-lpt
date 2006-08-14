@@ -1,0 +1,129 @@
+%defs (
+  structure LS = LexSpec
+  structure AMap = AtomMap
+
+  val wildcard = SIS.complement (SIS.singleton 0w10) (* everything but \n *)
+  fun charToSym c = Word32.fromInt (Char.ord c)
+(*  fun strToSym s = charToSym (String.sub (s, 0)) *)
+)
+
+%tokens
+  : BAR		("|")
+  | DOT		(".")
+  | DOLLAR	("$")
+  | PLUS	("+")
+  | STAR	("*")
+  | QUERY	("?")
+  | SEMI	(";")
+  | LP		("(")	| RP	(")")
+  | LSB		("[")	| RSB	("]")
+  | LCB		("{")	| RCB	("}")
+  | LT		("<")	| GT	(">")
+  | SLASH	("/")
+  | COMMA	(",")
+  | CARAT	("^")
+  | DASH	("-")
+  | DARROW	("=>")
+  | EQ		("=")
+  | KW_defs	("%defs")
+  | KW_name	("%name")
+  | KW_states	("%states")
+  | KW_let	("%let")
+  | KW_charset	("%charset")
+  | UNICODE	("unicode")
+  | ASCII7	("ascii7")
+  | ASCII8	("ascii8")
+  | STRING of string
+  | CHAR of char
+  | ID of string
+  | CODE of string
+  ;
+
+file(spec)
+  : decls@(spec, AMap.empty)
+  ;
+
+decls(spec, env)
+  : decl@(spec, env) decls@(decl)
+      => (decls)
+  | 
+      => (spec)
+  ;
+
+decl(spec, env)
+  : directive@(LS.getConf spec)
+      => (let val (conf', env') = directive
+	  in 
+	    (LS.updConf (spec, conf'),
+	     env')
+	  end)
+  | "%defs" CODE
+      => (LS.updDecls (spec, CODE), env)
+  | rule@(env)
+      => (LS.addRule (spec, rule), env)
+  ;
+
+directive@(conf, env)
+  : "%let" ID "=" re@(env)
+      => (conf, AMap.insert (env, Atom.atom ID, re))
+  | "%states" (ID ","? => (ID))+
+      => (LS.updStartStates (conf, AtomSet.fromList (map Atom.atom SR1)), 
+	  env)
+(*
+  | "%charset" ID
+  | "%name" ID
+*)
+  ;
+
+rule(env)
+  : ("<" (ID ","? => (ID))+ ">")? re@(env) "=>" CODE
+    => ((Option.map (AtomSet.fromList o (map Atom.atom)) SR1, re), CODE)
+  ;
+
+re(env)
+  : or_re@(env)
+  ;
+
+or_re(env)
+  : cat_re@(env) ("|" cat_re@(env))*
+      => (foldr RE.mkOr cat_re SR1)
+  ;
+
+cat_re(env)
+  : post_re@(env) (post_re@(env))*
+      => (foldr RE.mkConcat post_re SR1)
+  ;
+
+post_re(env)
+  : prim_re@(env) 
+      ( "?" => (RE.mkOpt)
+      | "*" => (RE.mkClosure)
+      | "+" => (fn re => RE.mkAtLeast (re, 1))
+      | => (fn x => x)
+      )
+      => (SR1 prim_re)
+  ;
+
+prim_re(env)
+  : "{" ID "}"
+      => (valOf (AMap.find (env, Atom.atom ID)))
+  | ID
+      => ( foldr RE.mkConcat
+		 RE.epsilon 
+		 (map (RE.mkSym o charToSym) (String.explode ID)) )
+  | "(" re@(env) ")"
+  | CHAR
+      => (RE.mkSym (charToSym CHAR))
+  | "."
+      => (wildcard)
+  | "[" 
+        ( "^" => (SIS.complement) 
+        | => (fn x => x)
+        )
+
+        ( CHAR "-" CHAR => (SIS.interval (CHAR1, CHAR2))
+        | CHAR => (SIS.singleton CHAR)
+        )+
+    "]"
+      => (SR1 (RE.mkSymSet (foldl SIS.union (hd SR2) (tl SR2))))
+  ;

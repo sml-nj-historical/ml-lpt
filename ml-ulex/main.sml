@@ -31,7 +31,7 @@ structure Main =
   (* count the total number of DFA states *)
     fun numStates (LO.Spec{dfa, ...}) = List.length dfa
 
-    fun mlFlex (Opt {fname, lexCompat, dot, dump, match, beTest}) = let
+    fun mlULex (Opt {fname, lexCompat, dot, dump, match, beTest}) = let
           val _ = if String.size (!fname) = 0 
 		  then (print "No input file specified (usage: lexgen [options] file)\n";
 			OS.Process.exit OS.Process.failure)
@@ -98,7 +98,7 @@ structure Main =
 			 match = ref false, beTest = ref false}
 	  val _ = List.app (procArgs opt) args
 	  in 
-	    mlFlex opt
+	    mlULex opt
           end
 
   end

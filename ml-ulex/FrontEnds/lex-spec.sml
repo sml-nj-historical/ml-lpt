@@ -5,7 +5,7 @@
  * Aaron Turon (adrassi@gmail.com)
  * All rights reserved.
  *
- * Input specification to ml-flex
+ * Input specification to ml-ulex
  *)
 
 structure LexSpec = 
@@ -45,7 +45,7 @@ structure LexSpec =
 		 arg = arg,
 	         startStates = new,
 		 clamp = clamp
-	       }
+ 	       }
           end
 
     fun updHeader (conf, new) = let
@@ -96,6 +96,26 @@ structure LexSpec =
 	         startStates = startStates,
 		 clamp = new
 	       }
+          end
+
+    fun addRule (spec, new) = let
+          val Spec {decls, conf, rules} = spec
+          in
+            Spec {decls = decls, conf = conf,
+		  rules = rules @ [new]}
+          end
+
+    fun getConf (Spec {conf, ...}) = conf
+    fun updConf (spec, new) = let
+          val Spec {decls, conf, rules} = spec
+          in
+            Spec {decls = decls, conf = new, rules = rules}
+          end
+
+    fun updDecls (spec, new) = let
+          val Spec {decls, conf, rules} = spec
+          in
+            Spec {decls = new, conf = conf, rules = rules}
           end
 
     fun emptyActions (spec) = let

@@ -56,6 +56,7 @@
 \newcommand{\parttext}{}
 \newcommand{\cpart}[1]{\renewcommand{\parttext}{#1}\part{#1}}
 
+\usepackage{fancyhdr}
 \renewcommand{\chaptermark}[1]{\markboth{\parttext{}: #1}{}}
 \renewcommand{\sectionmark}[1]{\markright{\thesection. \ #1}{}}
 
@@ -64,6 +65,17 @@
 \frontmatter
 
 	\maketitle
+	
+	\phantom{.}
+	\vspace{\stretch{1}}
+	
+	\noindent Copyright \copyright{}2006 Aaron Turon.  All rights reserved.
+	
+	\vskip 12pt
+	\noindent This document was written with support from NSF grant CNS-0454136, ``CRI: Standard ML Software Infrastructure.''
+	
+	\pagebreak
+	
 	\tableofcontents
 
 \mainmatter
