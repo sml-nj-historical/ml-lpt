@@ -74,38 +74,47 @@ structure Parser =
     end (* structure EBNF *)
     
     signature REPAIRABLE = sig
+
       type T
-      val farEnough : (T * T) -> bool
+      exception RepairableError
 
-      type repairs
-      val genRepairs : (T * T) -> repairs
-      val applyRepair : (T * repairs) -> (T * (T * repairs)) option
+      val farEnough : {
+	    startAt : T,
+	    endAt : T
+	  } -> bool
+
+      val chooseRepair : {
+	    startAt : T,
+	    endAt : T,
+	    try : T -> T
+	  } -> T
+
     end
-    functor Err(type T) : sig
 
-      val wrap : (T -> 'a) -> T -> 'a
-      val launch : (T -> 'a, T) -> 'a
+    functor ErrHandlerFn(R : REPAIRABLE) : sig
+
+      type err_handler
+      val mkErrHandler : unit -> err_handler
+      val wrap   : err_handler -> (R.T -> ('a, R.T)) -> R.T -> ('a, R.T)
+      val launch : err_handler -> (R.T -> ('a, R.T)) -> R.T -> ('a, R.T)
 
     end = struct
 
-      fun wrap f e = 
+      type repair_cont = R.T option SMLofNJ.Cont.cont 
+      type retry_cont  = R.T        SMLofNJ.Cont.cont
 
-      type stream = SW.wstream
+      datatype err_handler = EH of repair_cont option ref
 
-      type retry_cont = stream SMLofNJ.Cont.cont
-      exception ParseError of {
-	  errStrm : stream,
-	  errCont : retry_cont,
-	  revStack : (stream * retry_cont) list
-	}
-      fun addToStack (exn, strm, cont) = let
-	    val ParseError {errStrm, errCont, revStack} = exn
-            in ParseError {
-	         errStrm = errStrm, 
-		 errCont = errCont, 
-		 revStack = (strm, cont)::revStack
-	       }
+      exception JumpOut of (R.T * retry_cont) list
+
+      fun addToStack (exn, t, cont) = let
+	    val JumpOut stack = exn
+            in JumpOut ((t, cont)::stack)
 	    end
+
+      fun wrap (EH repairCont) f t = 
+
+
       fun findWindow (ParseError {errStrm, errCont, revStack}) = let
 	    fun find [] = (errStrm, errStrm, 0)
 	      | find [(backStrm, _)] = 

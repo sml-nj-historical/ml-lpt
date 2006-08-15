@@ -1,5 +1,5 @@
 #
-# COPYRIGHT (c) 20056
+# COPYRIGHT (c) 2006
 # John Reppy (http://www.cs.uchicago.edu/~jhr)
 # Aaron Turon (http://www.cs.uchicago.edu/~adrassi)
 # All rights reserved.
