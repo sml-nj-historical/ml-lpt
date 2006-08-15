@@ -76,6 +76,7 @@ structure Parser =
     signature REPAIRABLE = sig
 
       type T
+      type repair
       exception RepairableError
 
       val farEnough : {
@@ -87,7 +88,7 @@ structure Parser =
 	    startAt : T,
 	    endAt : T,
 	    try : T -> T
-	  } -> T
+	  } -> (T * repair) option
 
     end
 
@@ -95,8 +96,11 @@ structure Parser =
 
       type err_handler
       val mkErrHandler : unit -> err_handler
+      val whileDisabled : err_handler -> (unit -> 'a) -> 'a
+
       val wrap   : err_handler -> (R.T -> ('a, R.T)) -> R.T -> ('a, R.T)
-      val launch : err_handler -> (R.T -> ('a, R.T)) -> R.T -> ('a, R.T)
+      val launch : err_handler -> (R.T -> ('a, R.T)) -> 
+		   R.T -> ('a, R.T, R.repair list)
 
     end = struct
 
@@ -107,15 +111,24 @@ structure Parser =
 
       exception JumpOut of (R.T * retry_cont) list
 
-      fun addToStack (exn, t, cont) = let
-	    val JumpOut stack = exn
-            in JumpOut ((t, cont)::stack)
-	    end
+      fun throwIfEH (EH eh, t) = 
+	    Option.app (fn k => SMLofNJ.Cont.throw k (SOME t)) (!eh)
 
-      fun wrap (EH repairCont) f t = 
+      fun wrap eh f t = let
+	    val retry as (t', cont) = SMLofNJ.Cont.callcc (fn k => (t, k))
+            in
+	      f t'
+	      handle R.RepairableError => (
+		       throwIfEH (eh, t');
+		       raise JumpOut [retry])
+		   | JumpOut stack => (
+		       throwIfEH (eh, t');
+		       raise JumpOut (retry::stack))
+            end
 
-
-      fun findWindow (ParseError {errStrm, errCont, revStack}) = let
+      fun findWindow (stack) = let
+	    val revStack = rev stack
+	    val rightMost = hd stack
 	    fun find [] = (errStrm, errStrm, 0)
 	      | find [(backStrm, _)] = 
 		  (errStrm, backStrm, SW.subtract (errStrm, backStrm))
@@ -126,6 +139,12 @@ structure Parser =
             in
 	      find (rev revStack)
             end
+
+      fun repair (EH eh, stack)
+
+      fun launch eh f t = 
+	    (f t handle R.JumpOut stack => repair (eh, stack))
+	    before throwIfEH (eh, t)
 
       datatype repair
 	= Deletion
