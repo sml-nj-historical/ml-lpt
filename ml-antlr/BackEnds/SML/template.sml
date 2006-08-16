@@ -129,18 +129,43 @@ structure Parser =
       fun findWindow (stack) = let
 	    val revStack = rev stack
 	    val rightMost = hd stack
-	    fun find [] = (errStrm, errStrm, 0)
-	      | find [(backStrm, _)] = 
-		  (errStrm, backStrm, SW.subtract (errStrm, backStrm))
-	      | find ((backStrm, _)::stack) = 
-		  if SW.subtract (errStrm, backStrm) < 15
-		  then find stack
-		  else (errStrm, backStrm, SW.subtract (errStrm, backStrm))
+	    fun TOf (t, _) = t
+	    fun find [] = raise (Fail "BUG: findWindow given an empty stack")
+	      | find [top] = (top, top)
+	      | find (top::stack) = 
+		  if R.farEnough {startAt = TOf top, endAt = TOf rightMost}
+		  then (top, rightMost)
+		  else find stack
             in
-	      find (rev revStack)
+	      find revStack
             end
 
-      fun repair (EH eh, stack)
+      fun primaryRepair (EH eh, stack) = let
+	    val ((leftT, leftCont), (rightT, rightCont)) = 
+		  findWindow stack
+	    fun tryRepair t = 
+		  (case SMLofNJ.Cont.callcc (fn k => (eh := SOME k; NONE))
+		    of NONE => SOME t
+		     | SOME t' => SOME t'
+		   (* end case *))
+            in
+	      R.chooseRepair {
+	        startAt = leftT,
+		endAt = rightT,
+		try = tryRepair
+	      }
+            end
+
+      fun secondaryRepair (EH eh, stack) = let
+            in
+	      
+            end
+
+      fun repair (eh, stack) = (case primaryRepair (eh, stack)
+	    of SOME t => t
+	     | NONE   => secondaryRepair (eh, stack)
+           (* end case *))
+	    
 
       fun launch eh f t = 
 	    (f t handle R.JumpOut stack => repair (eh, stack))
