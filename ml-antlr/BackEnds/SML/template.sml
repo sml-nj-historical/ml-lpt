@@ -1,13 +1,18 @@
-structure Tok = 
-  struct
+structure Tok = struct
 
 @tokens@
 
 
-  end
+end (* structure Tok *)
 
-structure Parser =
-  struct
+signature LEXER = sig
+
+  type strm
+  val get1 : strm -> Tok.token * strm
+
+end (* signature LEXER *)
+
+functor Parser(YY_Lex : LEXER) = struct
 
   structure YY = struct
 
@@ -24,10 +29,10 @@ structure Parser =
 
       fun wrap strm =  WSTREAM {prefix = [], strm = strm, curTok = 0}
 
-      fun get1 get (WSTREAM {prefix = tok::toks, strm, curTok}) = 
+      fun get1 (WSTREAM {prefix = tok::toks, strm, curTok}) = 
 	    (tok, WSTREAM {prefix = toks, strm = strm, curTok = curTok + 1})
-	| get1 get (WSTREAM {prefix = [], strm, curTok}) = let
-	    val (tok, strm') = case get strm
+	| get1 (WSTREAM {prefix = [], strm, curTok}) = let
+	    val (tok, strm') = case YY_Lex.get1 strm
 				of SOME x => x
 				 | NONE => (Tok.EOF, strm)
 	    in (tok, WSTREAM {prefix = [], strm = strm', curTok = curTok + 1})
@@ -92,15 +97,87 @@ structure Parser =
 
     end
 
+    structure RepairableStrm : REPAIRABLE = struct
+
+      structure WS = WStream
+      type T = YY_Lex.strm WS.wstream
+
+      datatype repair
+	= Deletion
+	| Insertion of Tok.token
+	| Substitution of Tok.token
+
+      val minAdvance = 1
+      fun applyRepair ([], repair) = 
+	    raise Fail "applyRepair: expected nonempty working list"
+	| applyRepair (working, Deletion) = tl working
+	| applyRepair (working, Insertion tok) = tok :: working
+	| applyRepair (working, Substitution tok) = tok :: (tl working)
+      fun bestCand ([], _, NONE) = NONE
+	| bestCand ([], _, SOME cand) = SOME cand
+	| bestCand ( (c as (_, _, _, score))  ::cs, n, bs) = 
+	    if score > n then
+	      bestCand (cs, score, SOME c)
+	    else bestCand (cs, n, bs)
+      fun getWorking (strm, n, accum) = 
+	    if n = 0 
+	    then (strm, rev accum)
+	    else let
+	      val (tok, strm') = WS.get1 strm
+	      in case tok
+		  of Tok.EOF => (strm', rev (Tok.EOF :: accum))
+		   | _ => getWorking (strm', n-1, tok::accum)
+	      end
+      fun tryRepairs (prefix, working, repairs, strm, resume, cands, scoreOffset) = 
+	    (case (working, repairs)
+	      of ([], _) => (case bestCand (cands, 0, NONE)
+			      of SOME (c as (_, _, strm, _)) =>
+				 (printCand c; print "\n";
+				  SOME strm)
+			       | NONE => NONE
+			     (* end case *))
+	       | (t::ts, []) => 
+		   tryRepairs 
+		     (prefix @ [t], ts, YY.allRepairs, strm, resume, cands, scoreOffset)
+	       | (_, r::rs) => let
+		   val strm' = SW.prepend (prefix @ (applyRepair (working, r)), strm)
+		   in 
+		     case SMLofNJ.Cont.callcc (fn k => (repairCont := SOME k; NONE))
+		      of NONE => SOME strm'
+		       | SOME strm'' => let
+			   val score = SW.subtract (strm'', strm') +
+					   (case r
+					     of YY.Deletion => 1
+					      | YY.Insertion _ => ~1
+					      | YY.Substitution _ => 0) +
+					   scoreOffset
+			       val cand = (r, List.length prefix, strm', score)
+			       val cands' = if score > minAdvance then
+					      cand::cands
+					    else cands
+			       in
+			         repairCont := NONE;
+				 tryRepairs 
+				   (prefix, working, rs, strm, resume, cands', scoreOffset)
+			       end
+		       end
+		 (* end case *))
+
+    end (* structure RepairableStrm *)
+
     functor ErrHandlerFn(R : REPAIRABLE) : sig
 
       type err_handler
       val mkErrHandler : unit -> err_handler
       val whileDisabled : err_handler -> (unit -> 'a) -> 'a
 
+      datatype repair 
+	= Primary of R.repair
+	| Secondary of R.T * R.T
+
       val wrap   : err_handler -> (R.T -> ('a, R.T)) -> R.T -> ('a, R.T)
       val launch : err_handler -> (R.T -> ('a, R.T)) -> 
-		   R.T -> ('a, R.T, R.repair list)
+		   R.T -> ('a, R.T, repair list)
 
     end = struct
 
@@ -115,7 +192,9 @@ structure Parser =
 	    Option.app (fn k => SMLofNJ.Cont.throw k (SOME t)) (!eh)
 
       fun wrap eh f t = let
-	    val retry as (t', cont) = SMLofNJ.Cont.callcc (fn k => (t, k))
+	    val cont_ref : retry_cont option ref = ref NONE
+	    val t' = SMLofNJ.Cont.callcc (fn k => (cont_ref := SOME k; t))
+	    val retry = (t', valOf (!cont_ref))
             in
 	      f t'
 	      handle R.RepairableError => (
@@ -140,14 +219,19 @@ structure Parser =
 	      find revStack
             end
 
+      fun tryRepair cont t = 
+	    (case SMLofNJ.Cont.callcc (fn k => (eh := SOME k; NONE))
+	      of NONE => 
+		   (* first time through, try the repair *)
+		   SMLofNJ.Cont.throw cont t		
+	       | SOME t' => 
+		   (* second time through, return the new right-most T *)
+		   (eh := NONE; t')
+	     (* end case *))
+
       fun primaryRepair (EH eh, stack) = let
 	    val ((leftT, leftCont), (rightT, rightCont)) = 
 		  findWindow stack
-	    fun tryRepair t = 
-		  (case SMLofNJ.Cont.callcc (fn k => (eh := SOME k; NONE))
-		    of NONE => SOME t
-		     | SOME t' => SOME t'
-		   (* end case *))
             in
 	      R.chooseRepair {
 	        startAt = leftT,
@@ -156,14 +240,16 @@ structure Parser =
 	      }
             end
 
+(*
       fun secondaryRepair (EH eh, stack) = let
             in
 	      
             end
+*)
 
       fun repair (eh, stack) = (case primaryRepair (eh, stack)
 	    of SOME t => t
-	     | NONE   => secondaryRepair (eh, stack)
+	     | NONE   => raise Fail "todo" (* secondaryRepair (eh, stack) *)
            (* end case *))
 	    
 
@@ -171,21 +257,17 @@ structure Parser =
 	    (f t handle R.JumpOut stack => repair (eh, stack))
 	    before throwIfEH (eh, t)
 
-      datatype repair
-	= Deletion
-	| Insertion of Tok.token
-	| Substitution of Tok.token
+    end (* functor ErrHandlerFn *)
+      
 
 @yydefs@
 
 
-    end
+  end (* structure YY *)
 
 @defs@
 
-    val parse = let
-          val repairCont : YY.stream option SMLofNJ.Cont.cont option ref = ref NONE
-	  val minAdvance = 1
+  val parse = let
 	  fun lex strm = let
 	        val cont : YY.stream SMLofNJ.Cont.cont option ref = ref NONE
 		val (tok, strm') = 
@@ -198,75 +280,7 @@ structure Parser =
 	        in
 	          (exn, tok, strm')
 	        end
-	  fun applyRepair ([], repair) = 
-	        raise Fail "applyRepair: expected nonempty working list"
-	    | applyRepair (working, YY.Deletion) = tl working
-	    | applyRepair (working, YY.Insertion tok) = tok :: working
-	    | applyRepair (working, YY.Substitution tok) = tok :: (tl working)
-	  fun printStrm (n, strm) = 
-	        if n = 0 then ()
-		else let
-		  val (_, tok, strm') = lex strm
-		  in
-		    print (Tok.toString tok); print " ";
-		    printStrm (n-1, strm')
-		  end
-	  fun printCand (repair, pos, strm, score) = (print (String.concat [
-	        (case repair
-		  of YY.Deletion => "DEL "
-		   | YY.Insertion tok => "INS " ^ (Tok.toString tok)
-		   | YY.Substitution tok => "SUB " ^ (Tok.toString tok)),
-		" @ ", Int.toString pos, " ==> ", Int.toString score, "\n"]);
-		printStrm (pos + 5, strm); print "\n")
-	  fun bestCand ([], _, NONE) = NONE
-	    | bestCand ([], _, SOME cand) = SOME cand
-	    | bestCand ( (c as (_, _, _, score))  ::cs, n, bs) = 
-	        if score > n then
-		  bestCand (cs, score, SOME c)
-		else bestCand (cs, n, bs)
-	  fun tryRepairs (prefix, working, repairs, strm, resume, cands, scoreOffset) = 
-	        (case (working, repairs)
-		  of ([], _) => (case bestCand (cands, 0, NONE)
-                       of SOME (c as (_, _, strm, _)) =>
-		            (printCand c; print "\n";
-			     SOME strm)
-			| NONE => NONE
-		      (* end case *))
-		   | (t::ts, []) => 
-		       tryRepairs 
-			 (prefix @ [t], ts, YY.allRepairs, strm, resume, cands, scoreOffset)
-		   | (_, r::rs) => let
-		       val strm' = SW.prepend (prefix @ (applyRepair (working, r)), strm)
-		       in 
-		         case SMLofNJ.Cont.callcc (fn k => (repairCont := SOME k; NONE))
-			  of NONE => SOME strm'
-			   | SOME strm'' => let
-			       val score = SW.subtract (strm'', strm') +
-					   (case r
-					     of YY.Deletion => 1
-					      | YY.Insertion _ => ~1
-					      | YY.Substitution _ => 0) +
-					   scoreOffset
-			       val cand = (r, List.length prefix, strm', score)
-			       val cands' = if score > minAdvance then
-					      cand::cands
-					    else cands
-			       in
-			         repairCont := NONE;
-				 tryRepairs 
-				   (prefix, working, rs, strm, resume, cands', scoreOffset)
-			       end
-		       end
-		 (* end case *))
-	  fun getWorking (strm, n, accum) = 
-	        if n = 0 
-		then (strm, rev accum)
-		else let
-		  val (tok, strm') = SW.get1 strm
-		  in case tok
-		      of Tok.EOF => (strm', rev (Tok.EOF :: accum))
-		       | _ => getWorking (strm', n-1, tok::accum)
-		  end
+(*
 	  fun getDiff (strm, strm', accum) =
 	        if SW.subtract (strm, strm') = 0 
 		then rev accum
@@ -318,29 +332,7 @@ structure Parser =
 	          print " - Panic recovery, attempt 2 - \n";
 		  leftRightRepair (errStrm, [])
 	        end
-          fun handleError (atBottom, exn, curStrm, resume) = 
-	      (case !repairCont
-                of NONE => resume (SMLofNJ.Cont.callcc (fn cont => let
-		     val exn' = YY.addToStack (exn, curStrm, cont)
-		     in if not atBottom
-			then raise exn'
-			else let
-val _ = print " --- syntax error ---\n"
-			  val (errStrm, backStrm, offset) = YY.findWindow exn'
-			  val (errStrm', working) = getWorking (backStrm, offset + 5, [])
-			  val res = tryRepairs ([], working, YY.allRepairs,
-						errStrm', resume, [], ~offset)
-			  in case res
-			      of SOME strm => strm
-			       | NONE => secondaryRepair exn'
-			  end
-		     end))
-		 | SOME k => let
-		     val YY.ParseError {errStrm, ...} = exn
-		     in 
-		       SMLofNJ.Cont.throw k (SOME errStrm)
-		     end
-               (* end case *))
+*)
 	  fun tryProds (strm, prods) = let
 	    val oldRepairCont = !repairCont
 	    val strmCont : YY.stream SMLofNJ.Cont.cont option ref = ref NONE
@@ -378,4 +370,4 @@ val _ = print " --- syntax error ---\n"
 
 (*    fun parser strm = parser' (SW.wrap strm) *)
 
-  end
+end (* structure Parser *)
