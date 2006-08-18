@@ -16,6 +16,8 @@ functor Parser(YY_Lex : LEXER) = struct
 
   structure YY = struct
 
+@yydefs@
+
     (* "wrapped" streams, which track the number of tokens read
      * and allow "prepending" a sequence of tokens
      *)
@@ -102,23 +104,29 @@ functor Parser(YY_Lex : LEXER) = struct
       structure WS = WStream
       type T = YY_Lex.strm WS.wstream
 
+      fun farEnough {startAt, endAt} =
+	    WS.subtract (endAt, startAt) > 15
+
       datatype repair
 	= Deletion
 	| Insertion of Tok.token
 	| Substitution of Tok.token
 
       val minAdvance = 1
+
       fun applyRepair ([], repair) = 
 	    raise Fail "applyRepair: expected nonempty working list"
 	| applyRepair (working, Deletion) = tl working
 	| applyRepair (working, Insertion tok) = tok :: working
 	| applyRepair (working, Substitution tok) = tok :: (tl working)
+
       fun bestCand ([], _, NONE) = NONE
 	| bestCand ([], _, SOME cand) = SOME cand
 	| bestCand ( (c as (_, _, _, score))  ::cs, n, bs) = 
 	    if score > n then
 	      bestCand (cs, score, SOME c)
 	    else bestCand (cs, n, bs)
+
       fun getWorking (strm, n, accum) = 
 	    if n = 0 
 	    then (strm, rev accum)
@@ -128,40 +136,37 @@ functor Parser(YY_Lex : LEXER) = struct
 		  of Tok.EOF => (strm', rev (Tok.EOF :: accum))
 		   | _ => getWorking (strm', n-1, tok::accum)
 	      end
-      fun tryRepairs (prefix, working, repairs, strm, resume, cands, scoreOffset) = 
-	    (case (working, repairs)
+
+      fun chooseRepair {startAt, endAt, try} = let
+	    fun tryRepairs (prefix, working, repairs, cands) = (case (working, repairs)
 	      of ([], _) => (case bestCand (cands, 0, NONE)
-			      of SOME (c as (_, _, strm, _)) =>
-				 (printCand c; print "\n";
-				  SOME strm)
+			      of SOME (c as (r, _, strm, _)) => SOME (strm, r)
 			       | NONE => NONE
 			     (* end case *))
 	       | (t::ts, []) => 
-		   tryRepairs 
-		     (prefix @ [t], ts, YY.allRepairs, strm, resume, cands, scoreOffset)
+		   tryRepairs (prefix @ [t], ts, allRepairs, cands)
 	       | (_, r::rs) => let
-		   val strm' = SW.prepend (prefix @ (applyRepair (working, r)), strm)
-		   in 
-		     case SMLofNJ.Cont.callcc (fn k => (repairCont := SOME k; NONE))
-		      of NONE => SOME strm'
-		       | SOME strm'' => let
-			   val score = SW.subtract (strm'', strm') +
-					   (case r
-					     of YY.Deletion => 1
-					      | YY.Insertion _ => ~1
-					      | YY.Substitution _ => 0) +
-					   scoreOffset
-			       val cand = (r, List.length prefix, strm', score)
-			       val cands' = if score > minAdvance then
-					      cand::cands
-					    else cands
-			       in
-			         repairCont := NONE;
-				 tryRepairs 
-				   (prefix, working, rs, strm, resume, cands', scoreOffset)
-			       end
-		       end
-		 (* end case *))
+		   val strm = SW.prepend (prefix @ (applyRepair (working, r)), endAt)
+		   val strm' = try strm
+ 		   val score = SW.subtract (strm', strm)
+			         + (case r
+				     of Deletion => 1
+				      | Insertion _ => ~1
+				      | Substitution _ => 0)
+			         + scoreOffset
+		   val cand = (r, List.length prefix, strm, score)
+		   val cands' = if score > minAdvance then
+				  cand::cands
+				else cands
+		   in
+		     tryRepairs (prefix, working, rs, cands')
+		   end
+             (* end case *))
+	    val working = getWorking (startAt, WS.subtract (endAt, startAt) + 5, [])
+            in
+	      tryRepairs ([], working, allRepairs, [])
+	    end
+	    
 
     end (* structure RepairableStrm *)
 
@@ -172,8 +177,14 @@ functor Parser(YY_Lex : LEXER) = struct
       val whileDisabled : err_handler -> (unit -> 'a) -> 'a
 
       datatype repair 
-	= Primary of R.repair
-	| Secondary of R.T * R.T
+	= Primary of {
+	    errorAt : R.T,
+	    repair : R.repair
+          }
+	| Secondary of {
+	    deleteFrom : R.T,
+	    deleteTo : R.T
+	  }
 
       val wrap   : err_handler -> (R.T -> ('a, R.T)) -> R.T -> ('a, R.T)
       val launch : err_handler -> (R.T -> ('a, R.T)) -> 
@@ -184,14 +195,33 @@ functor Parser(YY_Lex : LEXER) = struct
       type repair_cont = R.T option SMLofNJ.Cont.cont 
       type retry_cont  = R.T        SMLofNJ.Cont.cont
 
-      datatype err_handler = EH of repair_cont option ref
-
       exception JumpOut of (R.T * retry_cont) list
 
-      fun throwIfEH (EH eh, t) = 
-	    Option.app (fn k => SMLofNJ.Cont.throw k (SOME t)) (!eh)
+      datatype err_handler = EH of {
+	cont : repair_cont option ref, 
+	enabled : bool ref
+      }
 
-      fun wrap eh f t = let
+      fun getCont    (EH {cont,    ...}) = !cont
+      fun getEnabled (EH {enabled, ...}) = !enabled
+
+      fun setCont    (EH {cont,    ...}, n) = cont := n
+      fun setEnabled (EH {enabled, ...}, n) = enabled := n
+
+      fun mkErrHandler () = EH {cont = ref NONE, enabled = ref true}
+      fun whileDisabled eh f = let
+	    val oldEnabled = getEnabled eh
+            in
+	      setEnabled (eh, false);
+	      f () before setEnabled (eh, oldEnabled)
+            end
+
+      fun throwIfEH (eh, t) = 
+	    if getEnabled eh then 
+	      Option.app (fn k => SMLofNJ.Cont.throw k (SOME t)) (getCont eh)
+	    else ()
+
+      fun wrap eh f t = if getEnabled eh then let
 	    val cont_ref : retry_cont option ref = ref NONE
 	    val t' = SMLofNJ.Cont.callcc (fn k => (cont_ref := SOME k; t))
 	    val retry = (t', valOf (!cont_ref))
@@ -204,6 +234,7 @@ functor Parser(YY_Lex : LEXER) = struct
 		       throwIfEH (eh, t');
 		       raise JumpOut (retry::stack))
             end
+          else f t
 
       fun findWindow (stack) = let
 	    val revStack = rev stack
@@ -248,38 +279,48 @@ functor Parser(YY_Lex : LEXER) = struct
 *)
 
       fun repair (eh, stack) = (case primaryRepair (eh, stack)
-	    of SOME t => t
-	     | NONE   => raise Fail "todo" (* secondaryRepair (eh, stack) *)
+	    of SOME (t, r) => Primary {errorAt = t, repair = r}
+	     | NONE        => raise Fail "todo" (* secondaryRepair (eh, stack) *)
            (* end case *))
-	    
 
       fun launch eh f t = 
-	    (f t handle R.JumpOut stack => repair (eh, stack))
-	    before throwIfEH (eh, t)
+	    if getEnabled eh then 
+	      (f t handle R.JumpOut stack => repair (eh, stack))
+	      before throwIfEH (eh, t)
+	    else f t
 
     end (* functor ErrHandlerFn *)
-      
 
-@yydefs@
-
+    structure Err = ErrHandlerFn(RepairableStrm)
 
   end (* structure YY *)
 
 @defs@
 
-  val parse = let
-	  fun lex strm = let
-	        val cont : YY.stream SMLofNJ.Cont.cont option ref = ref NONE
-		val (tok, strm') = 
-		    SW.get1 (SMLofNJ.Cont.callcc (fn k => (cont := SOME k; strm)))
-		val exn = YY.ParseError {
-			    errStrm = strm,
-			    errCont = valOf (!cont),
-			    revStack = []
-			  }
-	        in
-	          (exn, tok, strm')
-	        end
+  val yylex = WS.get1
+  fun yytryProds prods strm = let
+	fun try [] = raise ParseError
+	  | try (prod :: prods) = 
+	      prod strm
+	      handle _ => try (prods)
+        in
+          try prods
+        end
+
+  fun parse strm = let
+        val yyeh = Err.mkErrHandler()
+	val yywrap = Err.wrap yyeh
+	val yylaunch = Err.launch yyeh
+	val yywhileDisabled = Err.whileDisabled yyeh
+        fun parse' strm = 
+@parser@
+
+        in 
+          yylaunch (yywrap parse') (WS.wrap strm)
+        end
+
+
+
 (*
 	  fun getDiff (strm, strm', accum) =
 	        if SW.subtract (strm, strm') = 0 
@@ -333,40 +374,6 @@ functor Parser(YY_Lex : LEXER) = struct
 		  leftRightRepair (errStrm, [])
 	        end
 *)
-	  fun tryProds (strm, prods) = let
-	    val oldRepairCont = !repairCont
-	    val strmCont : YY.stream SMLofNJ.Cont.cont option ref = ref NONE
-	    val strm' = SMLofNJ.Cont.callcc (fn k => (strmCont := SOME k; strm))
-	    val exn = YY.ParseError {
-		        errStrm = strm,
-			errCont = valOf (!strmCont),
-			revStack = []
-		      }
-	    fun try [] = (repairCont := oldRepairCont; raise exn)
-	      | try (prod :: prods) = 
-		  (case SMLofNJ.Cont.callcc (fn k => (repairCont := SOME k; NONE))
-		    of NONE => prod strm'
-		     | SOME _ => try (prods)
-                   (* end case *))
-            in
-	      try prods
-	      before repairCont := oldRepairCont
-            end
-
-	  fun parser' strm = 
-@parser@
-
-	  handle (YY.ParseError e) =>
-            handleError (true, YY.ParseError e, strm, parser')
-
-          in (fn strm => let
-		   val _ = repairCont := NONE
-		   val (result, strm') = parser' (SW.wrap strm)
-		   in case !repairCont
-		       of NONE => (result, strm')
-			| SOME k => SMLofNJ.Cont.throw k (SOME strm')
-		   end)
-          end
 
 (*    fun parser strm = parser' (SW.wrap strm) *)
 
