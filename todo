@@ -18,6 +18,8 @@
 
  - make prePath required in GLA.*
 
+ - implement max lookahead for error checking (rather than finishing the parse)
+
  - more/better comments!
  - improve check-grammar
      - allow for and report multiple errors
