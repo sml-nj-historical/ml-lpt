@@ -166,7 +166,7 @@ structure CheckGrammar : sig
 	  val nterms = rev(!ntList)
 	  val startnt = hd (nterms)
 	  in LLKSpec.Grammar {
-	    defs = defs,
+	    defs = Action.action defs,
 	    toks = tokList,
 	    nterms = nterms,
 	    prods = List.rev(!prodList),

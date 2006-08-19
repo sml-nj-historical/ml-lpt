@@ -11,7 +11,7 @@
 structure GrammarSyntax =
   struct
 
-    type action = String.string
+    type action = Int.int * String.string
     datatype action_style
       = ActNormal
       | ActDebug
@@ -43,14 +43,14 @@ structure GrammarSyntax =
     type constr = (Atom.atom * ty option * Atom.atom option)
 
     datatype grammar = GRAMMAR of {
-	defs : string,
+	defs : action,
 	rules : rule list,
 	toks : constr list,
 	actionStyle : action_style
       }
 
     fun mkGrammar() = GRAMMAR {
-	  defs = "",
+	  defs = (0, ""),
 	  rules = [],
 	  toks = [],
 	  actionStyle = ActNormal

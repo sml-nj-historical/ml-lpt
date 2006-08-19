@@ -49,6 +49,8 @@ is
   BackEnds/expand-file.sml
 
   BackEnds/SML/ml.sml
+  BackEnds/SML/abs.sml
+  BackEnds/SML/pp.sml
   BackEnds/SML/sml-output.sml
 
   BackEnds/LaTeX/latex-output.sml

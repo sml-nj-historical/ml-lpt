@@ -2,10 +2,16 @@
   structure LS = LexSpec
   structure AMap = AtomMap
 
-  val wildcard = SIS.complement (SIS.singleton 0w10) (* everything but \n *)
+  structure S = LexSpec
+
+  structure RE = RegExp
+  structure SIS = RE.SymSet
+
+  fun listToASet ls = AtomSet.addList (AtomSet.empty, ls)
+
+  val wildcard = RE.mkSymSet (SIS.complement (SIS.singleton 0w10)) (* all but \n *)
   fun charToSym c = Word32.fromInt (Char.ord c)
-(*  fun strToSym s = charToSym (String.sub (s, 0)) *)
-)
+);
 
 %tokens
   : BAR		("|")
@@ -37,6 +43,7 @@
   | CHAR of char
   | ID of string
   | CODE of string
+  | BOGUS
   ;
 
 file(spec)
@@ -44,14 +51,14 @@ file(spec)
   ;
 
 decls(spec, env)
-  : decl@(spec, env) decls@(decl)
+  : decl@(spec, env) ";" decls@(decl)
       => (decls)
   | 
       => (spec)
   ;
 
 decl(spec, env)
-  : directive@(LS.getConf spec)
+  : directive@(LS.getConf spec, env)
       => (let val (conf', env') = directive
 	  in 
 	    (LS.updConf (spec, conf'),
@@ -63,11 +70,11 @@ decl(spec, env)
       => (LS.addRule (spec, rule), env)
   ;
 
-directive@(conf, env)
+directive(conf, env)
   : "%let" ID "=" re@(env)
       => (conf, AMap.insert (env, Atom.atom ID, re))
   | "%states" (ID ","? => (ID))+
-      => (LS.updStartStates (conf, AtomSet.fromList (map Atom.atom SR1)), 
+      => (LS.updStartStates (conf, listToASet (map Atom.atom SR1)), 
 	  env)
 (*
   | "%charset" ID
@@ -77,7 +84,7 @@ directive@(conf, env)
 
 rule(env)
   : ("<" (ID ","? => (ID))+ ">")? re@(env) "=>" CODE
-    => ((Option.map (AtomSet.fromList o (map Atom.atom)) SR1, re), CODE)
+    => ((Option.map (listToASet o (map Atom.atom)) SR1, re), CODE)
   ;
 
 re(env)
@@ -112,8 +119,8 @@ prim_re(env)
 		 RE.epsilon 
 		 (map (RE.mkSym o charToSym) (String.explode ID)) )
   | "(" re@(env) ")"
-  | CHAR
-      => (RE.mkSym (charToSym CHAR))
+  | char
+      => (RE.mkSym char)
   | "."
       => (wildcard)
   | "[" 
@@ -121,9 +128,14 @@ prim_re(env)
         | => (fn x => x)
         )
 
-        ( CHAR "-" CHAR => (SIS.interval (CHAR1, CHAR2))
-        | CHAR => (SIS.singleton CHAR)
+        ( char "-" char => (SIS.interval (char1, char2))
+        | char => (SIS.singleton char)
         )+
     "]"
-      => (SR1 (RE.mkSymSet (foldl SIS.union (hd SR2) (tl SR2))))
+      => (RE.mkSymSet (SR1 (foldl SIS.union (hd SR2) (tl SR2))))
+  ;
+
+char
+  : CHAR
+      => (charToSym CHAR)
   ;

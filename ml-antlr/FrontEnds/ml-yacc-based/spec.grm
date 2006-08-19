@@ -62,6 +62,7 @@ structure GS = GrammarSyntax
     | RecordList of string
     | Label of string
     | QualID of string
+    | Code of Int.int * String.string
 
 %arg (errFn) : (string * int * int) -> unit
 
@@ -85,8 +86,8 @@ Decls
 		(GS.mkGrammar())
 	| Decls KW_name ID SEMI
 		(Decls)
-	| Decls KW_defs CODE SEMI
-		(GS.updDefs (Decls, CODE))
+	| Decls KW_defs Code SEMI
+		(GS.updDefs (Decls, Code))
 	| Decls KW_tokens COLON ConstrList SEMI
 		(GS.updToks (Decls, ConstrList))
 	| Decls Rule SEMI
@@ -129,8 +130,8 @@ Alt
 		(AltItems)
 
 AltItems
-	: ItemList DARROW CODE
-		(GS.ALT {items = ItemList, action = SOME CODE, 
+	: ItemList DARROW Code
+		(GS.ALT {items = ItemList, action = SOME Code, 
 			 try = false, pred = NONE})
 	| ItemList
 		(GS.ALT {items = ItemList, action = NONE, 
@@ -161,8 +162,8 @@ PrimItem
 Args
 	:
 		(NONE)
-	| AT CODE
-		(SOME CODE)
+	| AT Code
+		(SOME Code)
 
 LHS
 	: ID
@@ -227,3 +228,7 @@ QualID
 		(ID)
 	| IDDOT QualID
 		(IDDOT ^ QualID)
+
+Code
+	: CODE
+		(CODEleft, CODE)

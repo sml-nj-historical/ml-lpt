@@ -15,7 +15,7 @@ fun eof () = (
       if (!comLvl > 0)
         then print("unclosed comment starting at line " ^ Int.toString(!comStart) ^ "\n")
         else ();
-      Tok.EOF(~1, ~1))
+      Tok.EOF)
 
 val text : string list ref = ref []
 fun addText s = (text := s::(!text))
@@ -42,6 +42,8 @@ tyvar="'"{idchars}*;
 
 %s STRING COM CODE CHARCLASS DIRECTIVE CHARSET;
 
+%structure MLULexLex
+
 %%
 
 {ws}+	=> (continue());
@@ -60,7 +62,7 @@ tyvar="'"{idchars}*;
 
 <CHARSET>"unicode" | "UNICODE" => (YYBEGIN INITIAL; Tok.UNICODE);
 <CHARSET>"ascii7" | "ASCII7" => (YYBEGIN INITIAL; Tok.ASCII7);
-<CHARSET>"ascii8" | "ASCII8" => (YYBEGIN INITIAL; Tok.ASCII8E);
+<CHARSET>"ascii8" | "ASCII8" => (YYBEGIN INITIAL; Tok.ASCII8);
 <CHARSET>";"	=> (YYBEGIN INITIAL; Tok.SEMI);
 <CHARSET>.	=> (REJECT(); YYBEGIN INITIAL);
 
@@ -122,7 +124,7 @@ tyvar="'"{idchars}*;
 		    inc pcount; continue());
 <CODE>")"	=> (dec pcount; 
 		    if !pcount = 0 then
-		      (YYBEGIN INITIAL; Tok.CODE (getText())
+		      (YYBEGIN INITIAL; Tok.CODE (getText()))
 		    else (addText yytext; continue()));
 <CODE>"\""	=> (addText yytext; YYBEGIN STRING; 
 		    ignore(continue() before YYBEGIN CODE);
@@ -130,13 +132,13 @@ tyvar="'"{idchars}*;
 <CODE>[^()"]+	=> (addText yytext; continue());
 
 <STRING>"\""	=> (addText yytext; Tok.BOGUS);
-<STRING>{eol}	=> (addText yytext; err (!yylineno, "unclosed string");
+<STRING>{eol}	=> (addText yytext; print ("unclosed string");
  	            Tok.BOGUS);
 <STRING>\\	=> (addText yytext; continue());
 <STRING>[^"\\\n\013]+ 
 		=> (addText yytext; continue());
 <STRING>\\\"	=> (addText yytext; continue());
 
-.	=> (print (cconcat[Int.toString (!yylineno), ": illegal character '", 
+.	=> (print (concat[Int.toString (!yylineno), ": illegal character '", 
 			String.toCString yytext, "'"]);
 	    continue());

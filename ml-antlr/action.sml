@@ -13,7 +13,7 @@ structure Action :>
 
     type action
 
-    val action : string -> action
+    val action : int * string -> action
     val toString : action -> string
 
     val same : (action * action) -> bool
@@ -21,7 +21,11 @@ structure Action :>
   end = struct
 
     datatype action 
-      = ACT of Int.int * string
+      = ACT of {
+	  id : int,
+	  code : string,
+	  lineNo : int
+        }
 
     local
       val cnt = ref 0
@@ -29,9 +33,14 @@ structure Action :>
     fun nextId() = (cnt := !cnt + 1; !cnt)
     end
 
-    fun action s = ACT (nextId(), s)
-    fun toString (ACT (_, s)) = s
+    fun action (i, s) = ACT {id = nextId(), code = s, lineNo = i}
+    fun toString (ACT {code, lineNo, ...}) = code
+(*	  if lineNo = 1 then
+	    "(*#line " ^ Int.toString lineNo ^ ".0*)" ^ code
+	  else
+	    "(*#line " ^ Int.toString (lineNo - 1) ^ ".0*) \n" ^ code
+*)
 
-    fun same (ACT (id1, _), ACT (id2, _)) = (id1 = id2)
+    fun same (ACT {id = id1, ...}, ACT {id = id2, ...}) = (id1 = id2)
 
   end

@@ -36,12 +36,10 @@ structure Main =
 		  then (print "No input file specified (usage: lexgen [options] file)\n";
 			OS.Process.exit OS.Process.failure)
 		  else ()
-	  val _ = if (!lexCompat = false) 
-		  then (print "--ml-lex-mode switch must be specified\n";
-			OS.Process.exit OS.Process.failure)
-		  else()
 	  val _ = debug "[lexgen: parsing]"
-          val inSpec' = MLLexInput.parseFile (!fname)
+          val inSpec' = if !lexCompat
+			then MLLexInput.parseFile (!fname)
+			else MLULexInput.parseFile (!fname)
 	  val inSpec = if (!beTest) 
 		       then LexSpec.emptyActions inSpec'
 		       else inSpec'

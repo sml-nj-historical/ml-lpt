@@ -14,6 +14,8 @@
  ml-antlr
 ================
 
+ - limit metric measurement to ~25 tokens, rather than to EOF
+
  - make prePath required in GLA.*
 
  - more/better comments!
@@ -26,3 +28,7 @@
  - improve DOT output
 
  - think about: EBNF predicates should only include true case?
+
+ - (*#line directive
+     - ran into problems with ordering in generated file not matching 
+       ordering in source

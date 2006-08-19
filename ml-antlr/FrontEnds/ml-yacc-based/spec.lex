@@ -104,7 +104,6 @@ tyvar="'"{idchars}*;
 	    continue());
 <CODE>"(*"
 	=> (comLvl := 1; comStart := !yylineno; YYBEGIN COM; 
-	    addText yytext;
 	    ignore(continue() before YYBEGIN CODE);
 	    continue());
 
