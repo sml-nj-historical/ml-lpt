@@ -8,7 +8,7 @@ end (* structure Tok *)
 signature LEXER = sig
 
   type strm
-  val get1 : strm -> (Tok.token * strm) option
+  val lex : strm -> (Tok.token * strm) option
 
 end (* signature LEXER *)
 
@@ -41,8 +41,8 @@ struct
    datatype str = EVAL of Tok.token * strm | UNEVAL of (unit -> Tok.token)
    and strm = STRM of str ref
 
-   fun get1(STRM (ref(EVAL t))) = SOME t
-     | get1(STRM (s as ref(UNEVAL f))) = let
+   fun lex(STRM (ref(EVAL t))) = SOME t
+     | lex(STRM (s as ref(UNEVAL f))) = let
 	 val tok = f()
          val t = (tok, STRM(ref(UNEVAL f))) 
          in
@@ -76,7 +76,7 @@ functor Parser(YY_Lex : LEXER) = struct
       fun get1 (WSTREAM {prefix = tok::toks, strm, curTok}) = 
 	    (tok, WSTREAM {prefix = toks, strm = strm, curTok = curTok + 1})
 	| get1 (WSTREAM {prefix = [], strm, curTok}) = let
-	    val (tok, strm') = case YY_Lex.get1 strm
+	    val (tok, strm') = case YY_Lex.lex strm
 				of SOME x => x
 				 | NONE => (Tok.EOF, strm)
 	    in (tok, WSTREAM {prefix = [], strm = strm', curTok = curTok + 1})

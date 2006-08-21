@@ -278,8 +278,11 @@ structure RegExp : REG_EXP =
     fun isNone None = true
       | isNone _    = false
 
-    fun symToString w = "#\"" ^ (Char.toString (Char.chr (Word32.toInt w))) ^ "\"" 
-	handle Overflow => raise Fail "(BUG) RegExp: symToString on a nonascii character"
+    fun symToString w = 
+	if !Options.lexCompat
+	then "#\"" ^ (Char.toString (Char.chr (Word32.toInt w))) ^ "\"" 
+	     handle Overflow => raise Fail "(BUG) RegExp: symToString on a nonascii character"
+	else "0wx" ^ Word32.toString w
 
     fun SISToString s = let
           fun c2s c = 

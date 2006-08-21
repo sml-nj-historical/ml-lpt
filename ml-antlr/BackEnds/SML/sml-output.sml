@@ -279,15 +279,14 @@ structure SMLOutput =
           val ppStrm = TextIOPP.openOut {dst = strm, wid = 80}
 	  val allRepairs = "    val allRepairs = "
 	  val unitToks = List.filter (not o Token.hasTy) toks
-	  val deletion = ML_Var "Deletion"
-	  fun mk cstr tok = ML_App (cstr, [ML_Var ("Tok." ^ (Token.name tok))])
-	  val repairs = 
-	        ML_List (deletion::
-			 (  (List.map (mk "Insertion")    unitToks)
-			  @ (List.map (mk "Substitution") unitToks)))
+	  val deletion = "Deletion"
+	  fun mk cstr tok = cstr ^ " Tok." ^ Token.name tok
+	  val repairs = (deletion::
+			  (  (List.map (mk "Insertion")    unitToks)
+			   @ (List.map (mk "Substitution") unitToks)))
           in
             TextIO.output (strm, allRepairs);
-            ML.ppML (ppStrm, repairs)
+	    TextIO.output (strm, "[" ^ (String.concatWith ", " repairs) ^ "]\n")
           end
 
   (* output user definitions *)

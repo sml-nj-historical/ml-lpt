@@ -19,6 +19,8 @@ structure SMLFunOutput : OUTPUT =
     datatype ml_exp = datatype ML.ml_exp
     datatype ml_pat = datatype ML.ml_pat
 
+    fun ML_Sym s = ML_Raw [ML.Tok (RE.symToString s)]
+
     val inp = "inp"
     val inpVar = ML_Var inp
 
@@ -287,22 +289,13 @@ structure SMLFunOutput : OUTPUT =
             TextIO.output (strm, arg')
 	  end
 
-    structure TIO = TextIO
-    val template = let
-          val file = TIO.openIn "BackEnds/SML/template-sml-fun.sml"
-	  fun done () = TIO.closeIn file
-	  fun read () = (case TIO.inputLine file
-			  of NONE => []
-			   | SOME line => line::read()
-			 (* end case *))
-	  in 
-            read() handle ex => (done(); raise ex)
-	    before done()
-	  end
+    val lexTemplate  = ExpandFile.mkTemplate "BackEnds/SML/template-ml-lex.sml" 
+    val ulexTemplate = ExpandFile.mkTemplate "BackEnds/SML/template-ml-ulex.sml" 
 
     fun output (spec, fname) = 
-          ExpandFile.expand {
-	      src = template,
+          ExpandFile.expand' {
+	      src = if !Options.lexCompat 
+		    then lexTemplate else ulexTemplate,
 	      dst = fname ^ ".sml",
 	      hooks = [("lexer", lexerHook spec),
 		       ("startstates", startStatesHook spec),

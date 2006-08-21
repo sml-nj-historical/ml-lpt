@@ -46,8 +46,8 @@
   | BOGUS
   ;
 
-file(spec)
-  : decls@(spec, AMap.empty)
+file
+  : decls@(LS.mkSpec(), AMap.empty)
   ;
 
 decls(spec, env)

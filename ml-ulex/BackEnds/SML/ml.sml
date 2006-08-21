@@ -22,7 +22,6 @@ structure ML =
    *)
     datatype ml_exp
       = ML_Var of string
-      | ML_Sym of RegExp.Sym.point
       | ML_Cmp of (cmp_op * ml_exp * ml_exp)
       | ML_Bool of (bool_op * ml_exp * ml_exp)
       | ML_Case of ml_exp * (ml_pat * ml_exp) list
@@ -63,7 +62,6 @@ structure ML =
 	    | letBody (false, pp) = pp()
 	  fun ppExp (inLet, prevFn, e) = (case e
 		 of (ML_Var x) => letBody(inLet, fn () => str x)
-		  | (ML_Sym n) => letBody(inLet, fn () => str(RegExp.symToString n))
 		  | (ML_Cmp (cop, e1, e2)) => letBody(inLet, fn () => (
 		      ppExp' e1;
 		      sp();

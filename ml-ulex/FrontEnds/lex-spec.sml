@@ -98,6 +98,8 @@ structure LexSpec =
 	       }
           end
 
+    fun mkSpec() = Spec {decls = "", conf = mkConfig(), rules = []}
+
     fun addRule (spec, new) = let
           val Spec {decls, conf, rules} = spec
           in

@@ -3,33 +3,44 @@
 ================
 
  - new spec format!
+     - lookahead / and $
+     - implement & and ^
+     - unicode char classes (and meeting the standard, generally)
 
- - new name
  - better lex/parse error messages
      - allow $ and /, but give error that not supported in --ml-lex-mode
- - check that all used start states are defines
 
+ - check that all used start states are defined
+ - check that for stuck states
+
+ - switch ulex backend to functional stream
 
 ================
  ml-antlr
 ================
 
- - limit metric measurement to ~25 tokens, rather than to EOF
+ - deal with functorization issue
 
+ - fix error repair
+     - implement heuristic for primary repair
+     - implement secondary recovery
+     - work on error messages
+     - limit metric measurement to ~25 tokens, rather than to EOF
  - make prePath required in GLA.*
+ - think about: EBNF predicates should only include true case?
+ - predicate hoisting
+ - grammar inheritance
 
- - implement max lookahead for error checking (rather than finishing the parse)
+ - controlling lexer state / lexer multiplexing
 
  - more/better comments!
  - improve check-grammar
      - allow for and report multiple errors
      - do additional checking
+
  - figure out syntax for A (X A)* and A ((X | Y | Z) A)*
  - friendlier errors for prediction tree failure
- - predicate hoisting
  - improve DOT output
-
- - think about: EBNF predicates should only include true case?
 
  - (*#line directive
      - ran into problems with ordering in generated file not matching 

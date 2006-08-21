@@ -10,6 +10,10 @@
  * occurs if the machine is in an accepting state after consuming the 
  * complete input; in particular, the input is meant to represent a single
  * token, and the machine does not restart until the end of input.
+ *
+ ****************************************************************
+ * NOTE!     NOT UNICODE COMPATIBLE
+ ****************************************************************
  *)
 
 structure Match : OUTPUT = 
