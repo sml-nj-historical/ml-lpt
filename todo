@@ -2,7 +2,7 @@
  ml-ulex
 ================
 
- - new spec format!
+ - new spec format
      - lookahead / and $
      - implement & and ^
      - unicode char classes (and meeting the standard, generally)
@@ -30,6 +30,7 @@
  - think about: EBNF predicates should only include true case?
  - predicate hoisting
  - grammar inheritance
+ - custom names for return values
 
  - controlling lexer state / lexer multiplexing
 
