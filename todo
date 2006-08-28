@@ -22,8 +22,8 @@
  - deal with functorization issue
 
  - fix error repair
-     - implement heuristic for primary repair
-     - implement secondary recovery
+     x implement heuristic for primary repair
+     x implement secondary recovery
      - work on error messages
      - limit metric measurement to ~25 tokens, rather than to EOF
      - deal with keywords

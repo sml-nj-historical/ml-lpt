@@ -18,12 +18,18 @@ signature REPAIRABLE = sig
   type repair
   exception RepairableError
 
-  val farEnough : {
+  val farEnoughWindow : {
 	startAt : T,
 	endAt : T
       } -> bool
 
-  val skip : T * int -> T
+  val farEnoughRepair : {
+	startAt : T,
+	endAt : T
+      } -> bool
+
+  val skip : T * int -> T 
+  val isEmpty : T -> bool
 
   val chooseRepair : {
 	startAt : T,
@@ -130,8 +136,13 @@ functor Parser(YY_Lex : LEXER) = struct
       type T = YY_Lex.strm WS.wstream
       exception RepairableError
 
-      fun farEnough {startAt, endAt} =
+      val minAdvance = 1
+
+      fun farEnoughWindow {startAt, endAt} =
 	    WS.subtract (endAt, startAt) > 15
+
+      fun farEnoughRepair {startAt, endAt} =
+	    WS.subtract (endAt, startAt) > minAdvance + 1
 
       datatype repair
 	= Deletion
@@ -140,8 +151,6 @@ functor Parser(YY_Lex : LEXER) = struct
 
 @repairs@
 
-
-      val minAdvance = 1
 
       fun applyRepair ([], repair) = 
 	    raise Fail "applyRepair: expected nonempty working list"
@@ -161,6 +170,9 @@ functor Parser(YY_Lex : LEXER) = struct
 
       fun skip (strm, 0) = strm
 	| skip (strm, n) = skip (#2 (WS.get1 strm), n - 1)
+      fun isEmpty strm = (case (#1 (WS.get1 strm))
+			   of Tok.EOF => true
+			    | _ => false)
 
       fun isKW _ = true (* TODO *)
 
@@ -326,7 +338,7 @@ functor Parser(YY_Lex : LEXER) = struct
 	    fun find [] = raise (Fail "BUG: findWindow given an empty stack")
 	      | find [top] = (top, top)
 	      | find (top::stack) = 
-		  if R.farEnough {startAt = TOf top, endAt = TOf rightMost}
+		  if R.farEnoughWindow {startAt = TOf top, endAt = TOf rightMost}
 		  then (top, rightMost)
 		  else find stack
             in
@@ -358,33 +370,36 @@ functor Parser(YY_Lex : LEXER) = struct
 		 | NONE => NONE
             end
 
-      fun secondaryRepair (EH eh, revStack) = let
+      fun secondaryRepair (eh, revStack) = let
 	    val stack = rev revStack
+	    val (errStrm, errCont) = hd stack
+	    fun try ((strm, cont), strm', next) = let
+	          val strm'' = tryRepair (eh, cont) strm'
+	          in
+	            if R.farEnoughRepair {startAt = strm', endAt = strm''}
+		    then SOME (Secondary {
+			   deleteFrom = strm,
+			   deleteTo = strm'
+			 }, cont, strm')
+		    else next()
+	          end
 	    fun rightRepair (strm, n) = 
 		  if n = 0 then NONE
 		  else let 
-		    val strm' = skip (strm, 1)
+		    val strm' = R.skip (strm, 1)
 		    in 
-		      try (errCont, strm', fn () => rightRepair (strm', n-1))
+		      try (hd stack, strm', fn () => rightRepair (strm', n-1))
 		    end
-	    fun leftRightRepair (strm, []) = let
-	          val strm' = skip (strm, 1)
-	          in case tok
-		      of Tok.EOF => raise Fail "Unrecoverable parse error"
-		       | _ => leftRightRepair (strm', stack)
-	          end
-	      | leftRightRepair (strm, [(_, cont)]) = 
-		  try (cont, strm, fn () => leftRightRepair (strm, []))
-	      | leftRightRepair (strm, (bStrm1, _)::(stack as (bStrm2, bCont2)::_)) = let
-		  val prefix = getDiff (bStrm1, bStrm2, [])
-		  val strm' = WS.prepend (prefix, strm)
-		  in
-		    try (bCont2, strm', fn () => leftRightRepair (strm, stack))
-		  end
+	    fun leftRightRepair (strm, []) = 
+		  if R.isEmpty strm then
+		    raise Fail "Unrecoverable parse error"
+		  else leftRightRepair (R.skip (strm, 1), stack)
+	      | leftRightRepair (strm, top::stack) = 
+		  try (top, strm, fn () => leftRightRepair (strm, stack))
             in
 	      case rightRepair (errStrm, 5)
 	       of SOME r => r
-		| _      => leftRightRepair (errStrm, [])
+		| _      => valOf (leftRightRepair (errStrm, []))
             end
 
       fun repair (eh, stack) = (case primaryRepair (eh, stack)
