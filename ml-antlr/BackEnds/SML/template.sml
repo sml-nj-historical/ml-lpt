@@ -23,6 +23,8 @@ signature REPAIRABLE = sig
 	endAt : T
       } -> bool
 
+  val skip : T * int -> T
+
   val chooseRepair : {
 	startAt : T,
 	endAt : T,
@@ -147,13 +149,6 @@ functor Parser(YY_Lex : LEXER) = struct
 	| applyRepair (working, Insertion tok) = tok :: working
 	| applyRepair (working, Substitution tok) = tok :: (tl working)
 
-      fun bestCand ([], _, NONE) = NONE
-	| bestCand ([], _, SOME cand) = SOME cand
-	| bestCand ( (c as (_, _, _, score))  ::cs, n, bs) = 
-	    if score > n then
-	      bestCand (cs, score, SOME c)
-	    else bestCand (cs, n, bs)
-
       fun getWorking (strm, n, accum) = 
 	    if n = 0 
 	    then (strm, rev accum)
@@ -164,42 +159,80 @@ functor Parser(YY_Lex : LEXER) = struct
 		   | _ => getWorking (strm', n-1, tok::accum)
 	      end
 
+      fun skip (strm, 0) = strm
+	| skip (strm, n) = skip (#2 (WS.get1 strm), n - 1)
+
+      fun isKW _ = true (* TODO *)
+
+      fun involvesKW (r, t) = (case r
+            of Insertion t' => isKW t'
+	     | Deletion => isKW t
+	     | Substitution t' => isKW t orelse isKW t'
+           (* end case *))
+
+      fun chooseCand (c1, c2) = let
+	    val (r1, _, _, score1, kw1) = c1
+	    val (r2, _, _, score2, kw2) = c2
+	    fun chooseKWScore() = (case (kw1, kw2)
+                  of (true, true) =>
+		       if score1 > score2 then c1 else c2
+		   | (false, false) => 
+		       if score1 > score2 then c1 else c2
+		   | (true, false) => c2
+		   | (false, true) => c1
+		 (* end case *))
+            in case (r1, r2)
+		of (Insertion _, Insertion _) => chooseKWScore()
+		 | (Insertion _, _) => c1
+		 | (_, Insertion _) => c2
+		 | (Deletion, Deletion) => chooseKWScore()
+		 | (Deletion, _) => c1
+		 | (_, Deletion) => c2
+		 | _ => chooseKWScore()
+            end
+
       fun chooseRepair {startAt, endAt, try} = let
-	val scoreOffset = raise Fail "todo"
-	    fun tryRepairs (prefix, working, repairs, cands) = (case (working, repairs)
-	      of ([], _) => (case bestCand (cands, 0, NONE)
-			      of SOME (c as (r, _, strm, _)) => 
+	    val (endAt', working) = getWorking 
+				      (startAt, 
+				       WS.subtract (endAt, startAt) + 5, [])
+	    val scoreOffset = List.length working
+	    fun tryRepairs (prefix, working, repairs, best) = (case (working, repairs)
+	      of ([], _) => (case best
+			      of SOME (r, prefixLen, strm, _, _) => 
 				   SOME {
-				     errorAt = strm,
+				     errorAt = skip (startAt, prefixLen),
 				     repair = r,
 				     repaired = strm
 			           }
 			       | NONE => NONE
 			     (* end case *))
 	       | (t::ts, []) => 
-		   tryRepairs (prefix @ [t], ts, allRepairs, cands)
+		   tryRepairs (prefix @ [t], ts, allRepairs, best)
 	       | (_, r::rs) => let
-		   val strm = WS.prepend (prefix @ (applyRepair (working, r)), endAt)
+		   val strm = WS.prepend (prefix @ (applyRepair (working, r)), endAt')
 		   val strm' = try strm
  		   val score = WS.subtract (strm', strm)
 			         + (case r
 				     of Deletion => 1
 				      | Insertion _ => ~1
 				      | Substitution _ => 0)
-			         + scoreOffset
-		   val cand = (r, List.length prefix, strm, score)
-		   val cands' = if score > minAdvance then
-				  cand::cands
-				else cands
+			         - scoreOffset
+		   val kw = involvesKW (r, hd working)
+		   val cand = (r, List.length prefix, strm, score, kw)
+		   val valid = if kw
+			       then score > minAdvance + 2
+			       else score > minAdvance
+		   val best' = if valid then
+				 case best
+				  of NONE => SOME cand
+				   | SOME c => SOME (chooseCand (c, cand))
+			       else best
 		   in
-		     tryRepairs (prefix, working, rs, cands')
+		     tryRepairs (prefix, working, rs, best')
 		   end
              (* end case *))
-	    val (endAt', working) = getWorking 
-				      (startAt, 
-				       WS.subtract (endAt, startAt) + 5, [])
             in
-	      tryRepairs ([], working, allRepairs, [])
+	      tryRepairs ([], working, allRepairs, NONE)
 	    end
 	    
 
@@ -325,16 +358,38 @@ functor Parser(YY_Lex : LEXER) = struct
 		 | NONE => NONE
             end
 
-(*
-      fun secondaryRepair (EH eh, stack) = let
+      fun secondaryRepair (EH eh, revStack) = let
+	    val stack = rev revStack
+	    fun rightRepair (strm, n) = 
+		  if n = 0 then NONE
+		  else let 
+		    val strm' = skip (strm, 1)
+		    in 
+		      try (errCont, strm', fn () => rightRepair (strm', n-1))
+		    end
+	    fun leftRightRepair (strm, []) = let
+	          val strm' = skip (strm, 1)
+	          in case tok
+		      of Tok.EOF => raise Fail "Unrecoverable parse error"
+		       | _ => leftRightRepair (strm', stack)
+	          end
+	      | leftRightRepair (strm, [(_, cont)]) = 
+		  try (cont, strm, fn () => leftRightRepair (strm, []))
+	      | leftRightRepair (strm, (bStrm1, _)::(stack as (bStrm2, bCont2)::_)) = let
+		  val prefix = getDiff (bStrm1, bStrm2, [])
+		  val strm' = WS.prepend (prefix, strm)
+		  in
+		    try (bCont2, strm', fn () => leftRightRepair (strm, stack))
+		  end
             in
-	      
+	      case rightRepair (errStrm, 5)
+	       of SOME r => r
+		| _      => leftRightRepair (errStrm, [])
             end
-*)
 
       fun repair (eh, stack) = (case primaryRepair (eh, stack)
 	    of SOME r => r
-	     | NONE => raise Fail "todo" (* secondaryRepair (eh, stack) *)
+	     | NONE => secondaryRepair (eh, stack)
            (* end case *))
 
       fun launch eh f t = let

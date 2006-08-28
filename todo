@@ -26,6 +26,8 @@
      - implement secondary recovery
      - work on error messages
      - limit metric measurement to ~25 tokens, rather than to EOF
+     - deal with keywords
+     - preferred replacements
  - make prePath required in GLA.*
  - think about: EBNF predicates should only include true case?
  - predicate hoisting
