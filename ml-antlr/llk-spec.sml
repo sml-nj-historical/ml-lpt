@@ -59,6 +59,7 @@ structure LLKSpec =
     datatype action_style = datatype GrammarSyntax.action_style
 
     datatype grammar = Grammar of {
+        header : string,
 	defs : Action.action,	(* user definitions *)
         toks : token list,
         nterms : nonterm list,

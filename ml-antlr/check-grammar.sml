@@ -51,7 +51,7 @@ structure CheckGrammar : sig
 
     fun check (g : Syn.grammar) = let
 	  val nextGlobalID = nextId (ref 0)
-	  val Syn.GRAMMAR {defs, rules, toks, actionStyle} = g
+	  val Syn.GRAMMAR {header, defs, rules, toks, actionStyle} = g
           val (tokList, tokTbl) = 
 	      loadToks (nextGlobalID, (Atom.atom "EOF", NONE, NONE)::toks)
 	  fun lookupTok name = (case ATbl.find tokTbl name
@@ -171,6 +171,7 @@ structure CheckGrammar : sig
 	  val nterms = rev(!ntList)
 	  val startnt = hd (nterms)
 	  in LLKSpec.Grammar {
+	    header = header,
 	    defs = Action.action defs,
 	    toks = tokList,
 	    nterms = nterms,

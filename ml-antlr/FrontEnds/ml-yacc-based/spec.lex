@@ -65,6 +65,7 @@ tyvar="'"{idchars}*;
 <INITIAL>"%keywords"	=> (Tok.KW_keywords	(!yylineno, !yylineno));
 <INITIAL>"%import"	=> (Tok.KW_import	(!yylineno, !yylineno));
 <INITIAL>"%name"	=> (Tok.KW_name		(!yylineno, !yylineno));
+<INITIAL>"%header"	=> (Tok.KW_header	(!yylineno, !yylineno));
 <INITIAL>"%start"	=> (Tok.KW_start	(!yylineno, !yylineno));
 <INITIAL>"%try"		=> (Tok.KW_try		(!yylineno, !yylineno));
 <INITIAL>"%where"       => (Tok.KW_where	(!yylineno, !yylineno));

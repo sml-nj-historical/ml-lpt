@@ -14,7 +14,7 @@ structure GS = GrammarSyntax
 
 %term EOF
     | KW_tokens | KW_defs | KW_keywords | KW_import | KW_name | KW_start
-    | KW_try | KW_where | KW_debugact | KW_unitact
+    | KW_try | KW_where | KW_debugact | KW_unitact | KW_header
     | LP | RP		(* ( ) *)
     | LSB | RSB		(* [ ] *)
     | LCB | RCB		(* { } *)
@@ -85,7 +85,9 @@ Decls
 	: 
 		(GS.mkGrammar())
 	| Decls KW_name ID SEMI
-		(Decls)
+		(GS.updHeader (Decls, "functor " ^ ID ^ "(YY_Lex : LEXER)"))
+	| Decls KW_header STRING SEMI
+		(GS.updHeader (Decls, STRING))
 	| Decls KW_defs Code SEMI
 		(GS.updDefs (Decls, Code))
 	| Decls KW_tokens COLON ConstrList SEMI

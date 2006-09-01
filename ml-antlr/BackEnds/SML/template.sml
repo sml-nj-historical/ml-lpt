@@ -43,28 +43,8 @@ signature REPAIRABLE = sig
 
 end
 
-(***** ADAPTED FROM ML-YACC *****)
-structure Streamify =
-struct
-   datatype str = EVAL of Tok.token * strm | UNEVAL of (unit -> Tok.token)
-   and strm = STRM of str ref
-
-   fun lex(STRM (ref(EVAL t))) = SOME t
-     | lex(STRM (s as ref(UNEVAL f))) = let
-	 val tok = f()
-         val t = (tok, STRM(ref(UNEVAL f))) 
-         in
-	   case tok
-	    of Tok.EOF => NONE
-	     | _ => (s := EVAL t; SOME(t))
-         end
-
-   fun streamify f = STRM(ref(UNEVAL f))
-   fun cons(a,s) = STRM(ref(EVAL(a,s)))
-
-end
-
-functor Parser(YY_Lex : LEXER) = struct
+@header@
+= struct
 
   structure YY = struct
 

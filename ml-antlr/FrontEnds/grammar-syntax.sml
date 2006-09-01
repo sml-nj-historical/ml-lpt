@@ -43,6 +43,7 @@ structure GrammarSyntax =
     type constr = (Atom.atom * ty option * Atom.atom option)
 
     datatype grammar = GRAMMAR of {
+        header : string,
 	defs : action,
 	rules : rule list,
 	toks : constr list,
@@ -50,33 +51,39 @@ structure GrammarSyntax =
       }
 
     fun mkGrammar() = GRAMMAR {
+	  header = "functor Parser(YY_Lex : LEXER)",
 	  defs = (0, ""),
 	  rules = [],
 	  toks = [],
 	  actionStyle = ActNormal
         }
 
+    fun updHeader (g, new) = let
+          val GRAMMAR {header, defs, rules, toks, actionStyle} = g
+          in GRAMMAR {header = new, defs = defs, rules = rules, 
+		      toks = toks, actionStyle = actionStyle} end
+
     fun updDefs (g, new) = let
-          val GRAMMAR {defs, rules, toks, actionStyle} = g
-          in GRAMMAR {defs = new, rules = rules, 
+          val GRAMMAR {header, defs, rules, toks, actionStyle} = g
+          in GRAMMAR {header = header, defs = new, rules = rules, 
 		      toks = toks, actionStyle = actionStyle} end
 
     fun updToks (g, new) = let
-          val GRAMMAR {defs, rules, toks, actionStyle} = g
-          in GRAMMAR {defs = defs, rules = rules, 
+          val GRAMMAR {header, defs, rules, toks, actionStyle} = g
+          in GRAMMAR {header = header, defs = defs, rules = rules, 
 		      toks = new, actionStyle = actionStyle} end
 
     fun updActionStyle (g, new) = let
-          val GRAMMAR {defs, rules, toks, actionStyle} = g
-          in GRAMMAR {defs = defs, rules = rules, 
+          val GRAMMAR {header, defs, rules, toks, actionStyle} = g
+          in GRAMMAR {header = header, defs = defs, rules = rules, 
 		      toks = toks, actionStyle = new} end
 
     fun debugAct g = updActionStyle (g, ActDebug)
     fun unitAct g = updActionStyle (g, ActUnit)
 
     fun addRule (g, new) = let
-          val GRAMMAR {defs, rules, toks, actionStyle} = g
-          in GRAMMAR {defs = defs, rules = rules@[new], 
+          val GRAMMAR {header, defs, rules, toks, actionStyle} = g
+          in GRAMMAR {header = header, defs = defs, rules = rules@[new], 
 		      toks = toks, actionStyle = actionStyle} end
 
     fun setToTry (ALT {items, action, try, pred}) = 

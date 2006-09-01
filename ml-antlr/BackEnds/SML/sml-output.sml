@@ -289,6 +289,13 @@ structure SMLOutput =
 	    TextIO.output (strm, "[" ^ (String.concatWith ", " repairs) ^ "]\n")
           end
 
+  (* output header *)
+    fun headerHook spec strm = let
+          val (S.Grammar {header, ...}, _) = spec
+          in
+            TextIO.output (strm, header)
+          end
+
   (* output user definitions *)
     fun defsHook spec strm = let
           val (S.Grammar {defs, ...}, _) = spec
@@ -305,6 +312,7 @@ structure SMLOutput =
 	      hooks = [("parser",   parserHook (grm, pm)),
 		       ("tokens",   tokensHook (grm, pm)),
 		       ("repairs",  repairsHook (grm, pm)),
+		       ("header",   headerHook (grm, pm)),
 		       ("defs",     defsHook (grm, pm)),
 		       ("args",     argsHook (grm, pm)),
 		       ("matchfns", matchfnsHook (grm, pm))]

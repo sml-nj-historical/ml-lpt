@@ -38,11 +38,12 @@
 
  - more/better comments!
  - improve check-grammar
-     - allow for and report multiple errors
+     x allow for and report multiple errors
      - do additional checking
+ - friendlier errors for prediction tree failure
+     - report multiple failures
 
  - figure out syntax for A (X A)* and A ((X | Y | Z) A)*
- - friendlier errors for prediction tree failure
  - improve DOT output
 
  - (*#line directive
