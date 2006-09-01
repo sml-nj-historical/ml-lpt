@@ -27,7 +27,7 @@ BE = 		BackEnds
 SML_SRC = 	$(wildcard $(BE)/SML/*.sml)
 LATEX_SRC =     $(wildcard $(BE)/LaTeX/*.sml)
 
-FE_SRC = 	$(wildcard $(FE)/*.sml) 
+FE_SRC = 	$(wildcard $(FE)/*.sml)  $(FE)/ml-yacc-based/spec.grm $(FE)/ml-yacc-based/spec.lex
 BE_SRC = 	$(wildcard $(BE)/*.sml) $(SML_SRC) $(LATEX_SRC)
 
 TEMPLATES =     $(BE)/SML/template.sml $(BE)/LaTeX/template.tex
