@@ -13,14 +13,13 @@ structure Token =
 
     datatype token = datatype LLKSpec.token
 
-    fun toString (T{name, ...}) = Atom.toString name
-
     fun name (T{name, ...}) = Atom.toString name
     fun ty (T{ty, ...}) = ty
     fun hasTy (T{ty = SOME _, ...}) = true
       | hasTy _ = false
-    fun abbrev (T{abbrev = SOME a, ...}) = Atom.toString a
-      | abbrev tok = name tok
+
+    fun toString (T{abbrev = SOME a, ...}) = Atom.toString a
+      | toString tok = name tok
 
     fun def tok = name tok
 	  ^ (case ty tok

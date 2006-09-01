@@ -30,14 +30,14 @@ structure ComputePredict :
 
   (* error handling, for lookahead computation failure *)
     fun mapi f l = ListPair.map f (List.tabulate (length l, fn i => i), l)
-    fun doErr (prePath, nt, msg) = (print (String.concat [
-          "lookahead computation failed for ",
-	  Nonterm.qualName nt, ",\n", msg, "\n  ",
+    fun doErr (prePath, nt, msg) = (Err.errMsg [
+          "Error: lookahead computation failed for ",
+	  "'", Nonterm.qualName nt, "',\n", msg, "\n",
+	  "The conflicting token sets are:\n  ",
 	  String.concatWith "\n  " 
 	    (mapi (fn (k, s) => "k = " ^ (Int.toString (k+1)) ^ ": " 
 			       ^ (Token.setToString s))
-		 prePath)]);
-	  print "\n")
+		 prePath), "\n"])
 
   (* compute a decision tree for predicting a production for a nonterminal *)
     fun compute(gla, nt) = let
@@ -70,7 +70,7 @@ structure ComputePredict :
 			  "with a conflict for the following productions:\n  ",
 			  String.concatWith "\n  " (map Prod.toString prods)
 			]);
-		        raise Fail "lookahead")
+		        raise Err.Abort)
 		      else (set, try (prePath @ [set], k+1, prods))
 	        val branches = foldl (tryToks(prePath, k)) [] prods
 	        in
@@ -108,8 +108,7 @@ structure ComputePredict :
 			      else (doErr (prePath @ [isct], nt, 
 			                   "deciding between the subrule and "
 					   ^ "the sequence following it:");
-				    print "\n";
-				    raise Fail "lookahead"))]
+				    raise Err.Abort))]
 	        in
 	          Predict.ByTok choices
 	        end

@@ -1,3 +1,12 @@
+(* token.sml
+ *
+ * COPYRIGHT (c) 2006
+ * All rights reserved.
+ *
+ * LaTeX output.
+ * Contributed by Adam Shaw.
+ *)
+
 (* 
 signature BACK_END =
   sig
@@ -171,7 +180,7 @@ structure LaTeXOutput (* : BACK_END *) =
           end
 
     and tok t = let
-          val abbrev = Token.abbrev t
+          val abbrev = Token.toString t
 	  val scrub = (escapeL (explode "_{}")) o
 		      (mathescapeL ["<", ">", "-", "|"]) o
 		      (stripquotes)
