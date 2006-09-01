@@ -133,6 +133,7 @@ tyvar="'"{idchars}*;
 <STRING>{eol}	=> (addText yytext; err (!yylineno, "unclosed string");
  	            Tok.BOGUS(!yylineno, !yylineno));
 <STRING>\\	=> (addText yytext; continue());
+<STRING>\\\\	=> (addText yytext; continue());
 <STRING>[^"\\\n\013]+ 
 		=> (addText yytext; continue());
 <STRING>\\\"	=> (addText yytext; continue());
