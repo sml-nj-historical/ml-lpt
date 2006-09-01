@@ -5,6 +5,7 @@ Library
   structure Action
   structure CheckGrammar
   structure ComputePredict
+  structure Err
   structure GLA
   structure GrammarSyntax
   structure Item
@@ -33,6 +34,7 @@ is
   action.sml
   check-grammar.sml
   compute-predict.sml
+  err.sml
   gla.sml
   item.sml
   llk-spec.sml

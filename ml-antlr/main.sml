@@ -29,39 +29,14 @@ structure Main : sig
     fun debug s = (print s; print "\n")
     fun debugs ss = debug (concat ss)
 
-  (* global flag to record the existance of errors *)
-    val anyErrors = ref false
-
-    fun errMsg l = (
-	  anyErrors := true;
-	  TextIO.output(TextIO.stdErr, String.concat l))
-
-  (* error function for lexers *)
-    fun lexErr filename (lnum, msg) = errMsg [
-	    "Error [", filename, ":", Int.toString lnum, "]: ", msg, "\n"
-	  ]
-
-  (* error function for parsers *)
-    fun parseErr filename (msg, p1, p2) = if (p1 = p2)
-	  then lexErr filename (p1, msg)
-	  else errMsg [
-	      "Error [", filename, ":", Int.toString p1, "-", Int.toString p2, "]: ",
-	      msg, "\n"
-	    ]
-
   (* parse a file, returning a parse tree *)
     fun parseFile filename = let
 	  val _ = debug "[ml-antlr: parsing]"
 	  val file = TextIO.openIn filename
 	  fun get n = TextIO.inputN (file, n)
-(*	  val lexArg = {
-		  comLvl = ref 0, comStart = ref 0,
-		  err = lexErr filename
-		}
-*)
-	  val lexer = LLKParser.makeLexer get (lexErr filename)
+	  val lexer = LLKParser.makeLexer get (Err.lexErr filename)
 	  in
-	    #1(LLKParser.parse(15, lexer, parseErr filename, parseErr filename))
+	    #1(LLKParser.parse(15, lexer, Err.parseErr filename, Err.parseErr filename))
 	      before TextIO.closeIn file
 	  end
 
@@ -80,33 +55,26 @@ structure Main : sig
           end
 
     fun process file = let
-	  val _ = anyErrors := false;
+	  val _ = Err.anyErrors := false;
 	  val grm = checkPT (parseFile file)
 	  val gla = GLA.mkGLA grm
 	  val pm = ComputePredict.mkPM (grm, gla)
 	  val outspec = (grm, pm, file)
 	  in
-(*
-            print "\n";
-            app (fn (nt, tree) => (print (Nonterm.name nt);
-				   print ":";
-				   print (Predict.toString tree);
-				   print "\n\n"))
-		(Nonterm.Map.listItemsi pmap);
-*)
             GLA.dumpGraph (grm, gla);
             SMLOutput.output outspec;
 	    LaTeXOutput.output outspec;
-	    if !anyErrors
+	    if !Err.anyErrors
 	      then OS.Process.failure
 	      else OS.Process.success
 	  end
- 	  handle ex => (
-	    errMsg [
+ 	  handle Err.Abort => OS.Process.failure
+	  | ex => (
+	    Err.errMsg [
 		"uncaught exception ", General.exnName ex,
-		" [", exnMessage ex, "]\n"
+		" [", exnMessage ex, "]"
 	      ];
-	    List.app (fn s => errMsg ["  raised at ", s, "\n"]) (SMLofNJ.exnHistory ex);
+	    List.app (fn s => Err.errMsg ["  raised at ", s]) (SMLofNJ.exnHistory ex);
 	    OS.Process.failure)
 
     fun main (_, [file]) = process file

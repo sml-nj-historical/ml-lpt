@@ -147,7 +147,11 @@ structure CheckGrammar : sig
 	(* check a rule *)
 	  fun chkRule (Syn.RULE{lhs, formals, alts}) = loadNTerm(lookupNTerm lhs, formals, alts)
         (* check the grammar *)
-	  val ((Syn.RULE{lhs, formals, alts})::rest) = rules
+	  val ((Syn.RULE{lhs, formals, alts})::rest) = 
+	        (case rules
+		  of [] => (Err.errMsg ["Error: no rules given."];
+			    raise Err.Abort)
+		   | _  => rules)
 	  fun addEOF (Syn.ALT {items, action, try, pred}) = 
 	        Syn.ALT {items = items @ [Syn.SYMBOL (Atom.atom "EOF", NONE)], 
 			 action = action, try = try, pred = pred}
@@ -157,12 +161,13 @@ structure CheckGrammar : sig
 	(* check for undefined nonterminals, while reversing the order of productions *)
 	  val _ = let
 		fun chkNT (LLKSpec.NT{name, prods, ...}) = (case !prods
-		       of [] => raise Fail(concat["nonterminal ", Atom.toString name, " has no productions"])
+		       of [] => Err.errMsg ["Error: nonterminal ", Atom.toString name, " has no productions."]
 			| l => prods := List.rev l
 		      (* end case *))
 		in
 		  List.app chkNT (!ntList)
 		end
+	  val _ = Err.abortIfErr()
 	  val nterms = rev(!ntList)
 	  val startnt = hd (nterms)
 	  in LLKSpec.Grammar {
