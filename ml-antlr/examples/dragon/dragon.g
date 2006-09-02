@@ -11,7 +11,7 @@
 );
 
 %tokens
-  : KW_program          ("program")
+  : KW_program ("program")
   | KW_var
   | KW_array
   | KW_of
@@ -30,15 +30,15 @@
   | ID of string
   | INT of IntInf.int
   | REAL of Real.real
-  | ASSIGNOP	(* := *)
-  | COMMA	(* , *)
-  | COLON	(* : *)
-  | SEMI	(* ; *)
-  | DOT		(* . *)
-  | LSB		(* [ *)
-  | RSB		(* ] *)
-  | LP		(* ( *)
-  | RP		(* ) *)
+  | ASSIGNOP	(":=")
+  | COMMA	(",")
+  | COLON	(":")
+  | SEMI	(";")
+  | DOT		(".")
+  | LSB		("[")
+  | RSB		("]")
+  | LP		("(")
+  | RP		(")")
   | MINUS
   | RELOP of string
   | ADDOP of string

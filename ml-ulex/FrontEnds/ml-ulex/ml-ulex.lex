@@ -49,7 +49,8 @@ tyvar="'"{idchars}*;
 
 %%
 
-<INITIAL,CHARSET,CHARCLASS>{ws}+	=> (continue());
+<INITIAL,DIRECTIVE,CHARSET,CHARCLASS>{ws}+	
+	=> (continue());
 
 <INITIAL>"%defs"	=> (YYBEGIN CODE; Tok.KW_defs);
 <INITIAL>"%name"	=> (YYBEGIN DIRECTIVE; Tok.KW_name);

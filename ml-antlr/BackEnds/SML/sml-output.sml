@@ -82,12 +82,12 @@ structure SMLOutput =
     end
 
   (* make an expression for the given (polymorphic) decision tree *)
-    fun mkPredict (pickFn, choiceFn, strm, tree) = let
+    fun mkPredict (pickFn, choiceFn, strm, tree, errAction) = let
           fun mkPredict (strm, P.Pick p) = 
 	        pickFn p
 	    | mkPredict (strm, P.ByTok branches) = let
 		val branches = List.concat (map mkMatch branches)
-		val errCase = (ML_Wild, ML_App ("raise", [ML_Var "ParseError"]))
+		val errCase = (ML_Wild, errAction)
 	        in
 	          ML_Case (mkGet1 strm, branches @ [errCase])
 	        end
@@ -126,7 +126,8 @@ structure SMLOutput =
 		fun mkBool true = ML_Var "true"
 		  | mkBool false = ML_Var "false"
 		fun choiceFn _ = raise Fail "BUG: mkEBNF: backtracking choice unexpected"
-		val caseExp = mkPredict (mkBool, choiceFn, "strm", predTree)
+		val errAction = ML_Var "false"
+		val caseExp = mkPredict (mkBool, choiceFn, "strm", predTree, errAction)
 		val predFn = ML_Funs ([(predName, ["strm"], caseExp)], innerExp)
 		in 
 	          mkNonterm (grm, pm) (nt, predFn)
@@ -182,7 +183,8 @@ structure SMLOutput =
 	  fun choiceFn prods = 
 	        ML_App ("yytryProds", [ML_Var "strm", 
 					ML_List (map (ML_Var o Prod.name) prods)])
-	  val caseExp = mkPredict (pickFn, choiceFn, "strm", tree)
+	  val errAction = ML_App ("raise", [ML_Var "ParseError"])
+	  val caseExp = mkPredict (pickFn, choiceFn, "strm", tree, errAction)
           in
 	    foldr mkProdFun caseExp (Nonterm.prods nt)
           end
@@ -245,9 +247,9 @@ structure SMLOutput =
 	  val errCase = (ML_Wild, ML_App ("raise", [ML_Var "ParseError"]))
           val exp = ML_Case (mkGet1 "strm", [matchCase, errCase])
 	  in
-            TextIO.output (strm, "fun " ^ tokMatch' t ^ " strm = ");
+            TextIO.output (strm, "val " ^ tokMatch' t ^ " = yywrap (fn strm => ");
 	    ML.ppML (ppStrm, exp);
-	    TextIO.output (strm, "\n")
+	    TextIO.output (strm, ")\n")
           end
 
   (* output the tokens datatype *)
@@ -257,7 +259,7 @@ structure SMLOutput =
 	  val toksDT = 
 	        "    datatype token = "
 		^ (String.concatWith "\n      | " (List.map Token.def toks))
-	  fun mkMat t = (ML_TupPat [tokConPat' t], rawCode ("\"" ^ Token.name t ^ "\""))
+	  fun mkMat t = (ML_TupPat [tokConPat' t], rawCode (Token.quoted t))
           val casesExp = ML_Case (ML_Var "tok", List.map mkMat toks)
           in
             TextIO.output (strm, toksDT ^ "\n\n");

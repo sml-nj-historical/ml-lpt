@@ -165,7 +165,7 @@ end
 			   of Tok.EOF => true
 			    | _ => false)
 
-      fun isKW _ = true (* TODO *)
+      fun isKW _ = false (* TODO *)
 
       fun involvesKW (r, t) = (case r
             of Insertion t' => isKW t'
@@ -173,35 +173,32 @@ end
 	     | Substitution t' => isKW t orelse isKW t'
            (* end case *))
 
+      infix >>
+      fun (Insertion _) >> _ = true
+	| Deletion >> _ = true
+	| _ >> _ = false
+
       fun chooseCand (c1, c2) = let
 	    val (r1, _, _, score1, kw1) = c1
 	    val (r2, _, _, score2, kw2) = c2
-	    fun chooseKWScore() = (case (kw1, kw2)
-                  of (true, true) =>
-		       if score1 > score2 then c1 else c2
-		   | (false, false) => 
-		       if score1 > score2 then c1 else c2
-		   | (true, false) => c2
-		   | (false, true) => c1
-		 (* end case *))
-            in case (r1, r2)
-		of (Insertion _, Insertion _) => chooseKWScore()
-		 | (Insertion _, _) => c1
-		 | (_, Insertion _) => c2
-		 | (Deletion, Deletion) => chooseKWScore()
-		 | (Deletion, _) => c1
-		 | (_, Deletion) => c2
-		 | _ => chooseKWScore()
+            in if score1 > score2 then c1
+	       else if score2 > score1 then c2
+	       else if r1 >> r2 then c1
+	       else if r2 >> r1 then c2
+	       else if kw1 = false then c1
+	       else c2 
             end
 
       fun chooseRepair {startAt, endAt, try} = let
-	    val (endAt', working) = getWorking 
-				      (startAt, 
-				       WS.subtract (endAt, startAt) + 5, [])
-	    val scoreOffset = List.length working
+	    val scoreOffset = WS.subtract (endAt, startAt)
+	    val (endAt', working) = getWorking (startAt, scoreOffset + 5, [])
 	    fun tryRepairs (prefix, working, repairs, best) = (case (working, repairs)
 	      of ([], _) => (case best
-			      of SOME (r, prefixLen, strm, _, _) => 
+			      of SOME (r, prefixLen, strm, _, _) => (*
+print (case r
+	of Deletion => "DEL\n"
+	 | Insertion t => "INS " ^ Tok.toString t ^ "\n"
+	 | Substitution t => "SUB " ^ Tok.toString t ^ "\n"); *)
 				   SOME {
 				     errorAt = skip (startAt, prefixLen),
 				     repair = r,
@@ -224,8 +221,8 @@ end
 		   val cand = (r, List.length prefix, strm, score, kw)
 		   val valid = if kw
 			       then score > minAdvance + 2
-			       else score > minAdvance
-		   val best' = if valid then
+			       else score > minAdvance 
+		   val best' = if valid then 
 				 case best
 				  of NONE => SOME cand
 				   | SOME c => SOME (chooseCand (c, cand))
@@ -257,7 +254,8 @@ end
 	    deleteTo : R.T
 	  }
 
-      val wrap   : err_handler -> (R.T -> ('a * R.T)) -> R.T -> ('a * R.T)
+(*      val wrap   : err_handler -> (R.T -> ('a * R.T)) -> R.T -> ('a * R.T) *)
+      val wrap   : err_handler -> (R.T -> 'a) -> R.T -> 'a
       val launch : err_handler -> (R.T -> ('a * R.T)) -> 
 		   R.T -> ('a * R.T * repair list)
 
@@ -324,10 +322,10 @@ end
 
       fun findWindow (stack) = let
 	    val revStack = rev stack
-	    val rightMost = hd stack
+	    val rightMost = hd revStack
 	    fun TOf (t, _) = t
 	    fun find [] = raise (Fail "BUG: findWindow given an empty stack")
-	      | find [top] = (top, top)
+	      | find [top] = (top, rightMost)
 	      | find (top::stack) = 
 		  if R.farEnoughWindow {startAt = TOf top, endAt = TOf rightMost}
 		  then (top, rightMost)
@@ -441,7 +439,7 @@ strm = let
 	val yywhileDisabled = YY.Err.whileDisabled yyeh
 	fun yytryProds (strm, prods) = 
 	      (yywrap (YY.tryProds yyeh prods)) strm
-	val yylex = yywrap YY.WStream.get1
+	val yylex = YY.WStream.get1
 @matchfns@
 
 @parser@
@@ -487,8 +485,8 @@ strm = let
         of Insert toks => "inserting " ^ toksToString toks
 	 | Delete toks => "deleting " ^ toksToString toks
 	 | Subst {old, new} => 
-	     "substituting " ^ toksToString old ^ " for "
-	     ^ toksToString new
+	     "substituting " ^ toksToString new ^ " for "
+	     ^ toksToString old
        (* end case *))
 
 

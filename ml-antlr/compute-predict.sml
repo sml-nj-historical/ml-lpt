@@ -100,8 +100,9 @@ structure ComputePredict :
 		val choices = List.concat [
 		      if TSet.isEmpty trueOnly then []
 		        else [(trueOnly, Predict.Pick true)],
-		      if TSet.isEmpty falseOnly then []
-		        else [(falseOnly, Predict.Pick false)],
+(* No longer include "false" cases *)
+(*		      if TSet.isEmpty falseOnly then []
+		        else [(falseOnly, Predict.Pick false)], *)
 		      if TSet.isEmpty isct then []
 		        else (if k <= maxK
 			      then [(isct, tryToks (k+1, prePath @ [isct]))]

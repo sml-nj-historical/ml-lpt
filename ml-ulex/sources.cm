@@ -25,7 +25,7 @@ is
   FrontEnds/ml-lex/ml-lex.yacc : MLYacc
   FrontEnds/ml-lex/ml-lex-input.sml
 
-  FrontEnds/ml-ulex/ml-ulex.lex.sml 
+  FrontEnds/ml-ulex/ml-ulex.lex
   FrontEnds/ml-ulex/ml-ulex.grm.sml
   FrontEnds/ml-ulex/ml-ulex-input.sml
 

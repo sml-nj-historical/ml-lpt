@@ -11,7 +11,6 @@
 %let idchars=({alpha}|{digit}|"_");
 %let id={alpha}{idchars}*;
 
-" "		=> (continue());
 {ws}+		=> (continue());
 "{" [^}]* "}"	=> (continue());
 

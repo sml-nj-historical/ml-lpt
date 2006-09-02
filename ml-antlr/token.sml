@@ -21,6 +21,9 @@ structure Token =
     fun toString (T{abbrev = SOME a, ...}) = Atom.toString a
       | toString tok = name tok
 
+    fun quoted (T{abbrev = SOME a, ...}) = Atom.toString a
+      | quoted tok = "\"" ^ name tok ^ "\""
+
     fun def tok = name tok
 	  ^ (case ty tok
 	      of NONE => ""
