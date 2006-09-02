@@ -27,12 +27,15 @@ BE = 		BackEnds
 ML_LEX =	$(FE)/ml-lex
 ML_LEX_SRC = 	$(wildcard $(ML_LEX)/*.sml) $(ML_LEX)/ml-lex.lex $(ML_LEX)/ml-lex.yacc
 
+ML_ULEX =	$(FE)/ml-ulex
+ML_ULEX_SRC = 	$(wildcard $(ML_ULEX)/*.sml) $(ML_ULEX)/ml-ulex.lex $(ML_ULEX)/ml-ulex.grm
+
 DUMP_SRC =	$(wildcard $(BE)/Dump/*.sml)
 DOT_SRC =	$(wildcard $(BE)/Dot/*.sml)
 SML_SRC = 	$(wildcard $(BE)/SML/*.sml)
 MATCH_SRC = 	$(wildcard $(BE)/Match/*.sml)
 
-FE_SRC = 	$(wildcard $(FE)/*.sml) $(ML_LEX_SRC)
+FE_SRC = 	$(wildcard $(FE)/*.sml) $(ML_LEX_SRC) $(ML_ULEX_SRC)
 BE_SRC = 	$(wildcard $(BE)/*.sml) $(DOT_SRC) $(SML_SRC) $(MATCH_SRC)
 
 CORE_SRC =	$(wildcard *.sml)

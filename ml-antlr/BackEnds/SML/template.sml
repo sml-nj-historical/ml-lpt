@@ -15,7 +15,10 @@ end (* signature LEXER *)
 signature REPAIRABLE = sig
 
   type T
-  type repair
+  datatype repair
+    = Deletion
+    | Insertion of Tok.token
+    | Substitution of Tok.token
   exception RepairableError
 
   val farEnoughWindow : {
@@ -60,6 +63,7 @@ end
       }
 
       fun wrap strm =  WSTREAM {prefix = [], strm = strm, curTok = 0}
+      fun unwrap (WSTREAM {strm, ...}) = strm
 
       fun get1 (WSTREAM {prefix = tok::toks, strm, curTok}) = 
 	    (tok, WSTREAM {prefix = toks, strm = strm, curTok = curTok + 1})
@@ -75,6 +79,13 @@ end
 
       fun subtract (WSTREAM {curTok = p1, ...}, WSTREAM {curTok = p2, ...}) = 
 	    p1 - p2
+
+      fun getDiff (ws1, ws2) =
+	    if subtract (ws1, ws2) <= 0 then []
+	    else let 
+		val (t, ws2') = get1 ws2
+	        in t :: (getDiff (ws1, ws2'))
+                end
 
     end (* structure WStream *)
     
@@ -419,7 +430,8 @@ end
 
   exception ParseError = YY.RepairableStrm.RepairableError
 
-  fun parse 
+  fun innerParse
+unwrapErr
 @args@
 
 strm = let
@@ -434,13 +446,50 @@ strm = let
 
 @parser@
 
-        in 
-          yylaunch (parse'
+        val (ret, _, errors) = yylaunch (parse'
 @args@
 
 ) (YY.WStream.wrap strm)
+        in 
+          (ret, map unwrapErr errors)
         end
 
+  datatype repair_action
+    = Insert of Tok.token list
+    | Delete of Tok.token list
+    | Subst of {
+	old : Tok.token list, 
+	new : Tok.token list
+      }
+
+  structure Err = YY.Err
+  structure R = YY.RepairableStrm
+
+  fun unwrapErr (Err.Primary {errorAt, repair = R.Deletion}) =
+        (YY.WStream.unwrap errorAt, Delete [(#1 (YY.WStream.get1 errorAt))])
+    | unwrapErr (Err.Primary {errorAt, repair = R.Insertion t}) =
+        (YY.WStream.unwrap errorAt, Insert [t])
+    | unwrapErr (Err.Primary {errorAt, repair = R.Substitution t}) = 
+        (YY.WStream.unwrap errorAt, 
+	 Subst {
+	   old = [(#1 (YY.WStream.get1 errorAt))],
+	   new = [t]
+         })
+    | unwrapErr (Err.Secondary {deleteFrom, deleteTo}) = 
+        (YY.WStream.unwrap deleteFrom, 
+	 Delete (YY.WStream.getDiff (deleteTo, deleteFrom)))
+
+  val parse = innerParse unwrapErr
+
+  fun toksToString toks = String.concatWith " " (map Tok.toString toks)
+
+  fun repairToString repair = (case repair
+        of Insert toks => "inserting " ^ toksToString toks
+	 | Delete toks => "deleting " ^ toksToString toks
+	 | Subst {old, new} => 
+	     "substituting " ^ toksToString old ^ " for "
+	     ^ toksToString new
+       (* end case *))
 
 
 (*

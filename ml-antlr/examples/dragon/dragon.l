@@ -1,20 +1,17 @@
-open Tok;
+%defs (
+  open Tok;
+  fun eof() = EOF
+);
 
-type lexresult = Tok.token
-fun eof() = EOF
+%let eol=("\n"|"\013\n"|"\013");
+%let ws=("\009"|"\011"|"\012"|" "|{eol});
+%let alpha=[a-zA-Z];
+%let digit=[0-9];
+%let int={digit}+;
+%let idchars=({alpha}|{digit}|"_");
+%let id={alpha}{idchars}*;
 
-%%
-
-eol=("\n"|"\013\n"|"\013");
-ws=("\009"|"\011"|"\012"|" "|{eol});
-alpha=[a-zA-Z];
-digit=[0-9];
-int={digit}*;
-idchars=({alpha}|{digit}|"_");
-id={alpha}{idchars}*;
-
-%%
-
+" "		=> (continue());
 {ws}+		=> (continue());
 "{" [^}]* "}"	=> (continue());
 

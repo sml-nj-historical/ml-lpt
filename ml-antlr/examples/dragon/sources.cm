@@ -7,5 +7,5 @@ is
   $/smlnj-lib.cm
 
   dragon.g.sml
-  dragon.l
+  dragon.l.sml
   main.sml

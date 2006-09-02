@@ -1,19 +1,18 @@
 structure Main = 
   struct
 
-    structure P = Parser(ListLexer)
+    structure P = Parser(Streamify)
 
-    fun parse(strm) = let
-      fun inputN n = (case TextIO.inputLine strm
-		       of SOME s => s
-			| NONE => "")
-      val lexer = Mlex.makeLexer inputN
-      fun lex() = (case lexer()
-		    of Tok.EOF => [Tok.EOF]
-		     | t => t :: lex())
-    in
-      #1 (P.parser (lex()))
-    end
+    fun parse strm = let
+	  val lexer =
+		Mlex.makeLexer (fn n => TextIO.inputN (strm, n))
+	  val (p, errors) = P.parse (Streamify.streamify lexer)
+			       before TextIO.closeIn strm
+	  fun errMsg (pos, err) = print (P.repairToString err ^ "\n")
+	  in
+            app errMsg errors;
+	    p
+	  end
 
     fun errMsg l = 
 	  TextIO.output(TextIO.stdErr, String.concat l)

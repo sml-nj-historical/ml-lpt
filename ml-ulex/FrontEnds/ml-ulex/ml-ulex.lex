@@ -26,6 +26,8 @@ val pcount = ref 0
 fun inc (ri as ref i) = (ri := i+1)
 fun dec (ri as ref i) = (ri := i-1)
 
+fun chomp s = String.substring (s, 1, String.size s - 2)
+
 %%
 
 eol=("\n"|"\013\n"|"\013");
@@ -47,7 +49,7 @@ tyvar="'"{idchars}*;
 
 %%
 
-{ws}+	=> (continue());
+<INITIAL,CHARSET,CHARCLASS>{ws}+	=> (continue());
 
 <INITIAL>"%defs"	=> (YYBEGIN CODE; Tok.KW_defs);
 <INITIAL>"%name"	=> (YYBEGIN DIRECTIVE; Tok.KW_name);
@@ -78,8 +80,8 @@ tyvar="'"{idchars}*;
 <INITIAL>")"	=> (Tok.RP);
 <INITIAL>"["	=> (YYBEGIN CHARCLASS; Tok.LSB);
 <INITIAL>"]"	=> (Tok.RSB);
-<INITIAL>"{"	=> (Tok.LCB);
-<INITIAL>"}"	=> (Tok.RCB);
+<INITIAL>"{" {id} "}"
+		=> (Tok.ID (chomp yytext));
 <INITIAL>"<"	=> (Tok.LT);
 <INITIAL>">"	=> (Tok.GT);
 <INITIAL>","	=> (Tok.COMMA);
@@ -88,7 +90,7 @@ tyvar="'"{idchars}*;
 <INITIAL>"=>"	=> (YYBEGIN CODE; clrText(); Tok.DARROW);
 <INITIAL>"\""	=> (YYBEGIN STRING; clrText(); 
 		    ignore(continue() before YYBEGIN INITIAL);
-		    Tok.STRING (getText()));
+		    (Tok.STRING o valOf o String.fromString o getText)());
 
 <CHARCLASS>"^"	=> (Tok.CARAT);
 <CHARCLASS>"-"	=> (Tok.DASH);
@@ -129,17 +131,19 @@ tyvar="'"{idchars}*;
 		    else (addText yytext; continue()));
 <CODE>"\""	=> (addText yytext; YYBEGIN STRING; 
 		    ignore(continue() before YYBEGIN CODE);
-		    continue());
+		    addText "\""; continue());
 <CODE>[^()"]+	=> (addText yytext; continue());
 
-<STRING>"\""	=> (addText yytext; Tok.BOGUS);
+<STRING>"\""	=> (Tok.BOGUS);
 <STRING>{eol}	=> (addText yytext; print ("unclosed string");
  	            Tok.BOGUS);
 <STRING>\\	=> (addText yytext; continue());
+<STRING>\\\\	=> (addText yytext; continue());
 <STRING>[^"\\\n\013]+ 
 		=> (addText yytext; continue());
 <STRING>\\\"	=> (addText yytext; continue());
 
+<INITIAL>.	=> (Tok.CHAR (String.sub (yytext, 0)));
 .	=> (print (concat[Int.toString (!yylineno), ": illegal character '", 
-			String.toCString yytext, "'"]);
+			String.toCString yytext, "'\n"]);
 	    continue());

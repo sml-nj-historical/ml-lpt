@@ -11,6 +11,8 @@
 
   val wildcard = RE.mkSymSet (SIS.complement (SIS.singleton 0w10)) (* all but \n *)
   fun charToSym c = Word32.fromInt (Char.ord c)
+
+  fun flip (x, y) = (y, x)
 );
 
 %tokens
@@ -93,12 +95,12 @@ re(env)
 
 or_re(env)
   : cat_re@(env) ("|" cat_re@(env))*
-      => (foldr RE.mkOr cat_re SR1)
+      => (foldl (RE.mkOr o flip) cat_re SR1)
   ;
 
 cat_re(env)
   : post_re@(env) (post_re@(env))*
-      => (foldr RE.mkConcat post_re SR1)
+      => (foldl (RE.mkConcat o flip) post_re SR1)
   ;
 
 post_re(env)
@@ -112,12 +114,12 @@ post_re(env)
   ;
 
 prim_re(env)
-  : "{" ID "}"
+  : ID
       => (valOf (AMap.find (env, Atom.atom ID)))
-  | ID
+  | STRING
       => ( foldr RE.mkConcat
 		 RE.epsilon 
-		 (map (RE.mkSym o charToSym) (String.explode ID)) )
+		 (map (RE.mkSym o charToSym) (String.explode STRING)) )
   | "(" re@(env) ")"
   | char
       => (RE.mkSym char)
