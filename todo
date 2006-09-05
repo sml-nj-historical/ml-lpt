@@ -29,7 +29,7 @@
      - deal with keywords
      - preferred replacements
  - make prePath required in GLA.*
- - think about: EBNF predicates should only include true case?
+ x think about: EBNF predicates should only include true case?
  - predicate hoisting
  - grammar inheritance
  - custom names for return values

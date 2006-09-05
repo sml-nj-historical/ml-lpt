@@ -950,10 +950,51 @@ fun directive_NT (conf, env) (strm) = let
 	  env),
                 strm')
             end
+      fun directive_PROD_3 (strm) = let
+            val strm' = yymatchKW_charset(strm)
+            val (SR1, strm') = let
+            fun SR1_NT (strm) = let
+                  fun SR1_PROD_1 (strm) = let
+                        val strm' = yymatchUNICODE(strm)
+                        in
+                          (( LS.updClamp (conf, LS.NO_CLAMP), env), strm')
+                        end
+                  fun SR1_PROD_2 (strm) = let
+                        val strm' = yymatchASCII7(strm)
+                        in
+                          ((  LS.updClamp (conf, LS.CLAMP127), env), strm')
+                        end
+                  fun SR1_PROD_3 (strm) = let
+                        val strm' = yymatchASCII8(strm)
+                        in
+                          ((  LS.updClamp (conf, LS.CLAMP255), env), strm')
+                        end
+                  in
+                    (case (yylex(strm))
+                     of (Tok.ASCII8, strm') => SR1_PROD_3(strm)
+                      | (Tok.UNICODE, strm') => SR1_PROD_1(strm)
+                      | (Tok.ASCII7, strm') => SR1_PROD_2(strm)
+                      | _ => raise(ParseError)
+                    (* end case *))
+                  end
+            in
+              (yywrap SR1_NT)(strm')
+            end
+            in
+              ((SR1), strm')
+            end
+      fun directive_PROD_4 (strm) = let
+            val strm' = yymatchKW_name(strm)
+            val (ID, strm') = yymatchID(strm')
+            in
+              (( LS.updStructName (conf, ID), env), strm')
+            end
       in
         (case (yylex(strm))
-         of (Tok.KW_states, strm') => directive_PROD_2(strm)
+         of (Tok.KW_name, strm') => directive_PROD_4(strm)
+          | (Tok.KW_states, strm') => directive_PROD_2(strm)
           | (Tok.KW_let, strm') => directive_PROD_1(strm)
+          | (Tok.KW_charset, strm') => directive_PROD_3(strm)
           | _ => raise(ParseError)
         (* end case *))
       end
@@ -988,8 +1029,10 @@ fun decl_NT (spec, env) (strm) = let
           | (Tok.LSB, strm') => decl_PROD_3(strm)
           | (Tok.LP, strm') => decl_PROD_3(strm)
           | (Tok.DOT, strm') => decl_PROD_3(strm)
+          | (Tok.KW_charset, strm') => decl_PROD_1(strm)
           | (Tok.KW_let, strm') => decl_PROD_1(strm)
           | (Tok.KW_states, strm') => decl_PROD_1(strm)
+          | (Tok.KW_name, strm') => decl_PROD_1(strm)
           | (Tok.KW_defs, strm') => decl_PROD_2(strm)
           | _ => raise(ParseError)
         (* end case *))
@@ -1009,8 +1052,10 @@ fun decls_NT (spec, env) (strm) = let
           | (Tok.ID(_), strm') => decls_PROD_1(strm)
           | (Tok.CHAR(_), strm') => decls_PROD_1(strm)
           | (Tok.STRING(_), strm') => decls_PROD_1(strm)
+          | (Tok.KW_charset, strm') => decls_PROD_1(strm)
           | (Tok.KW_let, strm') => decls_PROD_1(strm)
           | (Tok.KW_states, strm') => decls_PROD_1(strm)
+          | (Tok.KW_name, strm') => decls_PROD_1(strm)
           | (Tok.KW_defs, strm') => decls_PROD_1(strm)
           | (Tok.LT, strm') => decls_PROD_1(strm)
           | (Tok.LSB, strm') => decls_PROD_1(strm)

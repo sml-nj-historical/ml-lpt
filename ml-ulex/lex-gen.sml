@@ -78,7 +78,7 @@ structure LexGen :
 		end
 	  in
 	    ignore (f (initStatemap, initStates));
-	    (initStates, List.rev(!states))
+	    (initStates, List.rev(!states), !n)
 	  end
 
   (* clamp a machine to the right character set *)
@@ -92,6 +92,35 @@ structure LexGen :
             (List.app clampState states;
 	     states)
           end
+
+(*
+    structure B2A = Bool2Array
+
+    fun minimize (initStates, states, numStates) = let
+          val statesVec = Vector.fromList states
+          val marked = B2A.array (numStates, numStates, false)
+	  fun isMarked (i, j) = if i < j then B2A.sub (marked, i, j)
+				else B2A.sub (marked, j, i)n
+	  fun mark (i, j) = if i < j then B2A.update (marked, i, j, true)
+			    else B2A.update (marked, j, i, true)
+	  fun appAll (f : int -> ()) = let
+	        fun iter i = if i < numStates then (f i; iter i+1)
+			     else ()
+                in iter 0 end
+	  fun markAll i = appAll (fn j => mark (i, j))
+	  fun iter() = let
+	        val changed = ref false
+		fun check 
+          in
+            app (fn LO.State {id, ...} => markAll id) initStates;
+            app (fn LO.State {final = [], ...} => ()
+		  | LO.State {id, ...} => markAll id)
+		states;
+	    iter();
+	    merge();
+	    
+          end
+*)
 
     fun gen spec = let
 (* TODO: check for invalid start states on rules *)
@@ -138,7 +167,7 @@ structure LexGen :
 		val rules = List.map hasRule ruleSpecs
                 in Vector.fromList rules
 		end
-	  val (initStates, states) = mkDFA (List.map SSVec startStates)
+	  val (initStates, states, _) = mkDFA (List.map SSVec startStates)
           in LO.Spec {
                decls = decls,
 	       header = (if String.size header = 0

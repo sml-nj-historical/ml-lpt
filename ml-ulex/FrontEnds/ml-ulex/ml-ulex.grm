@@ -78,15 +78,17 @@ directive(conf, env)
   | "%states" (ID ","? => (ID))+
       => (LS.updStartStates (conf, listToASet (map Atom.atom SR1)), 
 	  env)
-(*
-  | "%charset" ID
+  | "%charset"
+      ( UNICODE => (LS.updClamp (conf, LS.NO_CLAMP), env)
+      | ASCII7 =>  (LS.updClamp (conf, LS.CLAMP127), env)
+      | ASCII8 =>  (LS.updClamp (conf, LS.CLAMP255), env))
   | "%name" ID
-*)
+      => (LS.updStructName (conf, ID), env)
   ;
 
 rule(env)
   : ("<" (ID ","? => (ID))+ ">")? re@(env) "=>" CODE
-    => ((Option.map (listToASet o (map Atom.atom)) SR1, re), CODE)
+      => ((Option.map (listToASet o (map Atom.atom)) SR1, re), CODE)
   ;
 
 re(env)

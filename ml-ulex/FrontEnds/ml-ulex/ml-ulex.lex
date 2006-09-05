@@ -1,4 +1,4 @@
-(* ml-ulex-bootstrap.lex
+(* ml-ulex.lex
  *
  * COPYRIGHT (c) 2006 
  * John Reppy (http://www.cs.uchicago.edu/~jhr)
@@ -8,46 +8,48 @@
  * (With some code borrowed from ml-yacc)
  *)
 
-val comLvl : int ref = ref 0		(* nesting depth of comments *)
-val comStart : int ref = ref 0		(* start line of current comment *)
+%defs (
+  val comLvl : int ref = ref 0		(* nesting depth of comments *)
+  val comStart : int ref = ref 0	(* start line of current comment *)
 
-fun eof () = (
-      if (!comLvl > 0)
-        then print("unclosed comment starting at line " ^ Int.toString(!comStart) ^ "\n")
-        else ();
-      Tok.EOF)
+  fun eof () = (
+        if (!comLvl > 0)
+          then print("unclosed comment starting at line " ^ Int.toString(!comStart) ^ "\n")
+          else ();
+        Tok.EOF)
 
-val text : string list ref = ref []
-fun addText s = (text := s::(!text))
-fun clrText () = (text := [])
-fun getText () = concat (rev (!text))
+  val text : string list ref = ref []
+  fun addText s = (text := s::(!text))
+  fun clrText () = (text := [])
+  fun getText () = concat (rev (!text))
 
-val pcount = ref 0
-fun inc (ri as ref i) = (ri := i+1)
-fun dec (ri as ref i) = (ri := i-1)
+  val pcount = ref 0
+  fun inc (ri as ref i) = (ri := i+1)
+  fun dec (ri as ref i) = (ri := i-1)
 
-fun chomp s = String.substring (s, 1, String.size s - 2)
+  fun chomp s = String.substring (s, 1, String.size s - 2)
+);
 
-%%
+(*
+%let eol=("\n"|"\013\n"|"\013");
+%let ws=("\009"|"\011"|"\012"|" "|{eol});
+*)
+%let eol="\n";
+%let ws=("\t"|" "|{eol});
+%let lc=[a-z];
+%let uc=[A-Z];
+%let alpha=({lc}|{uc});
+%let digit=[0-9];
+%let int=digit*;
+%let idchars=({alpha}|{digit}|"_");
+%let id={alpha}{idchars}*;
+%let qualid ={id}".";
+%let tyvar="'"{idchars}*;
 
-eol=("\n"|"\013\n"|"\013");
-ws=("\009"|"\011"|"\012"|" "|{eol});
-lc=[a-z];
-uc=[A-Z];
-alpha=({lc}|{uc});
-digit=[0-9];
-int=digit*;
-idchars=({alpha}|{digit}|"_");
-id={alpha}{idchars}*;
-qualid ={id}".";
-tyvar="'"{idchars}*;
+%states STRING COM CODE CHARCLASS DIRECTIVE CHARSET;
 
-%s STRING COM CODE CHARCLASS DIRECTIVE CHARSET;
-
-%structure MLULexLex
-%reject
-
-%%
+%name MLULexLex;
+%charset unicode;
 
 <INITIAL,DIRECTIVE,CHARSET,CHARCLASS>{ws}+	
 	=> (continue());
@@ -61,8 +63,8 @@ tyvar="'"{idchars}*;
 <DIRECTIVE>{id}	=> (Tok.ID yytext);
 <DIRECTIVE>","	=> (Tok.COMMA);
 <DIRECTIVE>";"	=> (YYBEGIN INITIAL; Tok.SEMI);
-<DIRECTIVE>">"	=> (YYBEGIN INITIAL; Tok.GT);
 <DIRECTIVE>"="	=> (YYBEGIN INITIAL; Tok.EQ);
+<DIRECTIVE>">"	=> (YYBEGIN INITIAL; Tok.GT);
 <DIRECTIVE>.	=> (YYBEGIN INITIAL; REJECT());
 
 <CHARSET>"unicode" | "UNICODE" => (YYBEGIN INITIAL; Tok.UNICODE);
@@ -139,13 +141,14 @@ tyvar="'"{idchars}*;
 <STRING>"\""	=> (Tok.BOGUS);
 <STRING>{eol}	=> (addText yytext; print ("unclosed string");
  	            Tok.BOGUS);
-<STRING>\\	=> (addText yytext; continue());
-<STRING>\\\\	=> (addText yytext; continue());
+<STRING>"\\"	=> (addText yytext; continue());
+<STRING>"\\\\"	=> (addText yytext; continue());
+<STRING>"\\\""	=> (addText yytext; continue());
 <STRING>[^"\\\n\013]+ 
 		=> (addText yytext; continue());
-<STRING>\\\"	=> (addText yytext; continue());
 
 <INITIAL>.	=> (Tok.CHAR (String.sub (yytext, 0)));
-.	=> (print (concat[Int.toString (!yylineno), ": illegal character '", 
-			String.toCString yytext, "'\n"]);
-	    continue());
+.		=> (print (concat[Int.toString (!yylineno), ": illegal character '", 
+				  String.toCString yytext, "'\n"]);
+		    continue());
+
