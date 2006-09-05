@@ -93,34 +93,76 @@ structure LexGen :
 	     states)
           end
 
-(*
-    structure B2A = Bool2Array
-
     fun minimize (initStates, states, numStates) = let
           val statesVec = Vector.fromList states
-          val marked = B2A.array (numStates, numStates, false)
-	  fun isMarked (i, j) = if i < j then B2A.sub (marked, i, j)
-				else B2A.sub (marked, j, i)n
-	  fun mark (i, j) = if i < j then B2A.update (marked, i, j, true)
-			    else B2A.update (marked, j, i, true)
-	  fun appAll (f : int -> ()) = let
-	        fun iter i = if i < numStates then (f i; iter i+1)
+          val marked = Array2.array (numStates, numStates, false)
+	  fun isMarked (i, j) = if i < j then Array2.sub (marked, i, j)
+				else Array2.sub (marked, j, i)
+	  fun mark (i, j) = if i < j then Array2.update (marked, i, j, true)
+			    else Array2.update (marked, j, i, true)
+	  fun appAll f = let
+	        fun iter i = if i < numStates then (f i; iter (i+1))
 			     else ()
                 in iter 0 end
+	  fun appAll2 f = 
+	        appAll (fn i => 
+		  appAll (fn j =>
+		    if i < j then f (i, j)
+		    else ()))
 	  fun markAll i = appAll (fn j => mark (i, j))
+	  fun idOf (LO.State {id, ...}) = id
 	  fun iter() = let
-	        val changed = ref false
-		fun check 
+	    val changed = ref false
+	    fun diffEdge (_, []) = false
+	      | diffEdge ((set1, state1), (set2, state2)::edges) = 
+		  if SIS.isEmpty (SIS.intersect (set1, set2))
+		  then diffEdge ((set1, state1), edges)
+		  else 
+		    if isMarked (idOf state1, idOf state2)
+		    then true
+		    else diffEdge ((set1, state1), edges)
+	    fun getEdgesAndLabels (i) = let
+	          val LO.State {next, ...} = Vector.sub (statesVec, i)
+		  val allLabels = foldl SIS.union SIS.empty 
+					(map (fn (set, _) => set) (!next))
+	          in
+	            (!next, allLabels)
+	          end
+	    fun check (i, j) = 
+		if isMarked (i, j) then ()
+		else let
+		  val (edgesi, labelsi) = getEdgesAndLabels i
+		  val (edgesj, labelsj) = getEdgesAndLabels j
+		  fun tryEdge edge = diffEdge (edge, edgesj)
+                  in
+		    case SIS.compare (labelsi, labelsj)
+		     of EQUAL => 
+			  if List.exists tryEdge edgesi
+			  then (mark (i, j); changed := true)
+			  else ()
+		      | _ => (mark (i, j); changed := true)
+		  end  
+	    in
+	      appAll2 check;
+	      if !changed then iter() else ()
+	    end
+	  fun merge() = let
+	    val totSaved = ref (0 : int)
+	    in
+	      appAll2 (fn (i, j) => if isMarked (i, j) then ()
+				    else totSaved := !totSaved + 1);
+	      print (" " ^ Int.toString (numStates - (!totSaved)) ^
+		     " states in minimized DFA\n");
+	      (initStates, states, numStates)
+            end
           in
             app (fn LO.State {id, ...} => markAll id) initStates;
             app (fn LO.State {final = [], ...} => ()
 		  | LO.State {id, ...} => markAll id)
 		states;
 	    iter();
-	    merge();
-	    
+	    merge()
           end
-*)
 
     fun gen spec = let
 (* TODO: check for invalid start states on rules *)
@@ -167,7 +209,12 @@ structure LexGen :
 		val rules = List.map hasRule ruleSpecs
                 in Vector.fromList rules
 		end
-	  val (initStates, states, _) = mkDFA (List.map SSVec startStates)
+	  val (initStates, states, numStates) = 
+	        mkDFA (List.map SSVec startStates)
+	  val (initStates, states, numStates) = 
+	        if !Options.minimize then
+		  minimize (initStates, states, numStates)
+		else (initStates, states, numStates)
           in LO.Spec {
                decls = decls,
 	       header = (if String.size header = 0

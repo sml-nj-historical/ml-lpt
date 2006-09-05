@@ -3,15 +3,15 @@
 ================
 
  - new spec format
-     - lookahead / and $
-     - implement & and ^
+     x implement & and ^
      - unicode char classes (and meeting the standard, generally)
+     - lookahead / and $
 
  - better lex/parse error messages
      - allow $ and /, but give error that not supported in --ml-lex-mode
 
  - check that all used start states are defined
- - check that for stuck states
+ - check for stuck states
 
  - switch ulex backend to functional stream
 
@@ -24,7 +24,8 @@
  - fix error repair
      x implement heuristic for primary repair
      x implement secondary recovery
-     - work on error messages
+     x work on error messages
+     - position details -- WSTREAM
      - limit metric measurement to ~25 tokens, rather than to EOF
      - deal with keywords
      - preferred replacements

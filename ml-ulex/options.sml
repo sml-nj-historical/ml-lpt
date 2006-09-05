@@ -16,6 +16,7 @@ structure Options =
     val dot       : bool ref   = ref false
     val match     : bool ref   = ref false
     val beTest    : bool ref   = ref false
+    val minimize  : bool ref   = ref false
 
     fun procArg arg = 
 	  (case arg
@@ -24,6 +25,7 @@ structure Options =
 	     | "--match"  => match := true
 	     | "--testbe" => beTest := true
 	     | "--ml-lex-mode" => lexCompat := true
+	     | "--minimize" => minimize := true
 	     | file	  => 
 	         if String.size (!fname) > 0 
 		 then 
