@@ -17,6 +17,7 @@
 
 %tokens
   : BAR		("|")
+  | AMP		("&")
   | DOT		(".")
   | DOLLAR	("$")
   | PLUS	("+")
@@ -38,7 +39,7 @@
   | KW_states	("%states")
   | KW_let	("%let")
   | KW_charset	("%charset")
-  | UNICODE	("unicode")
+  | UTF8	("utf8")
   | ASCII7	("ascii7")
   | ASCII8	("ascii8")
   | STRING of string
@@ -79,9 +80,9 @@ directive(conf, env)
       => (LS.updStartStates (conf, listToASet (map Atom.atom SR1)), 
 	  env)
   | "%charset"
-      ( UNICODE => (LS.updClamp (conf, LS.NO_CLAMP), env)
-      | ASCII7 =>  (LS.updClamp (conf, LS.CLAMP127), env)
-      | ASCII8 =>  (LS.updClamp (conf, LS.CLAMP255), env))
+      ( "utf8" => (LS.updClamp (conf, LS.NO_CLAMP), env)
+      | "ascii7" =>  (LS.updClamp (conf, LS.CLAMP127), env)
+      | "ascii8" =>  (LS.updClamp (conf, LS.CLAMP255), env))
   | "%name" ID
       => (LS.updStructName (conf, ID), env)
   ;
@@ -96,8 +97,19 @@ re(env)
   ;
 
 or_re(env)
-  : cat_re@(env) ("|" cat_re@(env))*
-      => (foldl (RE.mkOr o flip) cat_re SR1)
+  : and_re@(env) ("|" and_re@(env))*
+      => (foldl (RE.mkOr o flip) and_re SR1)
+  ;
+
+and_re(env)
+  : not_re@(env) ("&" not_re@(env))*
+      => (foldl (RE.mkAnd o flip) not_re SR1)
+  ;
+
+not_re(env)
+  : "^" cat_re@(env)
+      => (RE.mkNot cat_re)
+  | cat_re@(env)
   ;
 
 cat_re(env)

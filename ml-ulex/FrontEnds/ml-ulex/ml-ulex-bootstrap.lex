@@ -65,13 +65,14 @@ tyvar="'"{idchars}*;
 <DIRECTIVE>"="	=> (YYBEGIN INITIAL; Tok.EQ);
 <DIRECTIVE>.	=> (YYBEGIN INITIAL; REJECT());
 
-<CHARSET>"unicode" | "UNICODE" => (YYBEGIN INITIAL; Tok.UNICODE);
+<CHARSET>"utf8" | "UTF8" => (YYBEGIN INITIAL; Tok.UTF8);
 <CHARSET>"ascii7" | "ASCII7" => (YYBEGIN INITIAL; Tok.ASCII7);
 <CHARSET>"ascii8" | "ASCII8" => (YYBEGIN INITIAL; Tok.ASCII8);
 <CHARSET>";"	=> (YYBEGIN INITIAL; Tok.SEMI);
 <CHARSET>.	=> (YYBEGIN INITIAL; REJECT());
 
 <INITIAL>"|"	=> (Tok.BAR); 
+<INITIAL>"&"	=> (Tok.AMP); 
 <INITIAL>"."	=> (Tok.DOT); 
 <INITIAL>"$"	=> (Tok.DOLLAR); 
 <INITIAL>"+"	=> (Tok.PLUS); 
@@ -94,7 +95,7 @@ tyvar="'"{idchars}*;
 		    ignore(continue() before YYBEGIN INITIAL);
 		    (Tok.STRING o valOf o String.fromString o getText)());
 
-<CHARCLASS>"^"	=> (Tok.CARAT);
+<INITIAL,CHARCLASS>"^"	=> (Tok.CARAT);
 <CHARCLASS>"-"	=> (Tok.DASH);
 <INITIAL,CHARCLASS>"\\" ([A-Za-z] | [0-9]{3} | "\\")
 	=> (let val c = Char.fromString yytext

@@ -8,7 +8,7 @@ structure Tok = struct
       | STRING of string
       | ASCII8
       | ASCII7
-      | UNICODE
+      | UTF8
       | KW_charset
       | KW_let
       | KW_states
@@ -34,6 +34,7 @@ structure Tok = struct
       | PLUS
       | DOLLAR
       | DOT
+      | AMP
       | BAR
 
     fun toString tok = 
@@ -46,7 +47,7 @@ structure Tok = struct
   | (STRING(_)) => "STRING"
   | (ASCII8) => "ASCII8"
   | (ASCII7) => "ASCII7"
-  | (UNICODE) => "UNICODE"
+  | (UTF8) => "UTF8"
   | (KW_charset) => "KW_charset"
   | (KW_let) => "KW_let"
   | (KW_states) => "KW_states"
@@ -72,6 +73,7 @@ structure Tok = struct
   | (PLUS) => "PLUS"
   | (DOLLAR) => "DOLLAR"
   | (DOT) => "DOT"
+  | (AMP) => "AMP"
   | (BAR) => "BAR"
 (* end case *))
 
@@ -212,7 +214,7 @@ functor Parser(YY_Lex : LEXER)= struct
 	| Insertion of Tok.token
 	| Substitution of Tok.token
 
-    val allRepairs = [Deletion, Insertion Tok.EOF, Insertion Tok.BOGUS, Insertion Tok.ASCII8, Insertion Tok.ASCII7, Insertion Tok.UNICODE, Insertion Tok.KW_charset, Insertion Tok.KW_let, Insertion Tok.KW_states, Insertion Tok.KW_name, Insertion Tok.KW_defs, Insertion Tok.EQ, Insertion Tok.DARROW, Insertion Tok.DASH, Insertion Tok.CARAT, Insertion Tok.COMMA, Insertion Tok.SLASH, Insertion Tok.GT, Insertion Tok.LT, Insertion Tok.RCB, Insertion Tok.LCB, Insertion Tok.RSB, Insertion Tok.LSB, Insertion Tok.RP, Insertion Tok.LP, Insertion Tok.SEMI, Insertion Tok.QUERY, Insertion Tok.STAR, Insertion Tok.PLUS, Insertion Tok.DOLLAR, Insertion Tok.DOT, Insertion Tok.BAR, Substitution Tok.EOF, Substitution Tok.BOGUS, Substitution Tok.ASCII8, Substitution Tok.ASCII7, Substitution Tok.UNICODE, Substitution Tok.KW_charset, Substitution Tok.KW_let, Substitution Tok.KW_states, Substitution Tok.KW_name, Substitution Tok.KW_defs, Substitution Tok.EQ, Substitution Tok.DARROW, Substitution Tok.DASH, Substitution Tok.CARAT, Substitution Tok.COMMA, Substitution Tok.SLASH, Substitution Tok.GT, Substitution Tok.LT, Substitution Tok.RCB, Substitution Tok.LCB, Substitution Tok.RSB, Substitution Tok.LSB, Substitution Tok.RP, Substitution Tok.LP, Substitution Tok.SEMI, Substitution Tok.QUERY, Substitution Tok.STAR, Substitution Tok.PLUS, Substitution Tok.DOLLAR, Substitution Tok.DOT, Substitution Tok.BAR]
+    val allRepairs = [Deletion, Insertion Tok.EOF, Insertion Tok.BOGUS, Insertion Tok.ASCII8, Insertion Tok.ASCII7, Insertion Tok.UTF8, Insertion Tok.KW_charset, Insertion Tok.KW_let, Insertion Tok.KW_states, Insertion Tok.KW_name, Insertion Tok.KW_defs, Insertion Tok.EQ, Insertion Tok.DARROW, Insertion Tok.DASH, Insertion Tok.CARAT, Insertion Tok.COMMA, Insertion Tok.SLASH, Insertion Tok.GT, Insertion Tok.LT, Insertion Tok.RCB, Insertion Tok.LCB, Insertion Tok.RSB, Insertion Tok.LSB, Insertion Tok.RP, Insertion Tok.LP, Insertion Tok.SEMI, Insertion Tok.QUERY, Insertion Tok.STAR, Insertion Tok.PLUS, Insertion Tok.DOLLAR, Insertion Tok.DOT, Insertion Tok.AMP, Insertion Tok.BAR, Substitution Tok.EOF, Substitution Tok.BOGUS, Substitution Tok.ASCII8, Substitution Tok.ASCII7, Substitution Tok.UTF8, Substitution Tok.KW_charset, Substitution Tok.KW_let, Substitution Tok.KW_states, Substitution Tok.KW_name, Substitution Tok.KW_defs, Substitution Tok.EQ, Substitution Tok.DARROW, Substitution Tok.DASH, Substitution Tok.CARAT, Substitution Tok.COMMA, Substitution Tok.SLASH, Substitution Tok.GT, Substitution Tok.LT, Substitution Tok.RCB, Substitution Tok.LCB, Substitution Tok.RSB, Substitution Tok.LSB, Substitution Tok.RP, Substitution Tok.LP, Substitution Tok.SEMI, Substitution Tok.QUERY, Substitution Tok.STAR, Substitution Tok.PLUS, Substitution Tok.DOLLAR, Substitution Tok.DOT, Substitution Tok.AMP, Substitution Tok.BAR]
 
 
       fun applyRepair ([], repair) = 
@@ -559,8 +561,8 @@ fun yymatchASCII7 strm = (case (yylex(strm))
  of (Tok.ASCII7, strm') => strm'
   | _ => raise(ParseError)
 (* end case *))
-fun yymatchUNICODE strm = (case (yylex(strm))
- of (Tok.UNICODE, strm') => strm'
+fun yymatchUTF8 strm = (case (yylex(strm))
+ of (Tok.UTF8, strm') => strm'
   | _ => raise(ParseError)
 (* end case *))
 fun yymatchKW_charset strm = (case (yylex(strm))
@@ -663,6 +665,10 @@ fun yymatchDOT strm = (case (yylex(strm))
  of (Tok.DOT, strm') => strm'
   | _ => raise(ParseError)
 (* end case *))
+fun yymatchAMP strm = (case (yylex(strm))
+ of (Tok.AMP, strm') => strm'
+  | _ => raise(ParseError)
+(* end case *))
 fun yymatchBAR strm = (case (yylex(strm))
  of (Tok.BAR, strm') => strm'
   | _ => raise(ParseError)
@@ -681,12 +687,12 @@ fun re_NT (env) (strm) = let
         ((or_re), strm')
       end
 and or_re_NT (env) (strm) = let
-      val (cat_re, strm') = (yywrap (cat_re_NT (env)))(strm)
+      val (and_re, strm') = (yywrap (and_re_NT (env)))(strm)
       fun SR1_NT (strm) = let
             val strm' = yymatchBAR(strm)
-            val (cat_re, strm') = (yywrap (cat_re_NT (env)))(strm')
+            val (and_re, strm') = (yywrap (and_re_NT (env)))(strm')
             in
-              ((cat_re), strm')
+              ((and_re), strm')
             end
       fun SR1_PRED (strm) = (case (yylex(strm))
              of (Tok.BAR, strm') => true
@@ -697,7 +703,51 @@ and or_re_NT (env) (strm) = let
             (* end case *))
       val (SR1, strm') = YY.EBNF.closure(SR1_PRED, (yywrap SR1_NT), strm')
       in
-        (( foldl (RE.mkOr o flip) cat_re SR1), strm')
+        (( foldl (RE.mkOr o flip) and_re SR1), strm')
+      end
+and and_re_NT (env) (strm) = let
+      val (not_re, strm') = (yywrap (not_re_NT (env)))(strm)
+      fun SR1_NT (strm) = let
+            val strm' = yymatchAMP(strm)
+            val (not_re, strm') = (yywrap (not_re_NT (env)))(strm')
+            in
+              ((not_re), strm')
+            end
+      fun SR1_PRED (strm) = (case (yylex(strm))
+             of (Tok.AMP, strm') => true
+              | (Tok.DARROW, strm') => false
+              | (Tok.RP, strm') => false
+              | (Tok.SEMI, strm') => false
+              | (Tok.BAR, strm') => false
+              | _ => raise(ParseError)
+            (* end case *))
+      val (SR1, strm') = YY.EBNF.closure(SR1_PRED, (yywrap SR1_NT), strm')
+      in
+        (( foldl (RE.mkAnd o flip) not_re SR1), strm')
+      end
+and not_re_NT (env) (strm) = let
+      fun not_re_PROD_1 (strm) = let
+            val strm' = yymatchCARAT(strm)
+            val (cat_re, strm') = (yywrap (cat_re_NT (env)))(strm')
+            in
+              (( RE.mkNot cat_re), strm')
+            end
+      fun not_re_PROD_2 (strm) = let
+            val (cat_re, strm') = (yywrap (cat_re_NT (env)))(strm)
+            in
+              ((cat_re), strm')
+            end
+      in
+        (case (yylex(strm))
+         of (Tok.ID(_), strm') => not_re_PROD_2(strm)
+          | (Tok.CHAR(_), strm') => not_re_PROD_2(strm)
+          | (Tok.STRING(_), strm') => not_re_PROD_2(strm)
+          | (Tok.LSB, strm') => not_re_PROD_2(strm)
+          | (Tok.LP, strm') => not_re_PROD_2(strm)
+          | (Tok.DOT, strm') => not_re_PROD_2(strm)
+          | (Tok.CARAT, strm') => not_re_PROD_1(strm)
+          | _ => raise(ParseError)
+        (* end case *))
       end
 and cat_re_NT (env) (strm) = let
       val (post_re, strm') = (yywrap (post_re_NT (env)))(strm)
@@ -716,6 +766,7 @@ and cat_re_NT (env) (strm) = let
               | (Tok.DARROW, strm') => false
               | (Tok.RP, strm') => false
               | (Tok.SEMI, strm') => false
+              | (Tok.AMP, strm') => false
               | (Tok.BAR, strm') => false
               | _ => raise(ParseError)
             (* end case *))
@@ -754,6 +805,7 @@ and post_re_NT (env) (strm) = let
                 | (Tok.LP, strm') => SR1_PROD_4(strm)
                 | (Tok.SEMI, strm') => SR1_PROD_4(strm)
                 | (Tok.DOT, strm') => SR1_PROD_4(strm)
+                | (Tok.AMP, strm') => SR1_PROD_4(strm)
                 | (Tok.BAR, strm') => SR1_PROD_4(strm)
                 | (Tok.STAR, strm') => SR1_PROD_2(strm)
                 | (Tok.QUERY, strm') => SR1_PROD_1(strm)
@@ -899,6 +951,7 @@ fun rule_NT (env) (strm) = let
               | (Tok.ID(_), strm') => false
               | (Tok.CHAR(_), strm') => false
               | (Tok.STRING(_), strm') => false
+              | (Tok.CARAT, strm') => false
               | (Tok.LSB, strm') => false
               | (Tok.LP, strm') => false
               | (Tok.DOT, strm') => false
@@ -955,7 +1008,7 @@ fun directive_NT (conf, env) (strm) = let
             val (SR1, strm') = let
             fun SR1_NT (strm) = let
                   fun SR1_PROD_1 (strm) = let
-                        val strm' = yymatchUNICODE(strm)
+                        val strm' = yymatchUTF8(strm)
                         in
                           (( LS.updClamp (conf, LS.NO_CLAMP), env), strm')
                         end
@@ -972,7 +1025,7 @@ fun directive_NT (conf, env) (strm) = let
                   in
                     (case (yylex(strm))
                      of (Tok.ASCII8, strm') => SR1_PROD_3(strm)
-                      | (Tok.UNICODE, strm') => SR1_PROD_1(strm)
+                      | (Tok.UTF8, strm') => SR1_PROD_1(strm)
                       | (Tok.ASCII7, strm') => SR1_PROD_2(strm)
                       | _ => raise(ParseError)
                     (* end case *))
@@ -1025,6 +1078,7 @@ fun decl_NT (spec, env) (strm) = let
          of (Tok.ID(_), strm') => decl_PROD_3(strm)
           | (Tok.CHAR(_), strm') => decl_PROD_3(strm)
           | (Tok.STRING(_), strm') => decl_PROD_3(strm)
+          | (Tok.CARAT, strm') => decl_PROD_3(strm)
           | (Tok.LT, strm') => decl_PROD_3(strm)
           | (Tok.LSB, strm') => decl_PROD_3(strm)
           | (Tok.LP, strm') => decl_PROD_3(strm)
@@ -1057,6 +1111,7 @@ fun decls_NT (spec, env) (strm) = let
           | (Tok.KW_states, strm') => decls_PROD_1(strm)
           | (Tok.KW_name, strm') => decls_PROD_1(strm)
           | (Tok.KW_defs, strm') => decls_PROD_1(strm)
+          | (Tok.CARAT, strm') => decls_PROD_1(strm)
           | (Tok.LT, strm') => decls_PROD_1(strm)
           | (Tok.LSB, strm') => decls_PROD_1(strm)
           | (Tok.LP, strm') => decls_PROD_1(strm)
