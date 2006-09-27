@@ -13,7 +13,7 @@ structure GLA :>
   sig 
 
     type gla
-    type prepath = Token.Set.set list option
+    type prepath = Token.Set.set list
 
     val mkGLA : LLKSpec.grammar -> gla
     val lookK : (gla * LLKSpec.prod * prepath * Int.int) -> Token.Set.set
@@ -52,7 +52,7 @@ structure GLA :>
 	finEBNF : S.nonterm -> node
       }
 
-    type prepath = Token.Set.set list option
+    type prepath = Token.Set.set list
 
     fun isFinal (Node {ty = Final, ...}) = true
       | isFinal _ = false
@@ -162,24 +162,18 @@ structure GLA :>
    *)
     fun look (startOf, n, k, stack, prePath, leftSet, acc) = let
 	  val leftSet' = NodeSet.add (leftSet, n)
-	  fun repl (tokSet, leftSet) = (tokSet, leftSet')
+	  val lookRepl = (fn (tokSet, leftSet) => (tokSet, leftSet')) o look
           fun follow (Edge (Tok t, n'), (tokSet, leftSet)) = 
 	        if k = 1 then (TSet.add (tokSet, t), leftSet)
-		else (case prePath
-		       of NONE => 
-			    repl (look (startOf, n', k - 1, stack, 
-					NONE, NodeSet.empty, tokSet))
-			| SOME(preSet::pres) => 
-			    if TSet.member(preSet, t) then
-			      repl (look (startOf, n', k - 1, stack, 
-					  SOME pres, NodeSet.empty, tokSet))
-			    else (tokSet, leftSet)
-		      (* end case *))
+		else if TSet.member(hd prePath, t) then
+		  lookRepl (startOf, n', k - 1, stack, 
+			    tl prePath, NodeSet.empty, tokSet)
+		else (tokSet, leftSet)
 	    | follow (Edge (Epsilon, n'), (tokSet, leftSet)) = 
 	        look (startOf, n', k, stack, prePath, leftSet, tokSet)
 	    | follow (Edge (Call nt, n'), (tokSet, leftSet)) = 
-	        repl (look (startOf, startOf nt, k, 
-			    n'::stack, prePath, leftSet, tokSet))
+	        lookRepl (startOf, startOf nt, k, 
+			  n'::stack, prePath, leftSet, tokSet)
           in
             if NodeSet.member (leftSet, n) then
 	      if isInitial n then (

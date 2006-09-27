@@ -1,6 +1,6 @@
 \documentclass[11pt]{book}
 
-%\usepackage[top=1.25in, bottom=1.25in, left=1.33in, right=1.33in]{geometry}
+\usepackage[top=1.25in, bottom=1.25in, left=1.33in, right=1.33in]{geometry}
 \usepackage{amsmath}
 \usepackage[all]{xy}
 \usepackage{graphicx}
@@ -58,8 +58,6 @@ DRAFT}
 \newcommand{\cpart}[1]{\renewcommand{\parttext}{#1}\part{#1}}
 
 \usepackage{fancyhdr}
-\renewcommand{\chaptermark}[1]{\markboth{\parttext{}: #1}{}}
-\renewcommand{\sectionmark}[1]{\markright{\thesection. \ #1}{}}
 
 \begin{document}
 
@@ -70,7 +68,7 @@ DRAFT}
 	\phantom{.}
 	\vspace{\stretch{1}}
 	
-	\noindent Copyright \copyright{}2006 Aaron Turon.  All rights reserved.
+	\noindent Copyright \copyright{}2006.  All rights reserved.
 	
 	\vskip 12pt
 	\noindent This document was written with support from NSF grant CNS-0454136, ``CRI: Standard ML Software Infrastructure.''
@@ -80,6 +78,13 @@ DRAFT}
 	\tableofcontents
 
 \mainmatter
+
+	\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+	\renewcommand{\sectionmark}[1]{\markright{\thesection. \ #1}{}}
+
+	\input{overview}
+	
+	\renewcommand{\chaptermark}[1]{\markboth{\parttext{}: #1}{}}
 
 	\cpart{Usage}
 	
@@ -91,7 +96,7 @@ DRAFT}
 		\input{theory-ml-ulex}
 		\input{theory-ml-antlr}
 
-	\cpart{Code}
+	\cpart{Implementation}
 
 		\input{code-ml-ulex}
 		\input{code-ml-antlr}

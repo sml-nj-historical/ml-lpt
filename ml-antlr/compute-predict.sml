@@ -54,7 +54,7 @@ structure ComputePredict :
 			     branches)),
 			 TSet.difference (toks, isct))
 		      end
-	        val toks = GLA.lookK (gla, prod, SOME prePath, k)
+	        val toks = GLA.lookK (gla, prod, prePath, k)
 		val (branches', toks') = foldl intersect ([], toks) branches
                 in
 	          consNE((toks', [prod]), branches')
@@ -91,9 +91,9 @@ structure ComputePredict :
    *)
     fun computeEBNF(gla, nt) = let
 	  fun tryToks (k, prePath) = let
-	        fun lookProd prod = GLA.lookK (gla, prod, SOME prePath, k)
+	        fun lookProd prod = GLA.lookK (gla, prod, prePath, k)
 	        val trueToks = unionAll (map lookProd (Nonterm.prods nt))
-		val falseToks = GLA.lookKFollow (gla, nt, SOME prePath, k)
+		val falseToks = GLA.lookKFollow (gla, nt, prePath, k)
 		val isct = TSet.intersection (trueToks, falseToks)
 		val trueOnly = TSet.difference (trueToks, isct)
 		val falseOnly = TSet.difference (falseToks, isct)

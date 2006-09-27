@@ -29,9 +29,9 @@
      - limit metric measurement to ~25 tokens, rather than to EOF
      - deal with keywords
      - preferred replacements
- - make prePath required in GLA.*
+ x make prePath required in GLA.*
  x think about: EBNF predicates should only include true case?
- - predicate hoisting
+ - predicate hoisting (or maybe not...)
  - grammar inheritance
  - custom names for return values
 
@@ -43,6 +43,8 @@
      - do additional checking
  - friendlier errors for prediction tree failure
      - report multiple failures
+
+ - automatic left-factoring?
 
  - figure out syntax for A (X A)* and A ((X | Y | Z) A)*
  - improve DOT output
