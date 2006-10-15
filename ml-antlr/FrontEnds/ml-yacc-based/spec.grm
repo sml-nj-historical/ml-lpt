@@ -48,6 +48,7 @@ structure GS = GrammarSyntax
     | Formal of Atom.atom
     | AltList of GS.alt list
     | Alt of GS.alt
+    | AltPred of GS.alt
     | AltItems of GS.alt
     | ItemList of GS.item list
     | Item of GS.item
@@ -126,8 +127,14 @@ AltList
 		(Alt :: AltList)
 
 Alt
-	: KW_try AltItems
-		(GS.setToTry (AltItems))
+	: KW_try AltPred
+		(GS.setToTry (AltPred))
+	| AltPred
+		(AltPred)
+
+AltPred
+	: AltItems KW_where Code
+		(GS.addPred (AltItems, SOME Code))
 	| AltItems
 		(AltItems)
 

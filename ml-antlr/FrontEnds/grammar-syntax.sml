@@ -93,4 +93,8 @@ structure GrammarSyntax =
 	  ALT {items = items, action = SOME act, try = try, pred = pred}
       | addAction _ = raise Fail "BUG: only one action allowed"
 
+    fun addPred (ALT {items, action, try, pred = NONE}, pred) = 
+	  ALT {items = items, action = action, try = try, pred = pred}
+      | addPred _ = raise Fail "BUG: only one predicate allowed"
+
   end

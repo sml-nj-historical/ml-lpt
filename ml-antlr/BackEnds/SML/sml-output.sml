@@ -132,10 +132,6 @@ structure SMLOutput =
 		in 
 	          mkNonterm (grm, pm) (nt, predFn)
 	        end
-	  fun mkPred (p, strmExp, letFn) =
-	        letFn (ML_If (ML_Raw [ML.Tok (Action.toString p)], 
-			      strmExp,
-			      ML_Raw [ML.Tok "raise ParseError"]))
 	  fun mkItem strm ((item, binding), k) = let
 	        val strmExp = ML_Var strm
 		fun mkLet e = (case binding
@@ -163,7 +159,15 @@ structure SMLOutput =
 			   | NONE => String.concatWith ", " (List.mapPartial (fn x=>x) itemBindings)
   		         (* end case *))
 		  ^ ")"
-	  fun innerExp strm = ML_Tuple [ML_Raw [ML.Tok action], ML_Var (strm)]
+	  fun innerExp strm = let
+	        val act = ML_Tuple [ML_Raw [ML.Tok action], ML_Var (strm)]
+	        in case Prod.pred prod
+		    of NONE => act
+		     | SOME pred => 
+		         ML_If (ML_Raw [ML.Tok ("(" ^ Action.toString pred ^ ")")], 
+				act,
+				ML_Raw [ML.Tok "raise ParseError"])
+	        end
 	  val parse = case (ListPair.zip (rhs, itemBindings))
 		       of [] => innerExp "strm"
 			| fst::rst => 

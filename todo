@@ -34,6 +34,8 @@
  - predicate hoisting (or maybe not...)
  - grammar inheritance
  - custom names for return values
+ - move actions into separate functions
+ - reverse order of %where and => actions
 
  - controlling lexer state / lexer multiplexing
 

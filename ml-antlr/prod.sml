@@ -23,6 +23,7 @@ structure Prod =
     fun lhs (PROD{lhs, ...}) = lhs
     fun items (PROD{rhs, ...}) = rhs
     fun action (PROD{action, ...}) = action
+    fun pred (PROD{pred, ...}) = pred
 
     fun name (PROD{name, ...}) = Atom.toString name
 

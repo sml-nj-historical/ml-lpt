@@ -190,10 +190,6 @@ digraph dump {
     [ label = "EOF" ]
   80 -> 32
     [ label = "" ]
-  32 -> 242
-    [ label = "" ]
-  242 -> 242
-    [ label = "EOF" ]
   2 -> 84
     [ label = "" ]
   84 -> 85
@@ -206,38 +202,26 @@ digraph dump {
     [ label = "" ]
   86 -> 33
     [ label = "" ]
-  33 -> 109
+  3 -> 88
     [ label = "" ]
-  109 -> 110
-    [ label = "COLON" ]
-  110 -> 111
-    [ label = "compound_type" ]
-  111 -> 40
-    [ label = "" ]
-  40 -> 141
-    [ label = "" ]
-  141 -> 143
-    [ label = "parameter_list_SR1" ]
-  143 -> 141
-    [ label = "" ]
-  141 -> 142
-    [ label = "" ]
-  142 -> 46
-    [ label = "" ]
-  46 -> 134
-    [ label = "" ]
-  134 -> 135
-    [ label = "RP" ]
-  135 -> 45
-    [ label = "" ]
-  45 -> 130
-    [ label = "" ]
-  130 -> 131
+  88 -> 89
+    [ label = "KW_var" ]
+  89 -> 90
+    [ label = "id_list_type" ]
+  90 -> 91
     [ label = "SEMI" ]
-  131 -> 43
+  91 -> 34
     [ label = "" ]
-  43 -> 115
+  4 -> 63
     [ label = "" ]
+  63 -> 64
+    [ label = "declaration" ]
+  64 -> 35
+    [ label = "" ]
+  5 -> 114
+    [ label = "" ]
+  114 -> 115
+    [ label = "subprogram_head" ]
   115 -> 117
     [ label = "subprogram_declaration_SR1" ]
   117 -> 115
@@ -250,66 +234,12 @@ digraph dump {
     [ label = "SEMI" ]
   119 -> 36
     [ label = "" ]
-  36 -> 66
-    [ label = "" ]
-  66 -> 37
-    [ label = "" ]
-  37 -> 77
-    [ label = "" ]
-  45 -> 123
-    [ label = "" ]
-  123 -> 124
-    [ label = "COLON" ]
-  124 -> 125
-    [ label = "standard_type" ]
-  125 -> 126
-    [ label = "SEMI" ]
-  126 -> 43
-    [ label = "" ]
-  40 -> 139
-    [ label = "" ]
-  139 -> 47
-    [ label = "" ]
-  47 -> 143
-    [ label = "" ]
-  40 -> 90
-    [ label = "" ]
-  90 -> 91
-    [ label = "SEMI" ]
-  91 -> 34
-    [ label = "" ]
-  34 -> 113
-    [ label = "" ]
-  113 -> 44
-    [ label = "" ]
-  44 -> 117
-    [ label = "" ]
-  34 -> 64
-    [ label = "" ]
-  64 -> 35
-    [ label = "" ]
-  35 -> 75
-    [ label = "" ]
-  33 -> 71
-    [ label = "" ]
-  3 -> 88
-    [ label = "" ]
-  88 -> 89
-    [ label = "KW_var" ]
-  89 -> 90
-    [ label = "id_list_type" ]
-  4 -> 63
-    [ label = "" ]
-  63 -> 64
-    [ label = "declaration" ]
-  5 -> 114
-    [ label = "" ]
-  114 -> 115
-    [ label = "subprogram_head" ]
   6 -> 65
     [ label = "" ]
   65 -> 66
     [ label = "subprogram_declaration" ]
+  66 -> 37
+    [ label = "" ]
   7 -> 151
     [ label = "" ]
   151 -> 152
@@ -319,46 +249,6 @@ digraph dump {
   153 -> 154
     [ label = "KW_end" ]
   154 -> 38
-    [ label = "" ]
-  38 -> 162
-    [ label = "" ]
-  162 -> 48
-    [ label = "" ]
-  48 -> 174
-    [ label = "" ]
-  174 -> 48
-    [ label = "" ]
-  48 -> 169
-    [ label = "" ]
-  169 -> 48
-    [ label = "" ]
-  48 -> 167
-    [ label = "" ]
-  167 -> 168
-    [ label = "KW_else" ]
-  168 -> 169
-    [ label = "statement" ]
-  48 -> 148
-    [ label = "" ]
-  148 -> 150
-    [ label = "compound_statement_SR1_SR1" ]
-  150 -> 148
-    [ label = "" ]
-  148 -> 149
-    [ label = "" ]
-  149 -> 50
-    [ label = "" ]
-  50 -> 153
-    [ label = "" ]
-  48 -> 146
-    [ label = "" ]
-  146 -> 49
-    [ label = "" ]
-  49 -> 150
-    [ label = "" ]
-  38 -> 118
-    [ label = "" ]
-  38 -> 78
     [ label = "" ]
   152 -> 153
     [ label = "" ]
@@ -370,12 +260,16 @@ digraph dump {
     [ label = "ID" ]
   83 -> 39
     [ label = "" ]
-  39 -> 87
-    [ label = "" ]
   9 -> 108
     [ label = "" ]
   108 -> 109
     [ label = "id_list" ]
+  109 -> 110
+    [ label = "COLON" ]
+  110 -> 111
+    [ label = "compound_type" ]
+  111 -> 40
+    [ label = "" ]
   10 -> 94
     [ label = "" ]
   94 -> 95
@@ -398,8 +292,6 @@ digraph dump {
     [ label = "standard_type" ]
   103 -> 41
     [ label = "" ]
-  41 -> 111
-    [ label = "" ]
   10 -> 92
     [ label = "" ]
   92 -> 93
@@ -411,12 +303,6 @@ digraph dump {
   106 -> 107
     [ label = "KW_real" ]
   107 -> 42
-    [ label = "" ]
-  42 -> 125
-    [ label = "" ]
-  42 -> 103
-    [ label = "" ]
-  42 -> 93
     [ label = "" ]
   11 -> 104
     [ label = "" ]
@@ -432,6 +318,10 @@ digraph dump {
     [ label = "ID" ]
   129 -> 130
     [ label = "arguments" ]
+  130 -> 131
+    [ label = "SEMI" ]
+  131 -> 43
+    [ label = "" ]
   12 -> 120
     [ label = "" ]
   120 -> 121
@@ -440,10 +330,20 @@ digraph dump {
     [ label = "ID" ]
   122 -> 123
     [ label = "arguments" ]
+  123 -> 124
+    [ label = "COLON" ]
+  124 -> 125
+    [ label = "standard_type" ]
+  125 -> 126
+    [ label = "SEMI" ]
+  126 -> 43
+    [ label = "" ]
   13 -> 112
     [ label = "" ]
   112 -> 113
     [ label = "declaration" ]
+  113 -> 44
+    [ label = "" ]
   14 -> 136
     [ label = "" ]
   136 -> 45
@@ -454,16 +354,30 @@ digraph dump {
     [ label = "LP" ]
   133 -> 134
     [ label = "parameter_list" ]
+  134 -> 135
+    [ label = "RP" ]
+  135 -> 45
+    [ label = "" ]
   15 -> 140
     [ label = "" ]
   140 -> 141
     [ label = "id_list_type" ]
+  141 -> 143
+    [ label = "parameter_list_SR1" ]
+  143 -> 141
+    [ label = "" ]
+  141 -> 142
+    [ label = "" ]
+  142 -> 46
+    [ label = "" ]
   16 -> 137
     [ label = "" ]
   137 -> 138
     [ label = "SEMI" ]
   138 -> 139
     [ label = "id_list_type" ]
+  139 -> 47
+    [ label = "" ]
   17 -> 170
     [ label = "" ]
   170 -> 171
@@ -474,6 +388,8 @@ digraph dump {
     [ label = "KW_do" ]
   173 -> 174
     [ label = "statement" ]
+  174 -> 48
+    [ label = "" ]
   17 -> 163
     [ label = "" ]
   163 -> 164
@@ -484,10 +400,18 @@ digraph dump {
     [ label = "KW_then" ]
   166 -> 167
     [ label = "statement" ]
+  167 -> 168
+    [ label = "KW_else" ]
+  168 -> 169
+    [ label = "statement" ]
+  169 -> 48
+    [ label = "" ]
   17 -> 161
     [ label = "" ]
   161 -> 162
     [ label = "compound_statement" ]
+  162 -> 48
+    [ label = "" ]
   17 -> 159
     [ label = "" ]
   159 -> 160
@@ -510,10 +434,20 @@ digraph dump {
     [ label = "SEMI" ]
   145 -> 146
     [ label = "statement" ]
+  146 -> 49
+    [ label = "" ]
   19 -> 147
     [ label = "" ]
   147 -> 148
     [ label = "statement" ]
+  148 -> 150
+    [ label = "compound_statement_SR1_SR1" ]
+  150 -> 148
+    [ label = "" ]
+  148 -> 149
+    [ label = "" ]
+  149 -> 50
+    [ label = "" ]
   20 -> 177
     [ label = "" ]
   177 -> 178
@@ -526,122 +460,6 @@ digraph dump {
     [ label = "RSB" ]
   181 -> 51
     [ label = "" ]
-  51 -> 220
-    [ label = "" ]
-  220 -> 60
-    [ label = "" ]
-  60 -> 241
-    [ label = "" ]
-  241 -> 60
-    [ label = "" ]
-  60 -> 216
-    [ label = "" ]
-  216 -> 218
-    [ label = "term_SR1" ]
-  218 -> 216
-    [ label = "" ]
-  216 -> 217
-    [ label = "" ]
-  217 -> 59
-    [ label = "" ]
-  59 -> 211
-    [ label = "" ]
-  211 -> 57
-    [ label = "" ]
-  57 -> 204
-    [ label = "" ]
-  204 -> 206
-    [ label = "simple_exp_SR1" ]
-  206 -> 204
-    [ label = "" ]
-  204 -> 205
-    [ label = "" ]
-  205 -> 55
-    [ label = "" ]
-  55 -> 198
-    [ label = "" ]
-  198 -> 199
-    [ label = "exp_SR1" ]
-  199 -> 52
-    [ label = "" ]
-  52 -> 237
-    [ label = "" ]
-  237 -> 238
-    [ label = "RP" ]
-  238 -> 60
-    [ label = "" ]
-  52 -> 227
-    [ label = "" ]
-  227 -> 229
-    [ label = "factor_SR1" ]
-  229 -> 227
-    [ label = "" ]
-  227 -> 228
-    [ label = "" ]
-  228 -> 230
-    [ label = "RP" ]
-  230 -> 60
-    [ label = "" ]
-  52 -> 223
-    [ label = "" ]
-  223 -> 62
-    [ label = "" ]
-  62 -> 229
-    [ label = "" ]
-  52 -> 190
-    [ label = "" ]
-  190 -> 192
-    [ label = "procedure_statement_SR1" ]
-  192 -> 190
-    [ label = "" ]
-  190 -> 191
-    [ label = "" ]
-  191 -> 193
-    [ label = "RP" ]
-  193 -> 53
-    [ label = "" ]
-  53 -> 160
-    [ label = "" ]
-  52 -> 186
-    [ label = "" ]
-  186 -> 54
-    [ label = "" ]
-  54 -> 192
-    [ label = "" ]
-  52 -> 180
-    [ label = "" ]
-  52 -> 172
-    [ label = "" ]
-  52 -> 165
-    [ label = "" ]
-  52 -> 158
-    [ label = "" ]
-  198 -> 199
-    [ label = "" ]
-  55 -> 196
-    [ label = "" ]
-  196 -> 56
-    [ label = "" ]
-  56 -> 199
-    [ label = "" ]
-  57 -> 202
-    [ label = "" ]
-  202 -> 58
-    [ label = "" ]
-  58 -> 206
-    [ label = "" ]
-  59 -> 209
-    [ label = "" ]
-  209 -> 57
-    [ label = "" ]
-  60 -> 214
-    [ label = "" ]
-  214 -> 61
-    [ label = "" ]
-  61 -> 218
-    [ label = "" ]
-  51 -> 156
-    [ label = "" ]
   20 -> 175
     [ label = "" ]
   175 -> 176
@@ -652,6 +470,12 @@ digraph dump {
     [ label = "" ]
   197 -> 198
     [ label = "simple_exp" ]
+  198 -> 199
+    [ label = "exp_SR1" ]
+  199 -> 52
+    [ label = "" ]
+  198 -> 199
+    [ label = "" ]
   22 -> 187
     [ label = "" ]
   187 -> 188
@@ -660,6 +484,16 @@ digraph dump {
     [ label = "LP" ]
   189 -> 190
     [ label = "exp" ]
+  190 -> 192
+    [ label = "procedure_statement_SR1" ]
+  192 -> 190
+    [ label = "" ]
+  190 -> 191
+    [ label = "" ]
+  191 -> 193
+    [ label = "RP" ]
+  193 -> 53
+    [ label = "" ]
   22 -> 182
     [ label = "" ]
   182 -> 183
@@ -672,48 +506,80 @@ digraph dump {
     [ label = "COMMA" ]
   185 -> 186
     [ label = "exp" ]
+  186 -> 54
+    [ label = "" ]
   24 -> 203
     [ label = "" ]
   203 -> 204
     [ label = "signed_term" ]
+  204 -> 206
+    [ label = "simple_exp_SR1" ]
+  206 -> 204
+    [ label = "" ]
+  204 -> 205
+    [ label = "" ]
+  205 -> 55
+    [ label = "" ]
   25 -> 194
     [ label = "" ]
   194 -> 195
     [ label = "RELOP" ]
   195 -> 196
     [ label = "simple_exp" ]
+  196 -> 56
+    [ label = "" ]
   26 -> 210
     [ label = "" ]
   210 -> 211
     [ label = "term" ]
+  211 -> 57
+    [ label = "" ]
   26 -> 207
     [ label = "" ]
   207 -> 208
     [ label = "MINUS" ]
   208 -> 209
     [ label = "term" ]
+  209 -> 57
+    [ label = "" ]
   27 -> 200
     [ label = "" ]
   200 -> 201
     [ label = "ADDOP" ]
   201 -> 202
     [ label = "signed_term" ]
+  202 -> 58
+    [ label = "" ]
   28 -> 215
     [ label = "" ]
   215 -> 216
     [ label = "factor" ]
+  216 -> 218
+    [ label = "term_SR1" ]
+  218 -> 216
+    [ label = "" ]
+  216 -> 217
+    [ label = "" ]
+  217 -> 59
+    [ label = "" ]
   29 -> 239
     [ label = "" ]
   239 -> 240
     [ label = "KW_not" ]
   240 -> 241
     [ label = "factor" ]
+  241 -> 60
+    [ label = "" ]
   29 -> 235
     [ label = "" ]
   235 -> 236
     [ label = "LP" ]
   236 -> 237
     [ label = "exp" ]
+  237 -> 238
+    [ label = "RP" ]
+  238 -> 60
+    [ label = "" ]
   29 -> 233
     [ label = "" ]
   233 -> 234
@@ -734,20 +600,36 @@ digraph dump {
     [ label = "LP" ]
   226 -> 227
     [ label = "exp" ]
+  227 -> 229
+    [ label = "factor_SR1" ]
+  229 -> 227
+    [ label = "" ]
+  227 -> 228
+    [ label = "" ]
+  228 -> 230
+    [ label = "RP" ]
+  230 -> 60
+    [ label = "" ]
   29 -> 219
     [ label = "" ]
   219 -> 220
     [ label = "variable" ]
+  220 -> 60
+    [ label = "" ]
   30 -> 212
     [ label = "" ]
   212 -> 213
     [ label = "MULOP" ]
   213 -> 214
     [ label = "factor" ]
+  214 -> 61
+    [ label = "" ]
   31 -> 221
     [ label = "" ]
   221 -> 222
     [ label = "COMMA" ]
   222 -> 223
     [ label = "exp" ]
+  223 -> 62
+    [ label = "" ]
 }

@@ -258,8 +258,8 @@ structure GLA :>
 		  []
 		else (
 		  addSeen n;
-(*		  if isFinal n then []
-		  else *) List.concat (map (doEdge n) (edgesOf n)))
+		  if isFinal n then []
+		  else List.concat (map (doEdge n) (edgesOf n)))
 (*
 	  and doEdge n (Edge (Call nt, _)) =
 		[EDGE (nameOf n, nameOf (startOf nt), [])]
