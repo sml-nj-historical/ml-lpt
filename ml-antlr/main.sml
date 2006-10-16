@@ -18,45 +18,22 @@ structure Main : sig
 
   end = struct
 
-  (* glue together the lexer and parser *)
-    structure LLKLrVals = MLYLrValsFun (structure Token = LrParser.Token)
-    structure LLKLex = MLYLexFn (structure Tok = LLKLrVals.Tokens)
-    structure LLKParser = JoinWithArg(
-      structure ParserData = LLKLrVals.ParserData
-      structure Lex = LLKLex
-      structure LrParser = LrParser)
-
-    fun debug s = (print s; print "\n")
-    fun debugs ss = debug (concat ss)
-
-  (* parse a file, returning a parse tree *)
-    fun parseFile filename = let
-	  val _ = debug "[ml-antlr: parsing]"
-	  val file = TextIO.openIn filename
-	  fun get n = TextIO.inputN (file, n)
-	  val lexer = LLKParser.makeLexer get (Err.lexErr filename)
-	  in
-	    #1(LLKParser.parse(15, lexer, Err.parseErr filename, Err.parseErr filename))
-	      before TextIO.closeIn file
-	  end
-
   (* check a parse tree, returning a grammar *)
     fun checkPT parseTree = let
-	  val _ = debug "[ml-antlr: checking grammar]"
 	  val grm = CheckGrammar.check parseTree
 	  val LLKSpec.Grammar {nterms, prods, ...} = grm
-	  val _ = debugs [" ", Int.toString (List.length nterms), 
+	  val _ = Err.debugs [" ", Int.toString (List.length nterms), 
 			  " nonterminals"]
-	  val _ = debugs [" ", Int.toString (List.length prods), 
+	  val _ = Err.debugs [" ", Int.toString (List.length prods), 
 			  " productions"]
-(* val _ = app (debug o Prod.toString) prods *)
+val _ = app (Err.debug o Prod.toString) prods
           in
             grm
           end
 
     fun process file = let
 	  val _ = Err.anyErrors := false;
-	  val grm = checkPT (parseFile file)
+	  val grm = checkPT (ParseFile.parse file)
 	  val gla = GLA.mkGLA grm
 	  val pm = ComputePredict.mkPM (grm, gla)
 	  val outspec = (grm, pm, file)
@@ -78,11 +55,11 @@ structure Main : sig
 	    OS.Process.failure)
 
     fun main (_, [file]) = process file
-      | main _ = (print "usage: ml-antlr grammarfile\n"; OS.Process.failure)
+      | main _ = (Err.errMsg ["usage: ml-antlr grammarfile"]; OS.Process.failure)
 
   (* these functions are for debugging in the interactive loop *)
     fun load file = let
-          val grm = checkPT (parseFile file)
+          val grm = checkPT (ParseFile.parse file)
 	  val gla = GLA.mkGLA grm
     in
       (grm, gla)

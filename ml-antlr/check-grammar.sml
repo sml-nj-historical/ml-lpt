@@ -49,11 +49,51 @@ structure CheckGrammar : sig
 	    (List.rev (!tokList), tokTbl)
           end
 
+    structure AMap = AtomMap
+
+    fun appImport (Syn.GRAMMAR {import = SOME file, importChanges, header, defs, 
+				rules, toks, actionStyle}) = let
+	  val Syn.GRAMMAR {rules = prules, ...} = appImport (ParseFile.parse file)
+	  fun ins (rule as Syn.RULE{lhs, ...}, map) =
+	        if AMap.inDomain (map, lhs) then
+		  (Err.errMsg ["Error [", file, "]: ", Atom.toString lhs, " is multiply defined."];
+		   map)
+		else AMap.insert (map, lhs, rule)
+	  fun tryFind (lhs, map, err, f) = (case AMap.find (map, lhs)
+		of NONE =>
+		  (Err.errMsg ["Error: cannot ", err, " ", Atom.toString lhs, 
+			       " because it is not defined in the parent grammar."];
+		   map)
+		 | SOME rule => f rule
+	       (* end case *))
+	  fun appChg (Syn.ICDrop lhs, map) =
+	        tryFind (lhs, map, "drop", fn _ => 
+		  #1 (AMap.remove (map, lhs)))
+	    | appChg (Syn.ICExtend (rule as Syn.RULE{lhs, alts, formals}), map) = 
+	        tryFind (lhs, map, "extend", fn (Syn.RULE{alts = palts, ...}) =>
+		  AMap.insert (map, lhs, 
+		    Syn.RULE{lhs = lhs, alts = palts@alts, formals = formals}))
+	    | appChg (Syn.ICReplace (rule as Syn.RULE{lhs, ...}), map) = 
+	        tryFind (lhs, map, "replace", fn _ => AMap.insert (map, lhs, rule))
+	  val map = foldl ins AMap.empty prules
+	  val map' = foldl appChg map importChanges
+          in
+            Syn.GRAMMAR {import = SOME file, importChanges = importChanges, header = header,
+			 defs = defs, rules = (AMap.listItems map')@rules, toks = toks, 
+			 actionStyle = actionStyle}
+          end
+      | appImport (g as Syn.GRAMMAR {importChanges = [], ...}) = g
+      | appImport g = (Err.errMsg ["Error: import alterations (%drop, %extend...) ",
+				   "cannot be used unless %import is specified"];
+		       g)
+
     fun check (g : Syn.grammar) = let
+	  val _ = Err.status "checking grammar"
 	  val nextGlobalID = nextId (ref 0)
-	  val Syn.GRAMMAR {header, defs, rules, toks, actionStyle} = g
+	  val Syn.GRAMMAR {header, defs, rules, toks, actionStyle, ...} = 
+	        appImport g
           val (tokList, tokTbl) = 
-	      loadToks (nextGlobalID, (Atom.atom "EOF", NONE, NONE)::toks)
+	        loadToks (nextGlobalID, (Atom.atom "EOF", NONE, NONE)::toks)
 	  fun lookupTok name = (case ATbl.find tokTbl name
 		 of NONE => raise Fail ("Token '" ^
 					Atom.toString name ^
@@ -161,7 +201,7 @@ structure CheckGrammar : sig
 	(* check for undefined nonterminals, while reversing the order of productions *)
 	  val _ = let
 		fun chkNT (LLKSpec.NT{name, prods, ...}) = (case !prods
-		       of [] => Err.errMsg ["Error: nonterminal ", Atom.toString name, " has no productions."]
+		       of [] => Err.errMsg ["Error: symbol ", Atom.toString name, " is not defined."]
 			| l => prods := List.rev l
 		      (* end case *))
 		in

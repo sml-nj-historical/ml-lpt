@@ -11,6 +11,7 @@ Library
   structure Item
   structure LLKSpec
   structure Nonterm
+  structure ParseFile
   structure Predict
   structure Prod
   structure Token
@@ -43,7 +44,8 @@ is
   predict.sml
   prod.sml
   token.sml
-  
+
+  FrontEnds/parse-file.sml  
   FrontEnds/grammar-syntax.sml
   FrontEnds/ml-yacc-based/spec.lex
   FrontEnds/ml-yacc-based/spec.grm

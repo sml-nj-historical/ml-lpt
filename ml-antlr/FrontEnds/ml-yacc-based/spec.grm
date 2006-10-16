@@ -8,6 +8,8 @@
 
 structure GS = GrammarSyntax
 
+type code = Int.int * String.string
+
 %%
 
 %name MLY
@@ -15,6 +17,7 @@ structure GS = GrammarSyntax
 %term EOF
     | KW_tokens | KW_defs | KW_keywords | KW_import | KW_name | KW_start
     | KW_try | KW_where | KW_debugact | KW_unitact | KW_header
+    | KW_drop | KW_extend | KW_replace
     | LP | RP		(* ( ) *)
     | LSB | RSB		(* [ ] *)
     | LCB | RCB		(* { } *)
@@ -44,12 +47,12 @@ structure GS = GrammarSyntax
     | Decls of GS.grammar
     | Rule of GS.rule
     | Formals of Atom.atom list
-    | FormalList of Atom.atom list
-    | Formal of Atom.atom
+    | IDList of string list
     | AltList of GS.alt list
     | Alt of GS.alt
-    | AltPred of GS.alt
-    | AltItems of GS.alt
+    | IsTry of bool
+    | AltPred of code option
+    | AltCode of code option
     | ItemList of GS.item list
     | Item of GS.item
     | PrimItem of GS.item
@@ -63,7 +66,7 @@ structure GS = GrammarSyntax
     | RecordList of string
     | Label of string
     | QualID of string
-    | Code of Int.int * String.string
+    | Code of code
 
 %arg (errFn) : (string * int * int) -> unit
 
@@ -93,8 +96,24 @@ Decls
 		(GS.updDefs (Decls, Code))
 	| Decls KW_tokens COLON ConstrList SEMI
 		(GS.updToks (Decls, ConstrList))
+	| Decls KW_import STRING SEMI
+		(GS.updImport (Decls, 
+		  (Substring.string o
+		   (Substring.triml 1) o
+		   (Substring.trimr 1) o 
+		   Substring.full) STRING))
 	| Decls Rule SEMI
 		(GS.addRule (Decls, Rule))
+	| Decls KW_extend Rule SEMI
+		(GS.addImportChange (Decls, GS.ICExtend Rule))
+	| Decls KW_replace Rule SEMI
+		(GS.addImportChange (Decls, GS.ICReplace Rule))
+	| Decls KW_drop IDList SEMI
+		(foldl 
+		   (fn (id, g) =>
+		       GS.addImportChange (g, GS.ICDrop (Atom.atom id))) 
+		   Decls 
+		   IDList)
 	| Decls KW_debugact SEMI
 		(GS.debugAct Decls)
 	| Decls KW_unitact SEMI
@@ -105,20 +124,16 @@ Rule
 		(GS.RULE{lhs=LHS, formals = Formals, alts=AltList})
 
 Formals
-	: LP FormalList RP
-		(FormalList)
+	: LP IDList RP
+		(map Atom.atom IDList)
 	| 
 		([])
 
-FormalList
-	: Formal
-		([Formal])
-	| Formal COMMA FormalList
-		(Formal::FormalList)
-
-Formal
+IDList
 	: ID
-		(Atom.atom ID)
+		([ID])
+	| ID COMMA IDList
+		(ID::IDList)
 
 AltList
 	: Alt
@@ -127,24 +142,27 @@ AltList
 		(Alt :: AltList)
 
 Alt
-	: KW_try AltPred
-		(GS.setToTry (AltPred))
-	| AltPred
-		(AltPred)
+	: IsTry ItemList AltPred AltCode
+		(GS.ALT {items = ItemList, action = AltCode, 
+			 try = IsTry, pred = AltPred})
+
+IsTry
+	: KW_try
+		(true)
+	|
+		(false)
 
 AltPred
-	: AltItems KW_where Code
-		(GS.addPred (AltItems, SOME Code))
-	| AltItems
-		(AltItems)
+	: KW_where Code
+		(SOME Code)
+	| 
+		(NONE)
 
-AltItems
-	: ItemList DARROW Code
-		(GS.ALT {items = ItemList, action = SOME Code, 
-			 try = false, pred = NONE})
-	| ItemList
-		(GS.ALT {items = ItemList, action = NONE, 
-			 try = false, pred = NONE})
+AltCode
+	: DARROW Code
+		(SOME Code)
+	| 
+		(NONE)
 
 ItemList
 	: (* empty *)

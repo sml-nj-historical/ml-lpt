@@ -1,0 +1,25 @@
+%import "a.grm";
+
+%tokens
+  : ID of string
+  | INT of int
+  | REAL of real
+  | LP ("(")	| RP (")")
+  | PLUS ("+")	| TIMES ("*")
+  ;
+
+%drop stmt;
+
+%replace
+exp
+  : multExp ("+" multExp)*
+  ;
+
+multExp
+  : atomicExp ("*" atomicExp)*
+  ;
+
+%extend
+atomicExp
+  : REAL
+  ;

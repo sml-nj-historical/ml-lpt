@@ -37,4 +37,14 @@ structure Err =
 	      msg
 	    ]
 
+    val printDebug = ref true
+
+  (* print a debugging message *)
+    fun debug s = (print s; print "\n")
+    fun debugs ss = debug (concat ss)
+
+  (* print a status message *)
+    fun status s = print (concat ["[ml-antlr: ", s, "]\n"])
+    fun statuss ss = status (concat ss)
+
   end

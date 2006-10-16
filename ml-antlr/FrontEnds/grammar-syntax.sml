@@ -17,8 +17,10 @@ structure GrammarSyntax =
       | ActDebug
       | ActUnit
 
+    type symbol = Atom.atom
+
     datatype rule = RULE of {
-	lhs : Atom.atom,
+	lhs : symbol,
 	formals : Atom.atom list,
 	alts : alt list
       }
@@ -31,7 +33,7 @@ structure GrammarSyntax =
       }
 
     and item
-      = SYMBOL of Atom.atom * action option
+      = SYMBOL of symbol * action option
       | SUBRULE of alt list	(* ( ... ) *)
       | CLOS of item		(* ( ... )* *)
       | POSCLOS of item		(* ( ... )+ *)
@@ -42,7 +44,14 @@ structure GrammarSyntax =
     type ty = string
     type constr = (Atom.atom * ty option * Atom.atom option)
 
+    datatype import_change
+      = ICDrop of symbol
+      | ICReplace of rule
+      | ICExtend of rule
+
     datatype grammar = GRAMMAR of {
+        import : string option,
+	importChanges : import_change list,
         header : string,
 	defs : action,
 	rules : rule list,
@@ -51,6 +60,8 @@ structure GrammarSyntax =
       }
 
     fun mkGrammar() = GRAMMAR {
+	  import = NONE,
+	  importChanges = [],
 	  header = "functor Parser(YY_Lex : LEXER)",
 	  defs = (0, ""),
 	  rules = [],
@@ -59,32 +70,42 @@ structure GrammarSyntax =
         }
 
     fun updHeader (g, new) = let
-          val GRAMMAR {header, defs, rules, toks, actionStyle} = g
-          in GRAMMAR {header = new, defs = defs, rules = rules, 
+          val GRAMMAR {import, importChanges, header, defs, rules, toks, actionStyle} = g
+          in GRAMMAR {import = import, importChanges = importChanges, header = new, defs = defs, rules = rules, 
 		      toks = toks, actionStyle = actionStyle} end
 
     fun updDefs (g, new) = let
-          val GRAMMAR {header, defs, rules, toks, actionStyle} = g
-          in GRAMMAR {header = header, defs = new, rules = rules, 
+          val GRAMMAR {import, importChanges, header, defs, rules, toks, actionStyle} = g
+          in GRAMMAR {import = import, importChanges = importChanges, header = header, defs = new, rules = rules, 
 		      toks = toks, actionStyle = actionStyle} end
 
     fun updToks (g, new) = let
-          val GRAMMAR {header, defs, rules, toks, actionStyle} = g
-          in GRAMMAR {header = header, defs = defs, rules = rules, 
+          val GRAMMAR {import, importChanges, header, defs, rules, toks, actionStyle} = g
+          in GRAMMAR {import = import, importChanges = importChanges, header = header, defs = defs, rules = rules, 
 		      toks = new, actionStyle = actionStyle} end
 
     fun updActionStyle (g, new) = let
-          val GRAMMAR {header, defs, rules, toks, actionStyle} = g
-          in GRAMMAR {header = header, defs = defs, rules = rules, 
+          val GRAMMAR {import, importChanges, header, defs, rules, toks, actionStyle} = g
+          in GRAMMAR {import = import, importChanges = importChanges, header = header, defs = defs, rules = rules, 
 		      toks = toks, actionStyle = new} end
 
     fun debugAct g = updActionStyle (g, ActDebug)
     fun unitAct g = updActionStyle (g, ActUnit)
 
     fun addRule (g, new) = let
-          val GRAMMAR {header, defs, rules, toks, actionStyle} = g
-          in GRAMMAR {header = header, defs = defs, rules = rules@[new], 
+          val GRAMMAR {import, importChanges, header, defs, rules, toks, actionStyle} = g
+          in GRAMMAR {import = import, importChanges = importChanges, header = header, defs = defs, rules = rules@[new], 
 		      toks = toks, actionStyle = actionStyle} end
+
+    fun addImportChange (g, new) = let
+          val GRAMMAR {import, importChanges, header, defs, rules, toks, actionStyle} = g
+          in GRAMMAR {import = import, importChanges = importChanges@[new], header = header, defs = defs, rules = rules, 
+		      toks = toks, actionStyle = actionStyle} end
+
+    fun updImport (GRAMMAR {import = NONE, importChanges, header, defs, rules, toks, actionStyle}, new) =
+          GRAMMAR {import = SOME new, importChanges = importChanges, header = header, defs = defs, rules = rules, 
+		   toks = toks, actionStyle = actionStyle}
+      | updImport (g, _) = (Err.errMsg ["Error: multiple %imports are not allowed"]; g)
 
     fun setToTry (ALT {items, action, try, pred}) = 
 	  ALT {items = items, action = action, try = true, pred = pred}
