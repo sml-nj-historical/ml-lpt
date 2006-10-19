@@ -18,11 +18,15 @@ structure Nonterm =
 	  ]
     fun name (NT{name, ...}) = Atom.toString name
 
-    fun qualName (nt as NT{binding = LLKSpec.WITHIN ntOwner, ...}) = (qualName ntOwner) ^ "_" ^ (name nt)
+    fun qualName (nt as NT{binding = LLKSpec.WITHIN (LLKSpec.PROD {lhs, ...}), ...}) = 
+	  (qualName lhs) ^ "_" ^ (name nt)
       | qualName nt = name nt
 
     fun isSubrule (NT{binding = LLKSpec.TOP, ...}) = false
       | isSubrule _ = true
+
+    fun parent (NT{binding = LLKSpec.WITHIN prod, ...}) = SOME prod
+      | parent _ = NONE
 
     fun isEBNF (NT{isEBNF = v, ...}) = v
 
@@ -65,7 +69,8 @@ structure Nonterm =
    * rooted at start; return a list of nonterm lists
    *)
     fun topsort (start) = let
-          fun prodItems (S.PROD {rhs, ...}) = rhs
+          fun prodItems (S.PROD {rhs, ...}) = !rhs
+	  fun sym (S.ITEM {sym, ...}) = sym
           fun followItem (S.NONTERM (nt, _)) = 
 	        if isSubrule nt then []
 		else [nt]
@@ -73,7 +78,7 @@ structure Nonterm =
 	    | followItem (S.POSCLOS nt) = follow nt
 	    | followItem (S.OPT nt) = follow nt
 	    | followItem (S.TOK _) = []
-          and followItems itms = List.concat (map followItem itms)
+          and followItems itms = List.concat (map (followItem o sym) itms)
 	  and follow nt =
 	        List.concat (map (followItems o prodItems) 
 				 (prods nt))

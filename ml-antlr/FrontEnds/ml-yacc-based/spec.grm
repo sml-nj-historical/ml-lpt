@@ -53,7 +53,8 @@ type code = Int.int * String.string
     | IsTry of bool
     | AltPred of code option
     | AltCode of code option
-    | ItemList of GS.item list
+    | ItemList of (string option * GS.item) list
+    | NamedItem of string option * GS.item
     | Item of GS.item
     | PrimItem of GS.item
     | Args of GS.action option
@@ -89,7 +90,7 @@ Decls
 	: 
 		(GS.mkGrammar())
 	| Decls KW_name ID SEMI
-		(GS.updHeader (Decls, "functor " ^ ID ^ "(YY_Lex : LEXER)"))
+		(GS.updHeader (Decls, "functor " ^ ID ^ "(Lex : LEXER)"))
 	| Decls KW_header STRING SEMI
 		(GS.updHeader (Decls, STRING))
 	| Decls KW_defs Code SEMI
@@ -167,8 +168,14 @@ AltCode
 ItemList
 	: (* empty *)
 		([])
-	| Item ItemList
-		(Item :: ItemList)
+	| NamedItem ItemList
+		(NamedItem :: ItemList)
+
+NamedItem 
+	: ID COLON Item
+		(SOME ID, Item)
+	| Item
+		(NONE, Item)
 
 Item
 	: PrimItem

@@ -121,17 +121,8 @@ structure LaTeXOutput (* : BACK_END *) =
 	    !prods
           end
 
-    fun lhs p = let
-          val (S.PROD {lhs, ...}) = p
-          in
-            lhs
-          end
-
-    fun rhs p = let
-          val (S.PROD {rhs, ...}) = p
-          in
-            rhs
-          end
+    val lhs = Prod.lhs
+    val rhs = Prod.items
 
     val nt2s = Nonterm.toString
     val i2s  = Item.toString
@@ -191,7 +182,7 @@ structure LaTeXOutput (* : BACK_END *) =
           end
 
     and item isSubrule i = 
-          (case i
+          (case Item.sym i
 	    of S.TOK t => tok t
 	     | S.NONTERM (nt, _) => if Nonterm.isSubrule nt
 				    then (G.nt o G.GRP o (nonterm true)) nt

@@ -109,8 +109,20 @@ structure LexGen :
 		  appAll (fn j =>
 		    if i < j then f (i, j)
 		    else ()))
-	  fun markAll i = appAll (fn j => mark (i, j))
+	  fun smallestUnmarked j = let
+	    fun iter i = 
+		if i < j then 
+		  if not (isMarked (i, j)) then i		    
+		  else iter (i+1)
+		else j
+            in iter 0 end
+	  fun markAllIf (i, f) = appAll (fn j => 
+		if f (Vector.sub (statesVec, j)) 
+		then mark (i, j)
+		else ())
+	  fun markAll i = markAllIf (i, fn _ => true)
 	  fun idOf (LO.State {id, ...}) = id
+	  fun stateOf id = Vector.sub (statesVec, id)
 	  fun iter() = let
 	    val changed = ref false
 	    fun diffEdge (_, []) = false
@@ -147,18 +159,25 @@ structure LexGen :
 	      if !changed then iter() else ()
 	    end
 	  fun merge() = let
-	    val totSaved = ref (0 : int)
+	    fun move (sym, s) = (sym, (stateOf o smallestUnmarked o idOf) s)
+	    fun upd (LO.State {next, ...}) = next := (map move (!next))
+	    fun keep s = (smallestUnmarked (idOf s) = idOf s)
+	    val states' = List.filter keep states
 	    in
-	      appAll2 (fn (i, j) => if isMarked (i, j) then ()
-				    else totSaved := !totSaved + 1);
-	      print (" " ^ Int.toString (numStates - (!totSaved)) ^
-		     " states in minimized DFA\n");
-	      (initStates, states, numStates)
+	      app upd states';
+	      (initStates, states', List.length states')
             end
+	  fun isInit s1 = List.exists (fn s2 => idOf s1 = idOf s2) initStates
+	  fun isFinal (LO.State {final = [], ...}) = false
+	    | isFinal _ = true
+	  fun sameFinal (LO.State {final = f1, ...})
+	                (LO.State {final = f2, ...}) = 
+		ListPair.allEq op= (f1, f2)
+	        handle ListPair.UnequalLengths => false
           in
-            app (fn LO.State {id, ...} => markAll id) initStates;
-            app (fn LO.State {final = [], ...} => ()
-		  | LO.State {id, ...} => markAll id)
+            app (fn s => markAllIf (idOf s, isInit)) 
+		initStates;
+            app (fn s => markAllIf (idOf s, not o (sameFinal s)))
 		states;
 	    iter();
 	    merge()

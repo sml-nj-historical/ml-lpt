@@ -14,11 +14,11 @@ exp(env)
   ;
 addExp(env)
   : multExp@(env) ("+" multExp@(env))*
-      => ( List.foldl op+ multExp SR1 )
+      => ( List.foldl op+ multExp SR )
   ;
 multExp(env)
   : prefixExp@(env) ("*" prefixExp@(env))*
-      => ( List.foldl op* prefixExp SR1 )
+      => ( List.foldl op* prefixExp SR )
   ;
 prefixExp(env)
   : atomicExp@(env)
@@ -27,6 +27,7 @@ prefixExp(env)
   ;
 atomicExp(env)
   : ID
+      %where ( AtomMap.inDomain (env, Atom.atom ID) )
       => ( valOf(AtomMap.find (env, Atom.atom ID)) )
   | NUM
   | "(" exp@(env) ")"

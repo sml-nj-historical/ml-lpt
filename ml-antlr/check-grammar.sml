@@ -15,6 +15,7 @@ structure CheckGrammar : sig
   end = struct
 
     structure Syn = GrammarSyntax
+    structure S = LLKSpec
     structure ATbl = AtomTable
 
     fun nextId (r : int ref) () = let val id = !r in r := id+1; id end
@@ -34,7 +35,7 @@ structure CheckGrammar : sig
 	  fun addTok (name, ty, abbrev) = (case ATbl.find tokTbl name
 		 of NONE => let
 		      val id = nextGlobalID()
-		      val info = LLKSpec.T{name = name, id = id, ty = ty, abbrev = abbrev}
+		      val info = S.T{name = name, id = id, ty = ty, abbrev = abbrev}
 		      in
 			ATbl.insert tokTbl (name, info); 
 			Option.app (fn a => ATbl.insert tokTbl (a, info)) abbrev;
@@ -87,6 +88,34 @@ structure CheckGrammar : sig
 				   "cannot be used unless %import is specified"];
 		       g)
 
+  (* auto-number the bindings for repeated variable names *)
+    local
+      fun addNumbers(acc, _, _, []) = rev acc
+	| addNumbers(acc, n, s, s'::bs) = 
+	    if s = s' then 
+	      addNumbers((s' ^ (Int.toString n))::acc, n+1, s, bs)
+	    else addNumbers(s'::acc, n, s, bs)
+      fun numberBindings([]) = []
+	| numberBindings(b::bs) = 
+	    if List.exists (fn b' => b = b') bs
+	    then (b ^ "1")::numberBindings(addNumbers([], 2, b, bs))
+	    else b::(numberBindings bs)
+      (* assign a binding to an item *)
+      fun binding tokTbl (Syn.SYMBOL (name, _)) = (case ATbl.find tokTbl name
+	    of SOME tok => Token.name tok
+	     | NONE => Atom.toString name
+           (* end case *))
+	| binding tokTbl (Syn.SUBRULE _)	= "SR"
+	| binding tokTbl (Syn.CLOS itm)		= binding tokTbl itm
+	| binding tokTbl (Syn.POSCLOS itm)	= binding tokTbl itm
+	| binding tokTbl (Syn.OPT itm)		= binding tokTbl itm
+    in
+    (* assign bindings to a list of items *)
+    fun bindings (userNames, items, tokTbl) = 
+	  ListPair.map getOpt
+	    (userNames, numberBindings (map (binding tokTbl) items))
+    end
+
     fun check (g : Syn.grammar) = let
 	  val _ = Err.status "checking grammar"
 	  val nextGlobalID = nextId (ref 0)
@@ -100,74 +129,35 @@ structure CheckGrammar : sig
 					"' is undefined")
 		  | SOME info => info
 		(* end case *))
-	(* keeping track of nonterminals *)
+	(* keep track of nonterminals *)
 	  val numNTerms = ref 0
 	  val ntTbl = ATbl.mkTable (64, Fail "nonterm table")
 	  val ntList = ref []
-	  fun insNTerm (nt as LLKSpec.NT{name, ...}) =
+	  fun insNTerm (nt as S.NT{name, ...}) =
 	        (ATbl.insert ntTbl (name, nt);
 		 ntList := nt :: !ntList;
 		 nt)
 	(* map a non-terminal name to its info record *)
 	  fun lookupNTerm name = (case ATbl.find ntTbl name
-		 of NONE => insNTerm (LLKSpec.NT{name = name, id = nextGlobalID(), formals = ref [],
-						 binding = LLKSpec.TOP, prods = ref[], isEBNF = false}) 
+		 of NONE => insNTerm (S.NT{name = name, id = nextGlobalID(), formals = ref [],
+						 binding = S.TOP, prods = ref[], isEBNF = false}) 
 		  | SOME info => info
 		(* end case *))
-	(* keeping track of productions *)
+	(* keep track of productions *)
 	  val prodList = ref []
 	(* check a nonterminal *)
           fun loadNTerm(nt, newFormals, alts) = let
 (* val _ = print(concat["chkRule: ", Atom.toString lhs, "\n"]); *)
-		val LLKSpec.NT{prods, formals, ...} = nt
+		val S.NT{prods, formals, ...} = nt
 		val nextProdID = nextId (ref 1)
 		fun doAlt (rhs) = let
 		      val Syn.ALT {items, action, try, pred} = rhs
-		      val nextSRID = nextId (ref 1)
-		      fun doItem (Syn.SYMBOL (name, args)) = 
-			    if ATbl.inDomain tokTbl name
-			    then if not (isSome args)
-			         then LLKSpec.TOK(lookupTok name)
-			         else raise Fail 
-				   ("Attempted to apply arguments to token '" 
-				    ^ (Atom.toString name)
-				    ^ "'")
-			    else LLKSpec.NONTERM(lookupNTerm name, 
-						 Option.map Action.action args)
-			| doItem (Syn.SUBRULE alts) =
-			    LLKSpec.NONTERM(doSubrule (false, alts), NONE)
-			| doItem (Syn.CLOS itm) =
-			    LLKSpec.CLOS(doSubrule (true, mkAlts itm))
-			| doItem (Syn.POSCLOS itm) =
-			    LLKSpec.POSCLOS(doSubrule (true, mkAlts itm))
-			| doItem (Syn.OPT itm) =
-			    LLKSpec.OPT(doSubrule (true, mkAlts itm))
-		      and doItems items = List.map doItem items
-		      and mkAlts (Syn.SUBRULE alts) = alts
-			| mkAlts (itm) = [Syn.ALT {
-			    items = [itm],
-			    action = NONE,
-			    try = false,
-			    pred = NONE
-			  }]
-		      and doSubrule (isEBNF, alts) = let
-			    val prods = ref []
-			    val sr = LLKSpec.NT{
-				       name = Atom.atom (concat
-						["SR", Int.toString (nextSRID())]),
-				       formals = ref [],
-				       binding = LLKSpec.WITHIN nt,
-				       id = nextGlobalID(),
-				       prods = prods,
-				       isEBNF = isEBNF
-				     }
-		            in
-			      loadNTerm(sr, [], alts);
-			      insNTerm sr
-		            end
-		      val prod = LLKSpec.PROD{
+		      val (userNames, items) = ListPair.unzip items
+		      val prodrhs = ref []
+		      val prod = S.PROD{
 			      lhs = nt,
-			      rhs = doItems items,
+			      rhs = prodrhs,
+			      rhsBindings = bindings (userNames, items, tokTbl),
 			      id = nextGlobalID(),
 			      name = Atom.atom (concat
 				[Nonterm.name nt, "_PROD_", 
@@ -176,7 +166,51 @@ structure CheckGrammar : sig
 			      try = try,
 			      pred = Option.map Action.action pred
 			    }
+		      val nextSRID = nextId (ref 1)
+		      fun doPreitem (Syn.SYMBOL (name, args)) = 
+			    if ATbl.inDomain tokTbl name
+			    then if not (isSome args)
+			         then S.TOK(lookupTok name)
+			         else raise Fail 
+				   ("Attempted to apply arguments to token '" 
+				    ^ (Atom.toString name)
+				    ^ "'")
+			    else S.NONTERM(lookupNTerm name, 
+						  Option.map Action.action args)				 
+			| doPreitem (Syn.SUBRULE alts) =
+			    S.NONTERM(doSubrule (false, alts), NONE)
+			| doPreitem (Syn.CLOS itm) =
+			    S.CLOS(doSubrule (true, mkAlts itm))
+			| doPreitem (Syn.POSCLOS itm) =
+			    S.POSCLOS(doSubrule (true, mkAlts itm))
+			| doPreitem (Syn.OPT itm) =
+			    S.OPT(doSubrule (true, mkAlts itm))
+		      and doItem s = S.ITEM {sym = doPreitem s, 
+					     id = nextGlobalID()}
+		      and mkAlts (Syn.SUBRULE alts) = alts
+			| mkAlts (itm) = [Syn.ALT {
+			    items = [(NONE, itm)],
+			    action = NONE,
+			    try = false,
+			    pred = NONE
+			  }]
+		      and doSubrule (isEBNF, alts) = let
+			    val prods = ref []
+			    val sr = S.NT{
+				       name = Atom.atom (concat
+						["SR", Int.toString (nextSRID())]),
+				       formals = ref [],
+				       binding = S.WITHIN prod,
+				       id = nextGlobalID(),
+				       prods = prods,
+				       isEBNF = isEBNF
+				     }
+		            in
+			      loadNTerm(sr, [], alts);
+			      insNTerm sr
+		            end
 		      in
+			prodrhs := map doItem items;	(* compute RHS *)
 			prodList := prod :: !prodList;	(* add to global prod list *)
 			prods := prod :: !prods		(* add to lhs's prod list *)
 		      end
@@ -193,14 +227,14 @@ structure CheckGrammar : sig
 			    raise Err.Abort)
 		   | _  => rules)
 	  fun addEOF (Syn.ALT {items, action, try, pred}) = 
-	        Syn.ALT {items = items @ [Syn.SYMBOL (Atom.atom "EOF", NONE)], 
+	        Syn.ALT {items = items @ [(NONE, Syn.SYMBOL (Atom.atom "EOF", NONE))], 
 			 action = action, try = try, pred = pred}
 	  val fst' = Syn.RULE{lhs = lhs, formals = formals,
 			      alts = map addEOF alts}
 	  val _ = List.app chkRule (fst'::rest)
 	(* check for undefined nonterminals, while reversing the order of productions *)
 	  val _ = let
-		fun chkNT (LLKSpec.NT{name, prods, ...}) = (case !prods
+		fun chkNT (S.NT{name, prods, ...}) = (case !prods
 		       of [] => Err.errMsg ["Error: symbol ", Atom.toString name, " is not defined."]
 			| l => prods := List.rev l
 		      (* end case *))
@@ -210,7 +244,7 @@ structure CheckGrammar : sig
 	  val _ = Err.abortIfErr()
 	  val nterms = rev(!ntList)
 	  val startnt = hd (nterms)
-	  in LLKSpec.Grammar {
+	  in S.Grammar {
 	    header = header,
 	    defs = Action.action defs,
 	    toks = tokList,

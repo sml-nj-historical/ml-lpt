@@ -38,6 +38,8 @@
  x reverse order of %where and => actions
  - region information
 
+ - test performance
+
  - controlling lexer state / lexer multiplexing
 
  - friendlier errors for prediction tree failure

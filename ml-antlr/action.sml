@@ -15,6 +15,7 @@ structure Action :>
 
     val action : int * string -> action
     val toString : action -> string
+    val name : action -> string
 
     val same : (action * action) -> bool
 
@@ -41,6 +42,7 @@ structure Action :>
 	    "(*#line " ^ Int.toString (lineNo - 1) ^ ".0*) \n" ^ code
 *)
 
+    fun name (ACT {id, ...}) = Int.toString id
     fun same (ACT {id = id1, ...}, ACT {id = id2, ...}) = (id1 = id2)
 
   end

@@ -108,7 +108,7 @@ structure GLA :>
 	    | iter (nt, lastNode, itm::itms) = let
 		val n = newNode (nt, Normal)
 	        in
-		  (case itm
+		  (case Item.sym itm
 		    of S.TOK t => 
 		         addEdge (lastNode, n, Tok t)
 		     | S.NONTERM (nt, _) =>

@@ -26,7 +26,7 @@ structure GrammarSyntax =
       }
 
     and alt = ALT of {
-	items : item list,
+	items : (string option * item) list,
 	action : action option,
 	try : bool,
 	pred : sem_pred option
@@ -62,7 +62,7 @@ structure GrammarSyntax =
     fun mkGrammar() = GRAMMAR {
 	  import = NONE,
 	  importChanges = [],
-	  header = "functor Parser(YY_Lex : LEXER)",
+	  header = "functor Parser(Lex : LEXER)",
 	  defs = (0, ""),
 	  rules = [],
 	  toks = [],

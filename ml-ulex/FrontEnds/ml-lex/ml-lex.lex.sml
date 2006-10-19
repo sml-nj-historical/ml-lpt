@@ -460,35 +460,21 @@ fun yyQ124 (strm, lastMatch) = (case (yygetc(strm))
         | SOME(inp, strm') =>
             if inp = #"%"
               then yystuck(lastMatch)
-              else yyQ123(strm', lastMatch)
-      (* end case *))
-and yyQ123 (strm, lastMatch) = (case (yygetc(strm))
-       of NONE => yyAction1(strm, yyNO_MATCH)
-        | SOME(inp, strm') =>
-            if inp = #"%"
-              then yyQ124(strm', yyMATCH(strm, yyAction1, yyNO_MATCH))
-              else yyQ120(strm', yyMATCH(strm, yyAction1, yyNO_MATCH))
+              else yyQ120(strm', lastMatch)
       (* end case *))
 and yyQ120 (strm, lastMatch) = (case (yygetc(strm))
        of NONE => yyAction1(strm, yyNO_MATCH)
         | SOME(inp, strm') =>
             if inp = #"%"
               then yyQ124(strm', yyMATCH(strm, yyAction1, yyNO_MATCH))
-              else yyQ125(strm', yyMATCH(strm, yyAction1, yyNO_MATCH))
-      (* end case *))
-and yyQ125 (strm, lastMatch) = (case (yygetc(strm))
-       of NONE => yyAction1(strm, yyNO_MATCH)
-        | SOME(inp, strm') =>
-            if inp = #"%"
-              then yyQ124(strm', yyMATCH(strm, yyAction1, yyNO_MATCH))
-              else yyQ125(strm', yyMATCH(strm, yyAction1, yyNO_MATCH))
+              else yyQ120(strm', yyMATCH(strm, yyAction1, yyNO_MATCH))
       (* end case *))
 fun yyQ119 (strm, lastMatch) = (case (yygetc(strm))
        of NONE => yyAction1(strm, yyNO_MATCH)
         | SOME(inp, strm') =>
             if inp = #"%"
               then yyQ124(strm', yyMATCH(strm, yyAction1, yyNO_MATCH))
-              else yyQ125(strm', yyMATCH(strm, yyAction1, yyNO_MATCH))
+              else yyQ120(strm', yyMATCH(strm, yyAction1, yyNO_MATCH))
       (* end case *))
 fun yyQ122 (strm, lastMatch) = yyAction0(strm, yyNO_MATCH)
 fun yyQ121 (strm, lastMatch) = (case (yygetc(strm))
@@ -496,7 +482,7 @@ fun yyQ121 (strm, lastMatch) = (case (yygetc(strm))
         | SOME(inp, strm') =>
             if inp = #"%"
               then yyQ122(strm', yyMATCH(strm, yyAction58, yyNO_MATCH))
-              else yyQ123(strm', yyMATCH(strm, yyAction58, yyNO_MATCH))
+              else yyQ120(strm', yyMATCH(strm, yyAction58, yyNO_MATCH))
       (* end case *))
 fun yyQ7 (strm, lastMatch) = (case (yygetc(strm))
        of NONE =>

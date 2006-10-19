@@ -49,7 +49,11 @@ end
 @header@
 = struct
 
-  structure YY = struct
+    structure UserCode = struct
+
+@defs@
+
+    end
 
     (* "wrapped" streams, which track the number of tokens read
      * and allow "prepending" a sequence of tokens
@@ -68,7 +72,7 @@ end
       fun get1 (WSTREAM {prefix = tok::toks, strm, curTok}) = 
 	    (tok, WSTREAM {prefix = toks, strm = strm, curTok = curTok + 1})
 	| get1 (WSTREAM {prefix = [], strm, curTok}) = let
-	    val (tok, strm') = case YY_Lex.lex strm
+	    val (tok, strm') = case Lex.lex strm
 				of SOME x => x
 				 | NONE => (Tok.EOF, strm)
 	    in (tok, WSTREAM {prefix = [], strm = strm', curTok = curTok + 1})
@@ -124,7 +128,7 @@ end
     structure RepairableStrm : REPAIRABLE = struct
 
       structure WS = WStream
-      type T = YY_Lex.strm WS.wstream
+      type T = Lex.strm WS.wstream
       exception RepairableError
 
       val minAdvance = 1
@@ -413,7 +417,7 @@ print (case r
 
     structure Err = ErrHandlerFn(RepairableStrm)
 
-    fun tryProds eh prods strm = let
+    fun pretryProds eh prods strm = let
 	fun try [] = raise RepairableStrm.RepairableError
 	  | try (prod :: prods) = 
 	      Err.whileDisabled eh (fn () => prod strm)
@@ -422,51 +426,53 @@ print (case r
           try prods
         end
 
-  end (* structure YY *)
+    exception ParseError = RepairableStrm.RepairableError
 
-@defs@
-
-  exception ParseError = YY.RepairableStrm.RepairableError
-
-  fun innerParse
+    fun innerParse
 unwrapErr
 @args@
 
 strm = let
-        val yyeh = YY.Err.mkErrHandler()
-	fun yywrap f = YY.Err.wrap yyeh f
-	val yylaunch = YY.Err.launch yyeh
-	val yywhileDisabled = YY.Err.whileDisabled yyeh
-	fun yytryProds (strm, prods) = 
-	      (yywrap (YY.tryProds yyeh prods)) strm
-	val yylex = YY.WStream.get1
+        val eh = Err.mkErrHandler()
+	fun wrap f = Err.wrap eh f
+	val launch = Err.launch eh
+	val whileDisabled = Err.whileDisabled eh
+	fun tryProds (strm, prods) = 
+	      (wrap (pretryProds eh prods)) strm
+	val lex = WStream.get1
 @matchfns@
 
 @parser@
 
-        val (ret, _, errors) = yylaunch (parse'
+        val (ret, _, errors) = launch (parse'
 @args@
 
-) (YY.WStream.wrap strm)
+) (WStream.wrap strm)
         in 
           (ret, map unwrapErr errors)
         end
 
-  datatype repair_action
-    = Insert of Tok.token list
-    | Delete of Tok.token list
-    | Subst of {
-	old : Tok.token list, 
-	new : Tok.token list
-      }
+    datatype repair_action
+      = Insert of Tok.token list
+      | Delete of Tok.token list
+      | Subst of {
+	    old : Tok.token list, 
+	    new : Tok.token list
+	}
 
-  structure Err = YY.Err
-  structure R = YY.RepairableStrm
+    structure R = RepairableStrm
 
-  fun unwrapErr (Err.Primary {errorAt, repair = R.Deletion}) =
-        (YY.WStream.unwrap errorAt, Delete [(#1 (YY.WStream.get1 errorAt))])
-    | unwrapErr (Err.Primary {errorAt, repair = R.Insertion t}) =
-        (YY.WStream.unwrap errorAt, Insert [t])
-    | unwrapErr (Err.Primary {errorAt, repair = R.Substitution t}) = 
-
+    fun unwrapErr (Err.Primary {errorAt, repair = R.Deletion}) =
+          (WStream.unwrap errorAt, Delete [(#1 (WStream.get1 errorAt))])
+      | unwrapErr (Err.Primary {errorAt, repair = R.Insertion t}) =
+          (WStream.unwrap errorAt, Insert [t])
+      | unwrapErr (Err.Primary {errorAt, repair = R.Substitution t}) = 
+          (WStream.unwrap errorAt, 
+  	   Subst {
+  	     old = [(#1 (WStream.get1 errorAt))],
+  	     new = [t]
+           })
+      | unwrapErr (Err.Secondary {deleteFrom, deleteTo}) = 
+          (WStream.unwrap deleteFrom, 
+  	   Delete (WStream.getDiff (deleteTo, deleteFrom)))
 end (* structure Parser *)

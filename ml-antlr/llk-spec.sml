@@ -34,25 +34,31 @@ structure LLKSpec =
 
     and nt_binding
       = TOP
-      | WITHIN of nonterm
+      | WITHIN of prod
 
     and prod = PROD of {
-	lhs : nonterm,
-	rhs : item list,
 	id : Int.int,
 	name : Atom.atom,
-	action : Action.action option,
 	try : bool,
-	pred : Action.action option
+	lhs : nonterm,
+	rhs : item list ref,
+	rhsBindings : string list,
+	pred : Action.action option,
+	action : Action.action option
       }
 
-    and item
+    and preitem
       = TOK of token
       				(* nonterm * optional actual args *)
       | NONTERM of (nonterm * Action.action option)
       | CLOS of nonterm		(* ( ... )* *)
       | POSCLOS of nonterm	(* ( ... )+ *)
       | OPT of nonterm		(* ( ... )? *)
+
+    and item = ITEM of {
+	id : Int.int,
+	sym : preitem
+      }
 
     withtype sem_pred = Action.action
 

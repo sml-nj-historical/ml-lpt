@@ -13,47 +13,51 @@ structure Item =
 
     structure S = LLKSpec
 
-    fun toString (S.TOK t) = Token.toString t
-      | toString (S.NONTERM (nt, args)) = 
-	  String.concat ([Nonterm.toString nt] @ (
-	    case args
-	     of SOME args =>
-		["@(", Action.toString args, ")"]
-	      | _ =>  []))
-      | toString (S.CLOS nt) = Nonterm.toString nt ^ "*"
-      | toString (S.POSCLOS nt) = Nonterm.toString nt ^ "+"
-      | toString (S.OPT nt) = Nonterm.toString nt ^ "?"
+    fun sym (S.ITEM {sym = s, ...}) = s
+    val name = Preitem.name o sym
+    val toString = Preitem.toString o sym
+    val listToString = Preitem.listToString o (map sym)
 
-    fun listToString l = String.concatWith " " (map toString l)
+    fun id (S.ITEM {id, ...}) = id
+    fun compare (item1, item2) = Int.compare(id item1, id item2)
+    fun same pair = (case compare pair
+		      of EQUAL => true
+		       | _ => false)
 
-    fun name (S.TOK t) = Token.name t
-      | name (S.NONTERM (nt, _)) = Nonterm.name nt
-      | name (S.CLOS nt) = Nonterm.name nt
-      | name (S.POSCLOS nt) = Nonterm.name nt
-      | name (S.OPT nt) = Nonterm.name nt
+    fun nt itm = (case sym itm
+          of S.NONTERM (nt, _) => SOME nt
+	   | S.POSCLOS nt => SOME nt
+	   | S.CLOS nt => SOME nt
+	   | S.OPT nt => SOME nt
+	   | S.TOK _ => NONE
+         (* end case *))
 
-    fun binding (S.TOK t) = if Token.hasTy t then SOME (Token.name t) else NONE
-      | binding (S.NONTERM (nt, _)) = SOME (Nonterm.name nt)
-      | binding (S.CLOS nt)	    = SOME (Nonterm.name nt)
-      | binding (S.POSCLOS nt)	    = SOME (Nonterm.name nt)
-      | binding (S.OPT nt)	    = SOME (Nonterm.name nt)
-
-  (* Item IDs; we shift the ID and use the low bit to
-   * get a globally unique ID.
+  (* return the SET of bound names to the left of an item is a production.
+   * we use a set rather than a list because names might be 
+   * repeated in the bindings.
    *)
-    local
-      val tokenTag = 0w0
-      val ntermTag = 0w1
-      fun tagID (id, tag) = Word.toIntX(Word.orb(Word.<<(Word.fromInt id, 0w1), tag))
-    in
-    fun itemID (S.TOK(S.T{id, ...})) = tagID(id, tokenTag)
-      | itemID (S.NONTERM(S.NT{id, ...}, _)) = tagID(id, ntermTag)
-      | itemID (S.CLOS(S.NT{id, ...})) = tagID(id, ntermTag)
-      | itemID (S.POSCLOS(S.NT{id, ...})) = tagID(id, ntermTag)
-      | itemID (S.OPT(S.NT{id, ...})) = tagID(id, ntermTag)
-    end (* local *)
-
-    fun compare (item1, item2) = Int.compare(itemID item1, itemID item2)
+    fun bindingsLeftOf (item, prod) = let
+          fun lhs (LLKSpec.PROD {lhs, ...}) = lhs
+          fun items (LLKSpec.PROD {rhs, ...}) = !rhs
+          fun itemBindings (LLKSpec.PROD {rhsBindings, ...}) = rhsBindings
+          fun leftOf ([], accum) = raise Fail "BUG: leftOf on empty list"
+	    | leftOf ((i, name)::is, accum) = 
+	        if same (i, item) then accum
+		else leftOf (is, AtomSet.add(accum, Atom.atom name))
+	  val parentBindings = case Nonterm.parent (lhs prod)
+		of NONE => AtomSet.addList (AtomSet.empty, Nonterm.formals (lhs prod))
+		 | SOME prod' => let
+		     fun isProdItm (itm) = (case nt itm
+                           of SOME nt => Nonterm.same (nt, lhs prod)
+			    | NONE => false)
+		     val prodItm = valOf (List.find isProdItm (items prod'))
+		     in
+		       bindingsLeftOf (prodItm, prod')
+		     end
+          in
+            leftOf (ListPair.zip (items prod, itemBindings prod), 
+		    parentBindings)
+          end
 
     structure Set = RedBlackSetFn (
       struct

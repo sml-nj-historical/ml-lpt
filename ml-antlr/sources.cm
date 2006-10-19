@@ -13,6 +13,7 @@ Library
   structure Nonterm
   structure ParseFile
   structure Predict
+  structure Preitem
   structure Prod
   structure Token
 
@@ -42,6 +43,7 @@ is
   main.sml
   nonterm.sml
   predict.sml
+  preitem.sml
   prod.sml
   token.sml
 

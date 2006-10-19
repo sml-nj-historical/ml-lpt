@@ -46,40 +46,32 @@ structure SMLOutput =
 			    if Token.hasTy tok
 			    then [ML_Wild]
 			    else [])
-    fun tokMatch' tok = "yymatch" ^ (Token.name tok)
+    fun tokMatch' tok = "match" ^ (Token.name tok)
     fun tokMatch tok = "" ^ tokMatch' tok
 
     fun tokExpected tok = ML_Raw [ML.Tok ("raise Fail \"expected " ^ (Token.name tok) ^ "\"")]
 
+    val bindingSuffix = "_RES"
+
+    fun actionHeader (name, bindings, suffix) = let
+	  val withSuffix = map (fn b => Atom.toString b ^ suffix) 
+			       (AtomSet.listItems bindings)
+          in
+            String.concat [name, " (", 
+			   String.concatWith ", " withSuffix,
+			   ")"]
+          end
+
   (* make an expression that will pull the next token off the stream *)
-    fun mkGet1 strm = ML_App ("yylex", [ML_Var (strm)])
+    fun mkGet1 strm = ML_App ("lex", [ML_Var (strm)])
   (* make an expression that will pull the kth token off the stream *)
     fun mkGetk (strm, 1) = mkGet1 strm
-      | mkGetk (strm, k) = ML_App ("yylex", [ML_App ("#2", [mkGetk (strm, k-1)])])
+      | mkGetk (strm, k) = ML_App ("lex", [ML_App ("#2", [mkGetk (strm, k-1)])])
 
     fun rawCode code = ML_Raw [ML.Tok code]
 
-    fun wrap f = "(yywrap " ^ f ^ ")"
+    fun wrap f = "(wrap " ^ f ^ ")"
     fun wrapApp (f, params) = ML_App (wrap f, params)
-
-  (* auto-number the bindings for repeated variable names *)
-    local
-      fun addNumbers(acc, n, s, NONE :: bs) = addNumbers(NONE::acc, n, s, bs)
-	| addNumbers(acc, n, s, (SOME s') :: bs) = 
-	    if s = s' then 
-	      addNumbers((SOME (s' ^ (Int.toString n)))::acc, n+1, s, bs)
-	    else addNumbers((SOME s')::acc, n, s, bs)
-	| addNumbers(acc, _, _, []) = rev acc
-    in
-    fun numberBindings(NONE :: bs) = NONE::(numberBindings bs)
-      | numberBindings(SOME b :: bs) = 
-	  if List.exists (fn (SOME b') => b = b' 
-			   | _ => false) 
-			 bs
-	  then (SOME (b ^ "1"))::numberBindings(addNumbers([], 2, b, bs))
-	  else (SOME b)::(numberBindings bs)
-      | numberBindings([]) = []
-    end
 
   (* make an expression for the given (polymorphic) decision tree *)
     fun mkPredict (pickFn, choiceFn, strm, tree, errAction) = let
@@ -107,11 +99,16 @@ structure SMLOutput =
 	  val S.Grammar {actionStyle, ...} = grm
 	  fun mkTok (t, strmExp, letFn) = 
 	        letFn (ML_App (tokMatch t, [strmExp]))
-	  fun mkNT (nt, strmExp, args, letFn) = let
+	  fun mkNT (nt, strmExp, args, letFn, item) = let
 	        val name = case args
-			     of SOME args => "(" ^ NTFnName nt ^ " "
-					         ^ "(" ^ Action.toString args ^ "))"
-			      | NONE => NTFnName nt
+		  of SOME args => 
+		       "(" ^ NTFnName nt ^ " ("
+		       ^ actionHeader 
+			   ("UserCode.ARGS_" ^ Action.name args, 
+			    Item.bindingsLeftOf (item, prod), 
+			    bindingSuffix) 
+		       ^ "))"
+		   | NONE => NTFnName nt
 	        val innerExp = wrapApp (name, [strmExp])
 	        in
 	          if NT.isSubrule nt
@@ -134,37 +131,45 @@ structure SMLOutput =
 	        end
 	  fun mkItem strm ((item, binding), k) = let
 	        val strmExp = ML_Var strm
-		fun mkLet e = (case binding
-				of SOME name => ML_Let ("(" ^ name ^ ", strm')", e, k)
-				 | NONE => ML_Let ("strm'", e, k)
-			       (* end case *))
+		fun mkLet e = ML_Let ("(" ^ binding ^ bindingSuffix ^ 
+				      ", strm')", e, k)
 	        in
-	          case item
+	          case Item.sym item
 		   of S.TOK t      => mkTok  (t,  strmExp, mkLet)
 		    | S.NONTERM (nt, args)
-				   => mkNT   (nt, strmExp, args, mkLet)
-		    | S.CLOS nt    => mkEBNF (nt, strmExp, "YY.EBNF.closure", mkLet)
-		    | S.POSCLOS nt => mkEBNF (nt, strmExp, "YY.EBNF.posclos", mkLet)
-		    | S.OPT nt     => mkEBNF (nt, strmExp, "YY.EBNF.optional", mkLet)
+				   => mkNT   (nt, strmExp, args, mkLet, item)
+		    | S.CLOS nt    => mkEBNF (nt, strmExp, "EBNF.closure", mkLet)
+		    | S.POSCLOS nt => mkEBNF (nt, strmExp, "EBNF.posclos", mkLet)
+		    | S.OPT nt     => mkEBNF (nt, strmExp, "EBNF.optional", mkLet)
 	        end
-	  val itemBindings = numberBindings (List.map Item.binding rhs)
+	  val itemBindings = Prod.itemBindings prod
 	  val action = 
 	      case actionStyle
 	       of S.ActDebug =>
 		  "( print \"" ^ (Nonterm.qualName (Prod.lhs prod)) ^ "\\n\" )"
 		| S.ActUnit => "()"
-		| S.ActNormal => 
-	          "(" ^ (case Prod.action prod
-			  of SOME code => Action.toString code
-			   | NONE => String.concatWith ", " (List.mapPartial (fn x=>x) itemBindings)
-  		         (* end case *))
-		  ^ ")"
+		| S.ActNormal => (case Prod.action prod
+		    of SOME _ => actionHeader ("UserCode." ^ Prod.name prod ^ "_ACT", 
+					       Prod.bindingsAtAction prod, bindingSuffix)
+		     | NONE => String.concatWith ", " 
+			 (List.mapPartial 
+			    (fn (S.TOK t, binding) =>
+				  if Token.hasTy t then
+				    SOME (binding ^ bindingSuffix)
+				  else NONE
+			      | (_, binding) => SOME (binding ^ bindingSuffix))
+			    (ListPair.zip (map Item.sym rhs, itemBindings)))
+  	           (* end case *))
 	  fun innerExp strm = let
 	        val act = ML_Tuple [ML_Raw [ML.Tok action], ML_Var (strm)]
 	        in case Prod.pred prod
 		    of NONE => act
 		     | SOME pred => 
-		         ML_If (ML_Raw [ML.Tok ("(" ^ Action.toString pred ^ ")")], 
+		         ML_If (ML_Raw [ML.Tok ("(" 
+				  ^ actionHeader
+				      ("UserCode." ^ Prod.name prod ^ "_PRED",
+				       Prod.bindingsAtAction prod, bindingSuffix)
+				  ^ ")")], 
 				act,
 				ML_Raw [ML.Tok "raise ParseError"])
 	        end
@@ -185,7 +190,7 @@ structure SMLOutput =
 	  val tree = prodPredict nt
 	  fun pickFn prod = ML_App (Prod.name prod, [ML_Var "strm"])
 	  fun choiceFn prods = 
-	        ML_App ("yytryProds", [ML_Var "strm", 
+	        ML_App ("tryProds", [ML_Var "strm", 
 					ML_List (map (ML_Var o Prod.name) prods)])
 	  val errAction = ML_App ("raise", [ML_Var "ParseError"])
 	  val caseExp = mkPredict (pickFn, choiceFn, "strm", tree, errAction)
@@ -197,7 +202,9 @@ structure SMLOutput =
           val formals = 
 	        if length (Nonterm.formals nt) > 0
 		then " (" ^ (String.concatWith ", " 
-			       (map Atom.toString (Nonterm.formals nt)))
+			       (map 
+				  (fn f => Atom.toString f ^ bindingSuffix)
+				  (Nonterm.formals nt)))
 		     ^ ")"
 		else ""
 	  val exp = if List.length (Nonterm.prods nt) = 1
@@ -233,10 +240,7 @@ structure SMLOutput =
 	    else ()
           end
 
-  (* make a match function for a token.  match for tokens with unit type 
-   * will simply return a new stream, while match for tokens with data will
-   * pair that data with the new stream.
-   *)
+  (* make a match function for a token *)
     fun ppMatch (strm, ppStrm) t = let
           val matchCase = 
 	        (ML_TupPat 
@@ -247,11 +251,11 @@ structure SMLOutput =
 		    ML_VarPat "strm'"],
 		 if Token.hasTy t
 		 then ML_Tuple [ML_Var "x", ML_Var "strm'"]
-		 else ML_Var "strm'")
+		 else ML_Tuple [ML_Var "()", ML_Var "strm'"])
 	  val errCase = (ML_Wild, ML_App ("raise", [ML_Var "ParseError"]))
           val exp = ML_Case (mkGet1 "strm", [matchCase, errCase])
 	  in
-            TextIO.output (strm, "val " ^ tokMatch' t ^ " = yywrap (fn strm => ");
+            TextIO.output (strm, "val " ^ tokMatch' t ^ " = wrap (fn strm => ");
 	    ML.ppML (ppStrm, exp);
 	    TextIO.output (strm, ")\n")
           end
@@ -304,9 +308,29 @@ structure SMLOutput =
 
   (* output user definitions *)
     fun defsHook spec strm = let
-          val (S.Grammar {defs, ...}, _) = spec
+          val (S.Grammar {defs, prods, ...}, _) = spec
+	  fun output ss = TextIO.output (strm, String.concat ss)
+	  fun actionLevel (suffix, f) prod = (case f prod
+            of SOME code => output [
+	         "fun ", 
+		 actionHeader (
+		   Prod.name prod ^ suffix, 
+		   Prod.bindingsAtAction prod, ""), 
+		 " = \n  (", Action.toString code, ")\n"]
+	     | NONE => ())
+	  fun args prod (itm as S.ITEM {sym = S.NONTERM (nt, SOME code), ...}) = 
+	        output ["fun ",
+		  actionHeader (
+		    "ARGS_" ^ Action.name code,
+		    Item.bindingsLeftOf (itm, prod), ""),
+		  " = \n  (", Action.toString code, ")\n"]
+	    | args _ _ = ()
           in
-            TextIO.output (strm, Action.toString defs)
+            TextIO.output (strm, Action.toString defs);
+	    TextIO.output (strm, "\n\n");
+	    app (actionLevel ("_ACT", Prod.action)) prods;
+	    app (actionLevel ("_PRED", Prod.pred)) prods;
+	    app (fn prod => app (args prod) (Prod.items prod)) prods
           end
 
     val template = ExpandFile.mkTemplate "BackEnds/SML/template.sml"
