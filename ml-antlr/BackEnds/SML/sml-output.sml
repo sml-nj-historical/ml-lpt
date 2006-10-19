@@ -149,7 +149,7 @@ structure SMLOutput =
 		  "( print \"" ^ (Nonterm.qualName (Prod.lhs prod)) ^ "\\n\" )"
 		| S.ActUnit => "()"
 		| S.ActNormal => (case Prod.action prod
-		    of SOME _ => actionHeader ("UserCode." ^ Prod.name prod ^ "_ACT", 
+		    of SOME _ => actionHeader ("UserCode." ^ Prod.fullName prod ^ "_ACT", 
 					       Prod.bindingsAtAction prod, bindingSuffix)
 		     | NONE => String.concatWith ", " 
 			 (List.mapPartial 
@@ -167,7 +167,7 @@ structure SMLOutput =
 		     | SOME pred => 
 		         ML_If (ML_Raw [ML.Tok ("(" 
 				  ^ actionHeader
-				      ("UserCode." ^ Prod.name prod ^ "_PRED",
+				      ("UserCode." ^ Prod.fullName prod ^ "_PRED",
 				       Prod.bindingsAtAction prod, bindingSuffix)
 				  ^ ")")], 
 				act,
@@ -314,7 +314,7 @@ structure SMLOutput =
             of SOME code => output [
 	         "fun ", 
 		 actionHeader (
-		   Prod.name prod ^ suffix, 
+		   Prod.fullName prod ^ suffix, 
 		   Prod.bindingsAtAction prod, ""), 
 		 " = \n  (", Action.toString code, ")\n"]
 	     | NONE => ())

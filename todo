@@ -33,8 +33,8 @@
  x make prePath required in GLA.*
  x think about: EBNF predicates should only include true case?
  x grammar inheritance
- - custom names for return values
- - move actions into separate functions
+ x custom names for return values
+ x move actions into separate functions
  x reverse order of %where and => actions
  - region information
 

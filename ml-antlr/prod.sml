@@ -20,6 +20,9 @@ structure Prod =
     fun action (PROD{action, ...}) = action
     fun pred (PROD{pred, ...}) = pred
     fun name (PROD{name, ...}) = Atom.toString name
+    fun fullName p = (case Nonterm.parent (lhs p)
+          of SOME p' => Nonterm.qualName (lhs p') ^ "_" ^ name p
+	   | NONE => name p)
 
     fun toString p = concat[
 	    (* "[", Int.toString id, "] ", *)
