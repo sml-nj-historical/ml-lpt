@@ -47,7 +47,19 @@ signature REPAIRABLE = sig
 end
 
 @header@
-= struct
+(* : sig
+
+    datatype repair_action
+      = Insert of Tok.token list
+      | Delete of Tok.token list
+      | Subst of {
+	    old : Tok.token list, 
+	    new : Tok.token list
+	}
+
+    val parse : 
+
+  end *) = struct
 
     structure UserCode = struct
 
@@ -475,4 +487,17 @@ strm = let
       | unwrapErr (Err.Secondary {deleteFrom, deleteTo}) = 
           (WStream.unwrap deleteFrom, 
   	   Delete (WStream.getDiff (deleteTo, deleteFrom)))
+
+    val parse = innerParse unwrapErr
+
+    fun toksToString toks = String.concatWith " " (map Tok.toString toks)
+
+    fun repairToString repair = (case repair
+          of Insert toks => "inserting " ^ toksToString toks
+	   | Delete toks => "deleting " ^ toksToString toks
+	   | Subst {old, new} => 
+	       "substituting " ^ toksToString new ^ " for "
+	       ^ toksToString old
+         (* end case *))
+
 end (* structure Parser *)

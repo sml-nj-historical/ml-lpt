@@ -37,7 +37,10 @@
  x move actions into separate functions
  x reverse order of %where and => actions
  - region information
+     - add position info to default syntax error message
 
+ - add signature to generated parser
+     - add type for %arg
  - test performance
 
  - controlling lexer state / lexer multiplexing
