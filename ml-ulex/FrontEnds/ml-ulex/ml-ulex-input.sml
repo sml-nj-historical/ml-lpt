@@ -11,7 +11,7 @@
 structure MLULexInput =
   struct
 
-    structure P = Parser(Streamify)
+    structure P = Parser(MLULexLex)
 
     fun parseFile fname = let
           fun parseErr (msg, line, _) = 
@@ -19,11 +19,10 @@ structure MLULexInput =
 		 print ": ";
 		 print msg;
 		 print "\n")
-	  val strm = TextIO.openIn fname
-	  val lexer =
-		MLULexLex.makeLexer (fn n => TextIO.inputN (strm, n))
-	  val (spec, errors) = P.parse (Streamify.streamify lexer)
-			       before TextIO.closeIn strm
+	  val fstrm = TextIO.openIn fname
+	  val strm = MLULexLex.streamify (fn n => TextIO.inputN (fstrm, n))
+	  val (spec, errors) = P.parse strm
+			       before TextIO.closeIn fstrm
 	  fun errMsg (pos, err) = print (P.repairToString err ^ "\n")
 	  in
             app errMsg errors;

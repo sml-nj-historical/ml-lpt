@@ -34,6 +34,7 @@ structure SMLFunOutput : OUTPUT =
       val has = String.isSubstring
     in
     val hasyytext   = has "yytext"
+    val hasyysubstr = has "yysubstr"
     val hasREJECT   = has "REJECT"
     val hasyylineno = has "yylineno"
     end
@@ -143,7 +144,10 @@ structure SMLFunOutput : OUTPUT =
         (* if start state, check for eof *)
 	  val errAct = if startState
 		       then ML_If (ML_App("yyInput.eof", [ML_Var "strm"]),
-				   ML_App("UserDeclarations.eof", [ML_Var "yyarg"]),
+				   if !Options.lexCompat then
+				     ML_App("UserDeclarations.eof", [ML_Var "yyarg"])
+				   else 
+				     ML_Var "raise yyEOF",
 				   errAct')
 		       else errAct'
         (* error transitions = complement(valid transitions) *)
@@ -195,17 +199,23 @@ structure SMLFunOutput : OUTPUT =
           val updStrm = ML_RefPut (ML_Var "yystrm", ML_Var "strm")
 	  val act = ML_Raw [ML.Tok action]
 	  val seq = ML_Seq [updStrm, act]
+	  val lets = if hasyysubstr action andalso not (!Options.lexCompat)
+		     then ML_Let 
+			    ("yysubstr", 
+			     ML_App("yymksubstr", [ML_Var "strm"]), 
+			     seq)
+		     else seq
 	  val lett = if hasyytext action 
 		     then ML_Let 
 			    ("yytext", 
 			     ML_App("yymktext", [ML_Var "strm"]), 
-			     seq)
-		     else seq
+			     lets)
+		     else lets
 	  val letl = if hasyylineno action
 		     then ML_Let 
 			    ("yylineno", 
 			     ML_App("ref", 
-				 [ML_App ("yyInput.getlineNo", 
+				 [ML_App ("yygetlineNo", 
 					  [ML_RefGet (ML_Var "yystrm")])]), 
 			     lett)
 		     else lett

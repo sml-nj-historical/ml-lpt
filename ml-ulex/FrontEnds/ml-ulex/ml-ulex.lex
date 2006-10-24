@@ -12,11 +12,7 @@
   val comLvl : int ref = ref 0		(* nesting depth of comments *)
   val comStart : int ref = ref 0	(* start line of current comment *)
 
-  fun eof () = (
-        if (!comLvl > 0)
-          then print("unclosed comment starting at line " ^ Int.toString(!comStart) ^ "\n")
-          else ();
-        Tok.EOF)
+  type lex_result = Tok.token
 
   val text : string list ref = ref []
   fun addText s = (text := s::(!text))
@@ -30,17 +26,17 @@
   fun chomp s = String.substring (s, 1, String.size s - 2)
 );
 
-(*
 %let eol=("\n"|"\013\n"|"\013");
 %let ws=("\009"|"\011"|"\012"|" "|{eol});
-*)
+(*
 %let eol="\n";
 %let ws=("\t"|" "|{eol});
+*)
 %let lc=[a-z];
 %let uc=[A-Z];
 %let alpha=({lc}|{uc});
 %let digit=[0-9];
-%let int=digit*;
+%let int={digit}+;
 %let idchars=({alpha}|{digit}|"_");
 %let id={alpha}{idchars}*;
 %let qualid ={id}".";
@@ -86,6 +82,10 @@
 <INITIAL>"]"	=> (Tok.RSB);
 <INITIAL>"{" {id} "}"
 		=> (Tok.ID (chomp yytext));
+<INITIAL>"{" {int} "}"
+		=> ((Tok.REPEAT o valOf o Int.fromString o 
+		     Substring.string o (Substring.triml 1) o
+		     (Substring.trimr 1)) yysubstr);
 <INITIAL>"<"	=> (YYBEGIN DIRECTIVE; Tok.LT);
 <INITIAL>">"	=> (Tok.GT);
 <INITIAL>","	=> (Tok.COMMA);
@@ -102,10 +102,13 @@
 	=> (let val c = Char.fromString yytext
             in case c
                 of SOME c' => Tok.CHAR c'
-		 | NONE => Tok.CHAR (String.sub (yytext, 1))
+		 | NONE => (print (concat [
+		     Int.toString (!yylineno), ": unknown escape sequence '", 
+		     yytext, "'\n"]);
+		     continue())
             end);
 <CHARCLASS>"]"	=> (YYBEGIN INITIAL; Tok.RSB);
-<CHARCLASS>.	=> (Tok.CHAR (String.sub (yytext, 0)));
+<CHARCLASS>[^\n\\]	=> (Tok.CHAR (String.sub (yytext, 0)));
 
 <INITIAL>"(*" 
 	=> (comLvl := 1; comStart := !yylineno; YYBEGIN COM; 
@@ -147,7 +150,8 @@
 <STRING>[^"\\\n\013]+ 
 		=> (addText yytext; continue());
 
-<INITIAL>.	=> (Tok.CHAR (String.sub (yytext, 0)));
+<INITIAL>[^\n{};]
+		=> (Tok.CHAR (String.sub (yytext, 0)));
 .		=> (print (concat[Int.toString (!yylineno), ": illegal character '", 
 				  String.toCString yytext, "'\n"]);
 		    continue());

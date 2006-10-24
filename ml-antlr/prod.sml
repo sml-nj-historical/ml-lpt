@@ -21,7 +21,10 @@ structure Prod =
     fun pred (PROD{pred, ...}) = pred
     fun name (PROD{name, ...}) = Atom.toString name
     fun fullName p = (case Nonterm.parent (lhs p)
-          of SOME p' => Nonterm.qualName (lhs p') ^ "_" ^ name p
+          of SOME p' => String.concat [
+	       fullName p', "_",
+	       Nonterm.name (lhs p'), "_",
+	       name p]
 	   | NONE => name p)
 
     fun toString p = concat[

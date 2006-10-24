@@ -42,6 +42,7 @@
   | UTF8	("utf8")
   | ASCII7	("ascii7")
   | ASCII8	("ascii8")
+  | REPEAT of int
   | STRING of string
   | CHAR of char
   | ID of string
@@ -77,7 +78,7 @@ directive(conf, env)
   : "%let" ID "=" re@(env)
       => (conf, AMap.insert (env, Atom.atom ID, re))
   | "%states" (ID ","? => (ID))+
-      => (LS.updStartStates (conf, listToASet (map Atom.atom SR1)), 
+      => (LS.updStartStates (conf, listToASet (map Atom.atom SR)), 
 	  env)
   | "%charset"
       ( "utf8" => (LS.updClamp (conf, LS.NO_CLAMP), env)
@@ -89,7 +90,7 @@ directive(conf, env)
 
 rule(env)
   : ("<" (ID ","? => (ID))+ ">")? re@(env) "=>" CODE
-      => ((Option.map (listToASet o (map Atom.atom)) SR1, re), CODE)
+      => ((Option.map (listToASet o (map Atom.atom)) SR, re), CODE)
   ;
 
 re(env)
@@ -98,12 +99,12 @@ re(env)
 
 or_re(env)
   : and_re@(env) ("|" and_re@(env))*
-      => (foldl (RE.mkOr o flip) and_re SR1)
+      => (foldl (RE.mkOr o flip) and_re SR)
   ;
 
 and_re(env)
   : not_re@(env) ("&" not_re@(env))*
-      => (foldl (RE.mkAnd o flip) not_re SR1)
+      => (foldl (RE.mkAnd o flip) not_re SR)
   ;
 
 not_re(env)
@@ -114,7 +115,7 @@ not_re(env)
 
 cat_re(env)
   : post_re@(env) (post_re@(env))*
-      => (foldl (RE.mkConcat o flip) post_re SR1)
+      => (foldl (RE.mkConcat o flip) post_re SR)
   ;
 
 post_re(env)
@@ -122,14 +123,19 @@ post_re(env)
       ( "?" => (RE.mkOpt)
       | "*" => (RE.mkClosure)
       | "+" => (fn re => RE.mkAtLeast (re, 1))
+      | REPEAT => (fn re => RE.mkRep (re, REPEAT, REPEAT))
       | => (fn x => x)
       )
-      => (SR1 prim_re)
+      => (SR prim_re)
   ;
 
 prim_re(env)
   : ID
-      => (valOf (AMap.find (env, Atom.atom ID)))
+      => (case (AMap.find (env, Atom.atom ID))
+	   of SOME re => re
+	    | NONE => (print (String.concat [
+		"Error: ", ID, " is undefined.\n"]);
+		RE.any))
   | STRING
       => ( foldr RE.mkConcat
 		 RE.epsilon 

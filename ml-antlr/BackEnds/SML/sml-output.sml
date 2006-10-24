@@ -100,15 +100,15 @@ structure SMLOutput =
 	  fun mkTok (t, strmExp, letFn) = 
 	        letFn (ML_App (tokMatch t, [strmExp]))
 	  fun mkNT (nt, strmExp, args, letFn, item) = let
-	        val name = case args
-		  of SOME args => 
+	        val name = case (args, actionStyle)
+		  of (SOME args, S.ActNormal) => 
 		       "(" ^ NTFnName nt ^ " ("
 		       ^ actionHeader 
 			   ("UserCode.ARGS_" ^ Action.name args, 
 			    Item.bindingsLeftOf (item, prod), 
 			    bindingSuffix) 
 		       ^ "))"
-		   | NONE => NTFnName nt
+		   | _ => NTFnName nt
 	        val innerExp = wrapApp (name, [strmExp])
 	        in
 	          if NT.isSubrule nt
@@ -151,20 +151,24 @@ structure SMLOutput =
 		| S.ActNormal => (case Prod.action prod
 		    of SOME _ => actionHeader ("UserCode." ^ Prod.fullName prod ^ "_ACT", 
 					       Prod.bindingsAtAction prod, bindingSuffix)
-		     | NONE => String.concatWith ", " 
-			 (List.mapPartial 
+		     | NONE => let
+			 val bindings = (List.mapPartial 
 			    (fn (S.TOK t, binding) =>
 				  if Token.hasTy t then
 				    SOME (binding ^ bindingSuffix)
 				  else NONE
 			      | (_, binding) => SOME (binding ^ bindingSuffix))
 			    (ListPair.zip (map Item.sym rhs, itemBindings)))
+			 in 
+			   if List.length bindings > 0 
+			   then String.concatWith ", " bindings
+			   else "()"
+		         end
   	           (* end case *))
 	  fun innerExp strm = let
 	        val act = ML_Tuple [ML_Raw [ML.Tok action], ML_Var (strm)]
-	        in case Prod.pred prod
-		    of NONE => act
-		     | SOME pred => 
+	        in case (Prod.pred prod, actionStyle)
+		    of (SOME pred, S.ActNormal) =>
 		         ML_If (ML_Raw [ML.Tok ("(" 
 				  ^ actionHeader
 				      ("UserCode." ^ Prod.fullName prod ^ "_PRED",
@@ -172,6 +176,7 @@ structure SMLOutput =
 				  ^ ")")], 
 				act,
 				ML_Raw [ML.Tok "raise ParseError"])
+		     | _ => act
 	        end
 	  val parse = case (ListPair.zip (rhs, itemBindings))
 		       of [] => innerExp "strm"
@@ -199,7 +204,9 @@ structure SMLOutput =
           end
 
     and mkNonterm' (grm, pm) nt = let
-          val formals = 
+	  val S.Grammar {actionStyle, ...} = grm
+          val formals = case actionStyle
+	      of S.ActNormal =>
 	        if length (Nonterm.formals nt) > 0
 		then " (" ^ (String.concatWith ", " 
 			       (map 
@@ -207,6 +214,7 @@ structure SMLOutput =
 				  (Nonterm.formals nt)))
 		     ^ ")"
 		else ""
+	       | _ => ""
 	  val exp = if List.length (Nonterm.prods nt) = 1
 		    then mkProd (grm, pm) (hd (Nonterm.prods nt))
 		    else mknProds(grm, pm, nt)

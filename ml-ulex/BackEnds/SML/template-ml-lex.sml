@@ -127,6 +127,7 @@
 	      | yystuck (yyMATCH (strm, action, old)) = 
 		  action (strm, old)
 	    val yypos = yyInput.getpos (!yystrm)
+	    val yygetlineNo = yyInput.getlineNo
 	    fun continue() = 
 @lexer@
 

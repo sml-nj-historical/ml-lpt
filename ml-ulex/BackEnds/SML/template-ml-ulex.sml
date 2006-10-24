@@ -1,7 +1,11 @@
+@header@
+  = struct
+
 (* utf8.sml
  *
  * COPYRIGHT (c) 2004 The Moby Project (moby.cs.uchicago.edu)
  * All rights reserved.
+ * USED WITH PERMISSION
  *
  * Routines for working with UTF8 encoded strings.
  *
@@ -20,8 +24,7 @@
  *    of wchar to Word32.word).
  *)
 
-structure UTF8 =
-  struct
+  structure yyUTF8 = struct
 
     structure W = Word
     type wchar = W.word
@@ -66,121 +69,83 @@ structure UTF8 =
              (* end case *)
 	  end
 
-  end
-
-(***** ADAPTED FROM ML-YACC *****)
-structure Streamify =
-struct
-   datatype str = EVAL of Tok.token * strm | UNEVAL of (unit -> Tok.token)
-   and strm = STRM of str ref
-
-   fun lex(STRM (ref(EVAL t))) = SOME t
-     | lex(STRM (s as ref(UNEVAL f))) = let
-	 val tok = f()
-         val t = (tok, STRM(ref(UNEVAL f))) 
-         in
-	   case tok
-	    of Tok.EOF => NONE
-	     | _ => (s := EVAL t; SOME(t))
-         end
-
-   fun streamify f = STRM(ref(UNEVAL f))
-   fun cons(a,s) = STRM(ref(EVAL(a,s)))
-
-end
-
-
-@header@
-  = struct
+    end
 
     structure yyInput : sig
 
         type stream
 	val mkStream : (int -> string) -> stream
-	val fromStream : TextIO.StreamIO.instream -> stream
 	val getc : stream -> (Char.char * stream) option
 	val getpos : stream -> int
-	val getlineNo : stream -> int
-	val subtract : stream * stream -> string
+	val subtract : stream * stream -> Substring.substring
 	val eof : stream -> bool
 
       end = struct
 
-        structure TIO = TextIO
-        structure TSIO = TIO.StreamIO
-	structure TPIO = TextPrimIO
+        val chunkSize = 4096
 
-        datatype stream = Stream of {
-            strm : TSIO.instream,
-	    id : int,  (* track which streams originated 
-			* from the same stream *)
-	    pos : int,
-	    lineNo : int
+        datatype stream = S of (buf * int)
+	and buf = B of {
+	    data : string,
+	    basePos : int,
+	    more : more ref,
+	    inputN : int -> string
           }
+	and more = UNKNOWN | YES of buf | NO
+        
+	fun mkStream inputN = 
+	      (S (B {data = "", basePos = 0, 
+		     more = ref UNKNOWN,
+		     inputN = inputN},
+		  0))
 
-	local
-	  val next = ref 0
-	in
-	fun nextId() = !next before (next := !next + 1)
-	end
+	fun getc (S (buf as B {data, basePos, more, inputN}, pos)) = 
+	      if pos < String.size data then
+		SOME (String.sub (data, pos), S (buf, pos+1))
+	      else (case !more
+		     of NO => NONE
+		      | YES buf' => getc (S (buf', 0))
+		      | UNKNOWN => 
+			  (case inputN chunkSize
+			    of "" => (more := NO; NONE)
+			     | data' => let 
+				 val buf' = B {data = data',
+					       basePos = basePos + 
+						 String.size data,
+					       more = ref UNKNOWN,
+					       inputN = inputN}
+			         in
+				   more := YES buf';
+				   getc (S (buf', 0))
+			         end
+			   (* end case *))
+		    (* end case *))
 
-	val initPos = 0 
-
-	fun mkStream inputN = let
-              val strm = TSIO.mkInstream 
-			   (TPIO.RD {
-			        name = "lexgen",
-				chunkSize = 4096,
-				readVec = SOME inputN,
-				readArr = NONE,
-				readVecNB = NONE,
-				readArrNB = NONE,
-				block = NONE,
-				canInput = NONE,
-				avail = (fn () => NONE),
-				getPos = NONE,
-				setPos = NONE,
-				endPos = NONE,
-				verifyPos = NONE,
-				close = (fn () => ()),
-				ioDesc = NONE
-			      }, "")
-	      in 
-		Stream {strm = strm, id = nextId(), pos = initPos, lineNo = 1}
-	      end
-
-	fun fromStream strm = Stream {
-		strm = strm, id = nextId(), pos = initPos, lineNo = 1
-	      }
-
-	fun getc (Stream {strm, pos, id, lineNo}) = (case TSIO.input1 strm
-              of NONE => NONE
-	       | SOME (c, strm') => 
-		   SOME (c, Stream {
-			        strm = strm', 
-				pos = pos+1, 
-				id = id,
-				lineNo = lineNo + 
-					 (if c = #"\n" then 1 else 0)
-			      })
-	     (* end case*))
-
-	fun getpos (Stream {pos, ...}) = pos
-
-	fun getlineNo (Stream {lineNo, ...}) = lineNo
+	fun getpos (S (B {basePos, ...}, pos)) = basePos + pos
 
 	fun subtract (new, old) = let
-	      val Stream {strm = strm, pos = oldPos, id = oldId, ...} = old
-	      val Stream {pos = newPos, id = newId, ...} = new
-              val (diff, _) = if newId = oldId andalso newPos >= oldPos
-			      then TSIO.inputN (strm, newPos - oldPos)
-			      else raise Fail 
-				"BUG: yyInput: attempted to subtract incompatible streams"
-	      in 
-		diff 
+	      val (S (B {data = ndata, basePos = nbasePos, ...}, npos)) = new
+	      val (S (B {data = odata, basePos = obasePos, 
+			 more, inputN}, opos)) = old
+	      in
+	        if nbasePos = obasePos then
+		  Substring.substring (ndata, opos, npos-opos)
+		else case !more
+		      of NO =>      raise Fail "BUG: yyInput.subtract, but buffers are unrelated"
+		       | UNKNOWN => raise Fail "BUG: yyInput.subtract, but buffers are unrelated"
+		       | YES buf => 
+			   Substring.extract (
+			     Substring.concat [
+			       Substring.extract (odata, opos, NONE),
+			       subtract (new, S (buf, 0))],
+			     0, NONE)
 	      end
 
-	fun eof (Stream {strm, ...}) = TSIO.endOfStream strm
+	fun eof (S (B {data, more, ...}, pos)) = 
+	      pos >= String.size data andalso 
+	      (case !more
+		of NO => true
+		 | _ => false)
 
       end
 
@@ -200,7 +165,8 @@ end
 
       end
 
-    local
+    exception yyEOF
+
     fun mk yyins = let
         (* current start state *)
           val yyss = ref INITIAL
@@ -208,9 +174,10 @@ end
 	(* current input stream *)
           val yystrm = ref yyins
 	(* get one char of input *)
-	  val yygetc = UTF8.getu yyInput.getc 
+	  val yygetc = yyUTF8.getu yyInput.getc 
 	(* create yytext *)
-	  fun yymktext(strm) = yyInput.subtract (strm, !yystrm)
+	  fun yymksubstr(strm) = yyInput.subtract (strm, !yystrm)
+	  fun yymktext(strm) = Substring.string (yymksubstr strm)
           open UserDeclarations
           fun lex 
 @args@ 
@@ -219,6 +186,7 @@ end
 	      | yystuck (yyMATCH (strm, action, old)) = 
 		  action (strm, old)
 	    val yypos = yyInput.getpos (!yystrm)
+	    fun yygetlineNo(_) = 0
 	    fun continue() = 
 @lexer@
 
@@ -227,8 +195,23 @@ end
             lex 
 	    handle IO.Io{cause, ...} => raise cause
           end
-    in
-    fun makeLexer yyinputN = mk (yyInput.mkStream yyinputN)
-    end
+    
+    type tok = UserDeclarations.lex_result
+    datatype str = EVAL of tok * strm | UNEVAL of (unit -> tok)
+    and strm = STRM of str ref
+
+    fun lex(STRM (ref(EVAL t))) = SOME t
+      | lex(STRM (s as ref(UNEVAL f))) = let
+	  val tok = f()
+          val t = (tok, STRM(ref(UNEVAL f))) 
+          in
+	    s := EVAL t; 
+	    SOME(t)
+          end
+	  handle yyEOF => NONE
+
+    fun streamify inputN = STRM(ref(UNEVAL (mk (yyInput.mkStream inputN))))
+
+(*    fun cons(a,s) = STRM(ref(EVAL(a,s))) *)
 
   end
