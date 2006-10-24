@@ -14,7 +14,7 @@
  - check that all used start states are defined
  - check for stuck states
 
- - switch ulex backend to functional stream
+ x switch ulex backend to functional stream
 
 ================
  ml-antlr

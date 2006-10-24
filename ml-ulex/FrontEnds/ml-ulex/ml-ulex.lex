@@ -24,6 +24,19 @@
   fun dec (ri as ref i) = (ri := i-1)
 
   fun chomp s = String.substring (s, 1, String.size s - 2)
+
+  fun hexDigit x = 
+        if #"a" <= x andalso x <= #"f" then
+	  Char.ord x - Char.ord #"a" + 10
+	else if #"A" <=x andalso x <= #"F" then
+	  Char.ord x - Char.ord #"A" + 10
+	else Char.ord x - Char.ord #"0"
+
+  fun hexVal ss = 
+        Substring.foldl 
+	  (fn (dig, acc) => (Word32.fromInt o hexDigit) dig + 0w16 * acc) 
+	  0w0 ss
+
 );
 
 %let eol=("\n"|"\013\n"|"\013");
@@ -106,6 +119,11 @@
 		     yytext, "'\n"]);
 		     continue())
             end);
+<INITIAL,CHARCLASS,RESTRING> 
+	("\\u" ([A-Za-z] | [0-9]){4}) | 
+	("\\U" ([A-Za-z] | [0-9]){8}) 
+	=> (Tok.UCHAR (hexVal (Substring.triml 2 yysubstr)));
+
 <CHARCLASS>"]"	=> (YYBEGIN INITIAL; Tok.RSB);
 <CHARCLASS>[^\n\\]	=> (Tok.UCHAR (hd yyunicode));
 
