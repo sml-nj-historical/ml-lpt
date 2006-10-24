@@ -300,7 +300,7 @@ structure RegExp : REG_EXP =
 	  val intervals = SIS.intervals s
 	  val intervals' = SIS.intervals (SIS.complement s)
 	  val (neg, rngs) = 
-	        if List.length intervals < List.length intervals'
+	        if List.length intervals <= List.length intervals'
 		then ("", intervals)
 		else ("^", intervals')
 	  val str = neg ^ (String.concat (List.map f (rngs)))
