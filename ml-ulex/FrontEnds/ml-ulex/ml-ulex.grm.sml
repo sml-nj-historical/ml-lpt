@@ -4,8 +4,8 @@ structure Tok = struct
       | BOGUS
       | CODE of string
       | ID of string
+      | UCHAR of Word32.word
       | CHAR of char
-      | STRING of string
       | REPEAT of int
       | ASCII8
       | ASCII7
@@ -44,8 +44,8 @@ structure Tok = struct
   | (BOGUS) => "BOGUS"
   | (CODE(_)) => "CODE"
   | (ID(_)) => "ID"
+  | (UCHAR(_)) => "UCHAR"
   | (CHAR(_)) => "CHAR"
-  | (STRING(_)) => "STRING"
   | (REPEAT(_)) => "REPEAT"
   | (ASCII8) => "ascii8"
   | (ASCII7) => "ascii7"
@@ -215,23 +215,19 @@ fun prim_re_PROD_1_ACT (ID, env) =
 	    | NONE => (print (String.concat [
 		"Error: ", ID, " is undefined.\n"]);
 		RE.any))
-fun prim_re_PROD_2_ACT (env, STRING) = 
-  (  foldr RE.mkConcat
-		 RE.epsilon 
-		 (map (RE.mkSym o charToSym) (String.explode STRING)) )
-fun prim_re_PROD_4_ACT (env, char) = 
+fun prim_re_PROD_3_ACT (env, char) = 
   ( RE.mkSym char)
-fun prim_re_PROD_5_ACT (DOT, env) = 
+fun prim_re_PROD_4_ACT (DOT, env) = 
   ( wildcard)
-fun prim_re_PROD_6_prim_re_SR1_PROD_1_ACT (LSB, env, CARAT) = 
+fun prim_re_PROD_5_prim_re_SR1_PROD_1_ACT (LSB, env, CARAT) = 
   ( SIS.complement)
-fun prim_re_PROD_6_prim_re_SR1_PROD_2_ACT (LSB, env) = 
+fun prim_re_PROD_5_prim_re_SR1_PROD_2_ACT (LSB, env) = 
   ( fn x => x)
-fun prim_re_PROD_6_prim_re_SR2_PROD_1_ACT (LSB, SR1, env, DASH, char1, char2) = 
+fun prim_re_PROD_5_prim_re_SR2_PROD_1_ACT (LSB, SR1, env, DASH, char1, char2) = 
   ( SIS.interval (char1, char2))
-fun prim_re_PROD_6_prim_re_SR2_PROD_2_ACT (LSB, SR1, env, char) = 
+fun prim_re_PROD_5_prim_re_SR2_PROD_2_ACT (LSB, SR1, env, char) = 
   ( SIS.singleton char)
-fun prim_re_PROD_6_ACT (LSB, RSB, SR1, SR2, env) = 
+fun prim_re_PROD_5_ACT (LSB, RSB, SR1, SR2, env) = 
   ( RE.mkSymSet (SR1 (foldl SIS.union (hd SR2) (tl SR2))))
 fun char_PROD_1_ACT (CHAR) = 
   ( charToSym CHAR)
@@ -269,7 +265,7 @@ fun ARGS_33 (env) =
   (env)
 fun ARGS_36 (env) = 
   (env)
-fun ARGS_44 (LP, env) = 
+fun ARGS_43 (LP, env) = 
   (env)
 
     end
@@ -674,12 +670,12 @@ val matchID = wrap (fn strm => (case (lex(strm))
  of (Tok.ID(x), strm') => (x, strm')
   | _ => raise(ParseError)
 (* end case *)))
-val matchCHAR = wrap (fn strm => (case (lex(strm))
- of (Tok.CHAR(x), strm') => (x, strm')
+val matchUCHAR = wrap (fn strm => (case (lex(strm))
+ of (Tok.UCHAR(x), strm') => (x, strm')
   | _ => raise(ParseError)
 (* end case *)))
-val matchSTRING = wrap (fn strm => (case (lex(strm))
- of (Tok.STRING(x), strm') => (x, strm')
+val matchCHAR = wrap (fn strm => (case (lex(strm))
+ of (Tok.CHAR(x), strm') => (x, strm')
   | _ => raise(ParseError)
 (* end case *)))
 val matchREPEAT = wrap (fn strm => (case (lex(strm))
@@ -810,9 +806,22 @@ val matchBAR = wrap (fn strm => (case (lex(strm))
 fun parse'  strm = 
 let
 fun char_NT (strm) = let
-      val (CHAR_RES, strm') = matchCHAR(strm)
+      fun char_PROD_1 (strm) = let
+            val (CHAR_RES, strm') = matchCHAR(strm)
+            in
+              (UserCode.char_PROD_1_ACT (CHAR_RES), strm')
+            end
+      fun char_PROD_2 (strm) = let
+            val (UCHAR_RES, strm') = matchUCHAR(strm)
+            in
+              (UCHAR_RES, strm')
+            end
       in
-        (UserCode.char_PROD_1_ACT (CHAR_RES), strm')
+        (case (lex(strm))
+         of (Tok.UCHAR(_), strm') => char_PROD_2(strm)
+          | (Tok.CHAR(_), strm') => char_PROD_1(strm)
+          | _ => raise(ParseError)
+        (* end case *))
       end
 fun re_NT (env_RES) (strm) = let
       val (or_re_RES, strm') = (wrap (or_re_NT (UserCode.ARGS_22 (env_RES))))(strm)
@@ -867,8 +876,8 @@ and not_re_NT (env_RES) (strm) = let
       in
         (case (lex(strm))
          of (Tok.ID(_), strm') => not_re_PROD_2(strm)
+          | (Tok.UCHAR(_), strm') => not_re_PROD_2(strm)
           | (Tok.CHAR(_), strm') => not_re_PROD_2(strm)
-          | (Tok.STRING(_), strm') => not_re_PROD_2(strm)
           | (Tok.LSB, strm') => not_re_PROD_2(strm)
           | (Tok.LP, strm') => not_re_PROD_2(strm)
           | (Tok.DOT, strm') => not_re_PROD_2(strm)
@@ -885,8 +894,8 @@ and cat_re_NT (env_RES) (strm) = let
             end
       fun SR1_PRED (strm) = (case (lex(strm))
              of (Tok.ID(_), strm') => true
+              | (Tok.UCHAR(_), strm') => true
               | (Tok.CHAR(_), strm') => true
-              | (Tok.STRING(_), strm') => true
               | (Tok.LSB, strm') => true
               | (Tok.LP, strm') => true
               | (Tok.DOT, strm') => true
@@ -929,8 +938,8 @@ and post_re_NT (env_RES) (strm) = let
             in
               (case (lex(strm))
                of (Tok.ID(_), strm') => SR1_PROD_5(strm)
+                | (Tok.UCHAR(_), strm') => SR1_PROD_5(strm)
                 | (Tok.CHAR(_), strm') => SR1_PROD_5(strm)
-                | (Tok.STRING(_), strm') => SR1_PROD_5(strm)
                 | (Tok.DARROW, strm') => SR1_PROD_5(strm)
                 | (Tok.LSB, strm') => SR1_PROD_5(strm)
                 | (Tok.RP, strm') => SR1_PROD_5(strm)
@@ -959,42 +968,38 @@ and prim_re_NT (env_RES) (strm) = let
               (UserCode.prim_re_PROD_1_ACT (ID_RES, env_RES), strm')
             end
       fun prim_re_PROD_2 (strm) = let
-            val (STRING_RES, strm') = matchSTRING(strm)
-            in
-              (UserCode.prim_re_PROD_2_ACT (env_RES, STRING_RES), strm')
-            end
-      fun prim_re_PROD_3 (strm) = let
             val (LP_RES, strm') = matchLP(strm)
-            val (re_RES, strm') = (wrap (re_NT (UserCode.ARGS_44 (LP_RES, env_RES))))(strm')
+            val (re_RES, strm') = (wrap (re_NT (UserCode.ARGS_43 (LP_RES, env_RES))))(strm')
             val (RP_RES, strm') = matchRP(strm')
             in
               (re_RES, strm')
             end
-      fun prim_re_PROD_4 (strm) = let
+      fun prim_re_PROD_3 (strm) = let
             val (char_RES, strm') = (wrap char_NT)(strm)
             in
-              (UserCode.prim_re_PROD_4_ACT (env_RES, char_RES), strm')
+              (UserCode.prim_re_PROD_3_ACT (env_RES, char_RES), strm')
             end
-      fun prim_re_PROD_5 (strm) = let
+      fun prim_re_PROD_4 (strm) = let
             val (DOT_RES, strm') = matchDOT(strm)
             in
-              (UserCode.prim_re_PROD_5_ACT (DOT_RES, env_RES), strm')
+              (UserCode.prim_re_PROD_4_ACT (DOT_RES, env_RES), strm')
             end
-      fun prim_re_PROD_6 (strm) = let
+      fun prim_re_PROD_5 (strm) = let
             val (LSB_RES, strm') = matchLSB(strm)
             val (SR1_RES, strm') = let
             fun SR1_NT (strm) = let
                   fun SR1_PROD_1 (strm) = let
                         val (CARAT_RES, strm') = matchCARAT(strm)
                         in
-                          (UserCode.prim_re_PROD_6_prim_re_SR1_PROD_1_ACT (LSB_RES, env_RES, CARAT_RES),
+                          (UserCode.prim_re_PROD_5_prim_re_SR1_PROD_1_ACT (LSB_RES, env_RES, CARAT_RES),
                             strm')
                         end
-                  fun SR1_PROD_2 (strm) = (UserCode.prim_re_PROD_6_prim_re_SR1_PROD_2_ACT (LSB_RES, env_RES),
+                  fun SR1_PROD_2 (strm) = (UserCode.prim_re_PROD_5_prim_re_SR1_PROD_2_ACT (LSB_RES, env_RES),
                           strm)
                   in
                     (case (lex(strm))
-                     of (Tok.CHAR(_), strm') => SR1_PROD_2(strm)
+                     of (Tok.UCHAR(_), strm') => SR1_PROD_2(strm)
+                      | (Tok.CHAR(_), strm') => SR1_PROD_2(strm)
                       | (Tok.CARAT, strm') => SR1_PROD_1(strm)
                       | _ => raise(ParseError)
                     (* end case *))
@@ -1008,20 +1013,29 @@ and prim_re_NT (env_RES) (strm) = let
                         val (DASH_RES, strm') = matchDASH(strm')
                         val (char2_RES, strm') = (wrap char_NT)(strm')
                         in
-                          (UserCode.prim_re_PROD_6_prim_re_SR2_PROD_1_ACT (LSB_RES, SR1_RES, env_RES, DASH_RES, char1_RES, char2_RES),
+                          (UserCode.prim_re_PROD_5_prim_re_SR2_PROD_1_ACT (LSB_RES, SR1_RES, env_RES, DASH_RES, char1_RES, char2_RES),
                             strm')
                         end
                   fun SR2_PROD_2 (strm) = let
                         val (char_RES, strm') = (wrap char_NT)(strm)
                         in
-                          (UserCode.prim_re_PROD_6_prim_re_SR2_PROD_2_ACT (LSB_RES, SR1_RES, env_RES, char_RES),
+                          (UserCode.prim_re_PROD_5_prim_re_SR2_PROD_2_ACT (LSB_RES, SR1_RES, env_RES, char_RES),
                             strm')
                         end
                   in
                     (case (lex(strm))
-                     of (Tok.CHAR(_), strm') =>
+                     of (Tok.UCHAR(_), strm') =>
                           (case (lex(strm'))
                            of (Tok.DASH, strm') => SR2_PROD_1(strm)
+                            | (Tok.UCHAR(_), strm') => SR2_PROD_2(strm)
+                            | (Tok.CHAR(_), strm') => SR2_PROD_2(strm)
+                            | (Tok.RSB, strm') => SR2_PROD_2(strm)
+                            | _ => raise(ParseError)
+                          (* end case *))
+                      | (Tok.CHAR(_), strm') =>
+                          (case (lex(strm'))
+                           of (Tok.DASH, strm') => SR2_PROD_1(strm)
+                            | (Tok.UCHAR(_), strm') => SR2_PROD_2(strm)
                             | (Tok.CHAR(_), strm') => SR2_PROD_2(strm)
                             | (Tok.RSB, strm') => SR2_PROD_2(strm)
                             | _ => raise(ParseError)
@@ -1030,23 +1044,24 @@ and prim_re_NT (env_RES) (strm) = let
                     (* end case *))
                   end
             fun SR2_PRED (strm) = (case (lex(strm))
-                   of (Tok.CHAR(_), strm') => true
+                   of (Tok.UCHAR(_), strm') => true
+                    | (Tok.CHAR(_), strm') => true
                     | _ => false
                   (* end case *))
             val (SR2_RES, strm') = EBNF.posclos(SR2_PRED, (wrap SR2_NT), strm')
             val (RSB_RES, strm') = matchRSB(strm')
             in
-              (UserCode.prim_re_PROD_6_ACT (LSB_RES, RSB_RES, SR1_RES, SR2_RES, env_RES),
+              (UserCode.prim_re_PROD_5_ACT (LSB_RES, RSB_RES, SR1_RES, SR2_RES, env_RES),
                 strm')
             end
       in
         (case (lex(strm))
-         of (Tok.LSB, strm') => prim_re_PROD_6(strm)
-          | (Tok.CHAR(_), strm') => prim_re_PROD_4(strm)
-          | (Tok.STRING(_), strm') => prim_re_PROD_2(strm)
+         of (Tok.LSB, strm') => prim_re_PROD_5(strm)
+          | (Tok.UCHAR(_), strm') => prim_re_PROD_3(strm)
+          | (Tok.CHAR(_), strm') => prim_re_PROD_3(strm)
           | (Tok.ID(_), strm') => prim_re_PROD_1(strm)
-          | (Tok.LP, strm') => prim_re_PROD_3(strm)
-          | (Tok.DOT, strm') => prim_re_PROD_5(strm)
+          | (Tok.LP, strm') => prim_re_PROD_2(strm)
+          | (Tok.DOT, strm') => prim_re_PROD_4(strm)
           | _ => raise(ParseError)
         (* end case *))
       end
@@ -1201,8 +1216,8 @@ fun decl_NT (spec_RES, env_RES) (strm) = let
       in
         (case (lex(strm))
          of (Tok.ID(_), strm') => decl_PROD_3(strm)
+          | (Tok.UCHAR(_), strm') => decl_PROD_3(strm)
           | (Tok.CHAR(_), strm') => decl_PROD_3(strm)
-          | (Tok.STRING(_), strm') => decl_PROD_3(strm)
           | (Tok.CARAT, strm') => decl_PROD_3(strm)
           | (Tok.LT, strm') => decl_PROD_3(strm)
           | (Tok.LSB, strm') => decl_PROD_3(strm)
@@ -1231,8 +1246,8 @@ fun decls_NT (spec_RES, env_RES) (strm) = let
         (case (lex(strm))
          of (Tok.EOF, strm') => decls_PROD_2(strm)
           | (Tok.ID(_), strm') => decls_PROD_1(strm)
+          | (Tok.UCHAR(_), strm') => decls_PROD_1(strm)
           | (Tok.CHAR(_), strm') => decls_PROD_1(strm)
-          | (Tok.STRING(_), strm') => decls_PROD_1(strm)
           | (Tok.KW_charset, strm') => decls_PROD_1(strm)
           | (Tok.KW_let, strm') => decls_PROD_1(strm)
           | (Tok.KW_states, strm') => decls_PROD_1(strm)

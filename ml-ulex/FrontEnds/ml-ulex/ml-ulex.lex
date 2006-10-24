@@ -42,7 +42,7 @@
 %let qualid ={id}".";
 %let tyvar="'"{idchars}*;
 
-%states STRING COM CODE CHARCLASS DIRECTIVE CHARSET;
+%states STRING COM CODE CHARCLASS DIRECTIVE CHARSET RESTRING;
 
 %name MLULexLex;
 (* %charset utf8; *)
@@ -73,6 +73,7 @@
 <INITIAL>"."	=> (Tok.DOT); 
 <INITIAL>"$"	=> (Tok.DOLLAR); 
 <INITIAL>"+"	=> (Tok.PLUS); 
+<INITIAL>"&"	=> (Tok.AMP); 
 <INITIAL>"*"	=> (Tok.STAR);
 <INITIAL>"?"	=> (Tok.QUERY);
 <INITIAL>";"	=> (Tok.SEMI);
@@ -92,13 +93,11 @@
 <INITIAL>"/"	=> (Tok.SLASH);
 <INITIAL>"="	=> (Tok.EQ);
 <INITIAL>"=>"	=> (YYBEGIN CODE; clrText(); Tok.DARROW);
-<INITIAL>"\""	=> (YYBEGIN STRING; clrText(); 
-		    ignore(continue() before YYBEGIN INITIAL);
-		    (Tok.STRING o valOf o String.fromString o getText)());
+<INITIAL>"\""	=> (YYBEGIN RESTRING; continue());
 
-<CHARCLASS>"^"	=> (Tok.CARAT);
+<INITIAL,CHARCLASS>"^"	=> (Tok.CARAT);
 <CHARCLASS>"-"	=> (Tok.DASH);
-<INITIAL,CHARCLASS>"\\" ([A-Za-z] | [0-9]{3} | "\\")
+<INITIAL,CHARCLASS,RESTRING>"\\" ([A-Za-z] | [0-9]{3} | "\\" | "\"")
 	=> (let val c = Char.fromString yytext
             in case c
                 of SOME c' => Tok.CHAR c'
@@ -108,7 +107,7 @@
 		     continue())
             end);
 <CHARCLASS>"]"	=> (YYBEGIN INITIAL; Tok.RSB);
-<CHARCLASS>[^\n\\]	=> (Tok.CHAR (String.sub (yytext, 0)));
+<CHARCLASS>[^\n\\]	=> (Tok.UCHAR (hd yyunicode));
 
 <INITIAL>"(*" 
 	=> (comLvl := 1; comStart := !yylineno; YYBEGIN COM; 
@@ -142,7 +141,7 @@
 <CODE>[^()"]+	=> (addText yytext; continue());
 
 <STRING>"\""	=> (Tok.BOGUS);
-<STRING>{eol}	=> (addText yytext; print ("unclosed string");
+<STRING>{eol}	=> (addText yytext; print ("unclosed string\n");
  	            Tok.BOGUS);
 <STRING>"\\"	=> (addText yytext; continue());
 <STRING>"\\\\"	=> (addText yytext; continue());
@@ -150,8 +149,12 @@
 <STRING>[^"\\\n\013]+ 
 		=> (addText yytext; continue());
 
+<RESTRING>"\""	=> (YYBEGIN INITIAL; continue());
+<RESTRING>{eol} => (print ("unclosed string\n"); continue());
+<RESTRING>.	=> (Tok.UCHAR (hd yyunicode));
+
 <INITIAL>[^\n{};]
-		=> (Tok.CHAR (String.sub (yytext, 0)));
+		=> (Tok.UCHAR (hd yyunicode));
 .		=> (print (concat[Int.toString (!yylineno), ": illegal character '", 
 				  String.toCString yytext, "'\n"]);
 		    continue());

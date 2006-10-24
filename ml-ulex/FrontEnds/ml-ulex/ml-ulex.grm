@@ -43,8 +43,8 @@
   | ASCII7	("ascii7")
   | ASCII8	("ascii8")
   | REPEAT of int
-  | STRING of string
   | CHAR of char
+  | UCHAR of Word32.word
   | ID of string
   | CODE of string
   | BOGUS
@@ -136,10 +136,6 @@ prim_re(env)
 	    | NONE => (print (String.concat [
 		"Error: ", ID, " is undefined.\n"]);
 		RE.any))
-  | STRING
-      => ( foldr RE.mkConcat
-		 RE.epsilon 
-		 (map (RE.mkSym o charToSym) (String.explode STRING)) )
   | "(" re@(env) ")"
   | char
       => (RE.mkSym char)
@@ -160,4 +156,5 @@ prim_re(env)
 char
   : CHAR
       => (charToSym CHAR)
+  | UCHAR
   ;

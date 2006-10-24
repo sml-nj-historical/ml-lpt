@@ -36,13 +36,13 @@ lc=[a-z];
 uc=[A-Z];
 alpha=({lc}|{uc});
 digit=[0-9];
-int=digit*;
+int={digit}+;
 idchars=({alpha}|{digit}|"_");
 id={alpha}{idchars}*;
 qualid ={id}".";
 tyvar="'"{idchars}*;
 
-%s STRING COM CODE CHARCLASS DIRECTIVE CHARSET;
+%s STRING COM CODE CHARCLASS DIRECTIVE CHARSET RESTRING;
 
 %structure MLULexLex
 %reject
@@ -85,23 +85,28 @@ tyvar="'"{idchars}*;
 <INITIAL>"]"	=> (Tok.RSB);
 <INITIAL>"{" {id} "}"
 		=> (Tok.ID (chomp yytext));
+<INITIAL>"{" {int} "}"
+		=> ((Tok.REPEAT o valOf o Int.fromString o 
+		     Substring.string o (Substring.triml 1) o
+		     (Substring.trimr 1)o Substring.full) yytext);
 <INITIAL>"<"	=> (YYBEGIN DIRECTIVE; Tok.LT);
 <INITIAL>">"	=> (Tok.GT);
 <INITIAL>","	=> (Tok.COMMA);
 <INITIAL>"/"	=> (Tok.SLASH);
 <INITIAL>"="	=> (Tok.EQ);
 <INITIAL>"=>"	=> (YYBEGIN CODE; clrText(); Tok.DARROW);
-<INITIAL>"\""	=> (YYBEGIN STRING; clrText(); 
-		    ignore(continue() before YYBEGIN INITIAL);
-		    (Tok.STRING o valOf o String.fromString o getText)());
+<INITIAL>"\""	=> (YYBEGIN RESTRING; continue());
 
 <INITIAL,CHARCLASS>"^"	=> (Tok.CARAT);
 <CHARCLASS>"-"	=> (Tok.DASH);
-<INITIAL,CHARCLASS>"\\" ([A-Za-z] | [0-9]{3} | "\\")
+<INITIAL,CHARCLASS,RESTRING>"\\" ([A-Za-z] | [0-9]{3} | "\\" | "\"")
 	=> (let val c = Char.fromString yytext
             in case c
                 of SOME c' => Tok.CHAR c'
-		 | NONE => Tok.CHAR (String.sub (yytext, 1))
+		 | NONE => (print (concat [
+		     Int.toString (!yylineno), ": unknown escape sequence '", 
+		     yytext, "'\n"]);
+		     continue())
             end);
 <CHARCLASS>"]"	=> (YYBEGIN INITIAL; Tok.RSB);
 <CHARCLASS>.	=> (Tok.CHAR (String.sub (yytext, 0)));
@@ -145,6 +150,10 @@ tyvar="'"{idchars}*;
 <STRING>[^"\\\n\013]+ 
 		=> (addText yytext; continue());
 <STRING>\\\"	=> (addText yytext; continue());
+
+<RESTRING>"\""	=> (YYBEGIN INITIAL; continue());
+<RESTRING>{eol} => (print ("unclosed string\n"); continue());
+<RESTRING>.	=> (Tok.CHAR (String.sub (yytext, 0)));
 
 <INITIAL>.	=> (Tok.CHAR (String.sub (yytext, 0)));
 .	=> (print (concat[Int.toString (!yylineno), ": illegal character '", 

@@ -5,8 +5,8 @@
 \usepackage[all]{xy}
 \usepackage{graphicx}
 
-\newcommand{\ulex}{\textsc{ml-ulex}}
-\newcommand{\mlantlr}{\textsc{ml-antlr}}
+\newcommand{\ulex}{\texttt{ml-ulex}}
+\newcommand{\mlantlr}{\texttt{ml-antlr}}
 
 \title{SML/NJ Language Processing Tools\\
 DRAFT}
@@ -40,7 +40,8 @@ DRAFT}
 
 \newcommand{\GFirstB}[2]{\textit{#1} & ::= & \textit{#2} \\ }
 \newcommand{\GNextB}[1]{ & | & \textit{#1} \\ }
-\newcommand{\T}[1]{{\tt '#1'}}
+%\newcommand{\T}[1]{{\tt '#1'}}
+\newcommand{\T}[1]{{\textbf{\tt #1}}}
 \newcommand{\kw}[1]{{\T{\%#1}}}
 
 \usepackage{amsthm}
@@ -82,6 +83,17 @@ DRAFT}
 	\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
 	\renewcommand{\sectionmark}[1]{\markright{\thesection. \ #1}{}}
 
+    \newpage
+    \phantom{.}
+	\vskip 72pt
+	\begin{center}
+	{\Huge Notice}
+	\end{center}
+	\vskip 20pt \noindent
+	{\Large This is an \textbf{early draft} manual for {\tt ml-ulex} and {\tt ml-antlr}.  The early release of these tools and this manual is intended for gathering feedback.  The interfaces described herein will likely undergo substantial revision before the general release of these tools.}
+	
+	\newpage
+
 	\input{overview}
 	
 	\renewcommand{\chaptermark}[1]{\markboth{\parttext{}: #1}{}}
@@ -93,12 +105,12 @@ DRAFT}
 	
 	\cpart{Theory}
 	
-		\input{theory-ml-ulex}
+%		\input{theory-ml-ulex}
 		\input{theory-ml-antlr}
 
 	\cpart{Implementation}
 
-		\input{code-ml-ulex}
+%		\input{code-ml-ulex}
 		\input{code-ml-antlr}
 
 \backmatter

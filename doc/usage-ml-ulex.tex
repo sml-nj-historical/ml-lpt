@@ -2,8 +2,33 @@
 
 \section{Overview}
 
+\textsc{ml-ulex} is used for generating ``lexers,'' which discern the lexical structure of an input string.  If the generated module is called {\tt Lexer}, it will contain a type {\tt strm} and a function
+\begin{verbatim}
+    val lex : strm -> (token * strm) option
+\end{verbatim}
+where {\tt token} is a type determined by the user of \ulex{}.  Thus, a lexer is a token reader, in the sense of the Basis library {\tt StringCvt.reader} type.
+
+The tool is invoked from the command-line as follows:
+\begin{verbatim}
+    ml-ulex [options] file
+\end{verbatim}
+where {\tt file} is the name of the input \ulex{} specification, and where {\tt options} may be any combination of:
+
+\vskip 12pt
+\begin{tabular}{lp{0.65\textwidth}}
+  {\tt --dot} & generate DOT output (for graphviz; see \texttt{http://www.graphviz.org}).  The produced file will be named {\tt file.dot}, where {\tt file} is the input file. \\
+  \\
+  {\tt --match} & enter interactive matching mode.  This will allow interactive testing of the machine; presently, only the {\tt INITIAL} start state is available for testing (see Section~\ref{sec:start-states} for details on start states).  \\
+  \\
+  {\tt --ml-lex-mode} & operate in {\tt ml-lex} compatibility mode.  See Section~\ref{sec:lex-compat} for details.
+%  {\tt --minimize} & generate a minimal machine.  Note that this is slow, and is almost never necessary.
+\end{tabular}
+
 \section{Specification format}
 
+A \ulex{} specification is a list of semicolon-terminated \emph{declarations}.  Each declaration is either a \emph{directive}
+
+\begin{figure}
 \Grammar{
 \GFirstB{spec}
 	{$($ declaration \T{;} $)^*$}
@@ -30,7 +55,22 @@
 \GFirstB{rule}
 	{re \T{=>} code}
 }
+\caption{The top-level \ulex{} grammar}
+\end{figure}
 
+\section{Directives}
+
+\subsection{The \kw{defs} directive}
+
+\subsection{The \kw{let} directive}
+
+\subsection{The \kw{name} directive}
+
+\subsection{The \kw{states} directive}
+
+\section{Regular expressions}
+
+\begin{figure}
 \Grammar{	
 \GFirstB{re}
 	{{\rm any nonreserved, nonwhitespace character or escape code}}
@@ -51,7 +91,7 @@
 \GNextB
 	{re \T{\$}}
 \GNextB
-	{STRING}
+	{{\rm a double-quoted string, as in SML}}
 \GNextB
 	{\T{\{} ID \T{\}}}
 \GNextB
@@ -65,20 +105,20 @@
 \GNextB
 	{\T{\_}}
 }
+\caption{The \ulex{} grammar for regular expressions}
+\end{figure}
+
+\section{Using the generated code}
 
 \section{An example}
 
 \begin{verbatim}
-calc.lex
-
 %name CalcLex;
-%charset UTF8;
 
-(* note: number and letter are predefined unicode 
- * character classes.
- *)
-%let int = [:number:]*;
-%let id = [:letter:]([:letter:] | [:number:])*;
+%let digit = [0-9];
+%let int = {digit}+;
+%let alpha = [a-zA-Z];
+%let id = {alpha}({alpha} | {digit})*;
 
 %defs (
   open CalcParse.Tok
@@ -94,7 +134,9 @@ in      => ( KW_in );
 "*"     => ( TIMES );
 "("     => ( LP );
 ")"     => ( RP );
-[:whitespace:]
-        => ( yyignore() );
+" " | \n | \t
+        => ( continue() );
 .       => ( (* handle error *) );
 \end{verbatim}
+
+\section{{\tt ml-lex} compatibility}\label{sec:lex-compat}

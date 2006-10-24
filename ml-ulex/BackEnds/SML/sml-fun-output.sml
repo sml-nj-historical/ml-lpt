@@ -35,6 +35,7 @@ structure SMLFunOutput : OUTPUT =
     in
     val hasyytext   = has "yytext"
     val hasyysubstr = has "yysubstr"
+    val hasyyunicode= has "yyunicode"
     val hasREJECT   = has "REJECT"
     val hasyylineno = has "yylineno"
     end
@@ -211,14 +212,20 @@ structure SMLFunOutput : OUTPUT =
 			     ML_App("yymktext", [ML_Var "strm"]), 
 			     lets)
 		     else lets
+	  val letu = if hasyyunicode action 
+		     then ML_Let 
+			    ("yyunicode", 
+			     ML_App("yymkunicode", [ML_Var "strm"]), 
+			     lett)
+		     else lett
 	  val letl = if hasyylineno action
 		     then ML_Let 
 			    ("yylineno", 
 			     ML_App("ref", 
 				 [ML_App ("yygetlineNo", 
 					  [ML_RefGet (ML_Var "yystrm")])]), 
-			     lett)
-		     else lett
+			     letu)
+		     else letu
 	  val letr = if hasREJECT action
 		     then ML_Let
 			    ("oldStrm", ML_RefGet (ML_Var "yystrm"),

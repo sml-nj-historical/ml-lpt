@@ -24,15 +24,15 @@
  *    of wchar to Word32.word).
  *)
 
-  structure yyUTF8 = struct
+    structure yyUTF8 = struct
 
-    structure W = Word
-    type wchar = W.word
+      structure W = Word32
+      type wchar = W.word
 
-    exception Incomplete
+      exception Incomplete
 	(* raised by some operations when applied to incomplete strings. *)
 
-    fun getu getc strm = let
+      fun getu getc strm = let
           fun getContByte (strm, wc) = (case getc strm
 	        of NONE => raise Incomplete
 		 | SOME(c, strm') => let
@@ -68,6 +68,16 @@
 		   end
              (* end case *)
 	  end
+
+      fun getList getc strm = let
+	    val get1 = getu getc
+	    fun iter (strm, accum) = (case get1 strm
+		  of NONE => rev accum
+		   | SOME (w, strm') => iter (strm', w::accum)
+	         (* end case *))
+            in
+	      iter (strm, [])
+            end
 
     end
 
@@ -178,6 +188,7 @@
 	(* create yytext *)
 	  fun yymksubstr(strm) = yyInput.subtract (strm, !yystrm)
 	  fun yymktext(strm) = Substring.string (yymksubstr strm)
+	  fun yymkunicode(strm) = yyUTF8.getList Substring.getc (yymksubstr strm)
           open UserDeclarations
           fun lex 
 @args@ 
