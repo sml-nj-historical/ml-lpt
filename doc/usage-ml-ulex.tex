@@ -2,7 +2,7 @@
 
 \section{Overview}
 
-\textsc{ml-ulex} is used for generating ``lexers,'' which discern the lexical structure of an input string.  If the generated module is called {\tt Lexer}, it will contain a type {\tt strm} and a function
+\textsc{ml-ulex} is used for generating ``lexers,'' which analyze the lexical structure of an input string, in this case using regular expressions..  If the generated module is called {\tt Lexer}, it will contain a type {\tt strm} and a function
 \begin{verbatim}
     val lex : strm -> (token * strm) option
 \end{verbatim}
@@ -26,7 +26,7 @@ where {\tt file} is the name of the input \ulex{} specification, and where {\tt 
 
 \section{Specification format}
 
-A \ulex{} specification is a list of semicolon-terminated \emph{declarations}.  Each declaration is either a \emph{directive}
+A \ulex{} specification is a list of semicolon-terminated \emph{declarations}.  Each declaration is either a \emph{directive} or a \emph{rule}.  Directives are used to alter global specification properties (such as the name of the module that will be generated) or to define named regular expressions.  Rules specify the actual reguluar expressions to be matched.  The top-level grammar is given in Figure~\ref{fig:ulex-syntax}.
 
 \begin{figure}
 \Grammar{
@@ -38,8 +38,9 @@ A \ulex{} specification is a list of semicolon-terminated \emph{declarations}.  
 \GNextB
 	{rule}
 
-\GFirstB{directive}
-	{\kw{charset} $($ \T{ASCII7} $|$ \T{ASCII8} $|$ \T{UTF8} $)$}
+%\GFirstB{directive}
+%	{\kw{charset} $($ \T{ASCII7} $|$ \T{ASCII8} $|$ \T{UTF8} $)$}
+
 \GNextB
 	{\kw{defs} code}
 \GNextB
@@ -53,65 +54,153 @@ A \ulex{} specification is a list of semicolon-terminated \emph{declarations}.  
 	{ \T{(} $\dots$ \T{)} }
 	
 \GFirstB{rule}
-	{re \T{=>} code}
+	{ $($\T{<} ID $($ \T{,} ID $)^*$ \T{>}$)^?$ re \T{=>} code}
 }
-\caption{The top-level \ulex{} grammar}
+\caption{The top-level \ulex{} grammar}\label{fig:ulex-syntax}
 \end{figure}
+
+There are a few lexical details of the specification format worth mentioning.  First, SML-style comments (\texttt{(* ... *)}) are treated as ignored whitespace anywhere they occur in the specification, \emph{except} in segments of code.  The \textit{ID} symbol used in the grammar stands for alpha-numeric-underscore identifiers, starting with an alpha character.  The \textit{code} production represents a segment of SML code, enclosed in parentheses.  Extra parentheses occuring within strings or comments in code need not be balanced.
 
 \section{Directives}
 
 \subsection{The \kw{defs} directive}
 
+The \kw{defs} directive is used to include a segment of code in the generated lexer module.  All definitions given will be in scope for the rule actions; see Section~\ref{sec:ulex-rules}.
+
 \subsection{The \kw{let} directive}
+
+Use \kw{let} to define named abbreviations for regular expressions; once bound, an abbreviation can be used in further \kw{let}-bindings or in rules.  For example,
+\begin{verbatim}
+    %let digit = [0-9];
+\end{verbatim}
+introduces an abbreviation for a regular expression matching a single digit.  To use abbreviations, enclose their name in curly braces.  For example, an additional \kw{let} definition can be given in terms of \texttt{digit},
+\begin{verbatim}
+    %let int = {digit}+;
+\end{verbatim}
+which matches arbitrary-length integers.  Note that scoping of let-bindings follows standard SML rules, so that the definition of \texttt{int} must appear after the definition of \texttt{digit}.
 
 \subsection{The \kw{name} directive}
 
+The name to use for the generated lexer module is specified using \kw{name}.
+
 \subsection{The \kw{states} directive}
 
-\section{Regular expressions}
+It is often helpful for a lexer to have multiple \emph{start states}, which influence the regular expressions that the lexer will match.  For instance, after seeing a double-quote, the lexer might switch into a \texttt{STRING} start state, which contains only the rules necessary for matching strings, and which returns to the standard start state after the closing quote.
+
+Start states are introduced via \kw{states}, and are named using standard identifiers.  There is always an implicit, default start state called \texttt{INITIAL}.  Within a rule action, the function \texttt{YYBEGIN} can be applied to the name of a start state to switch the lexer into that state; see~\ref{sec:ulex-actions} for details on rule actions.
+
+\section{Rules}\label{sec:ulex-rules}
+
+Recall that the \texttt{lex} function of the generated lexer module is a ``token'' reader.  In general, when \texttt{lex} is applied to an input stream, it will attempt to match a prefix of the input with a regular expression given in one of the rules.  When a rule is matched, its \emph{action} (associated code) is evaluated and the result is returned.  Hence, all actions must belong to the same type, but no restrictions are placed on what that type is.
+
+Rules are specified by an optional list of start states, a regular expression, and the action code.  The rule is said to ``belong'' to the start states it lists.  If no start states are specified, the rule belongs to \emph{all} defined start states.
+
+Rule matching is influenced by three factors: start state, match length, and rule order.  A rule is only considered for matching if it belongs to the lexer's current start state.  If multiple rules match an input prefix, the rule matching the longest prefix is selected.  In the case of a tie, the rule appearing first in the specification is selected.
+
+For example, suppose the start state {\tt FOO} is defined, and the following rules appear, with no other rules belonging to {\tt FOO}:
+\begin{verbatim}
+    <FOO> a+    => ( Tokens.as );
+    <FOO> a+b+  => ( Tokens.asbs );
+    <FOO> a+bb* => ( Tokens.asbs );
+\end{verbatim}
+If the current start state is not {\tt FOO}, none of the rules will be considered.  Otherwise, on input ``aabbbc'' all three rules are possible matches.  The first rule is discarded, since the others match a longer prefix.  The second rule is then selected, because it matches the same prefix as the third rule, but appears earlier in the specification.
+
+\subsection{Regular expression syntax}
 
 \begin{figure}
 \Grammar{	
 \GFirstB{re}
 	{{\rm any nonreserved, nonwhitespace character or escape code}}
 \GNextB
-	{re \T{*}}
-\GNextB
-	{re \T{?}}
-\GNextB
-	{re \T{+}}
-\GNextB
-	{\T{\^{ }} re}
-\GNextB
-	{re \T{|} re}
-\GNextB
-	{re \T{\&} re}
-\GNextB
-	{re \T{/} re}
-\GNextB
-	{re \T{\$}}
-\GNextB
 	{{\rm a double-quoted string, as in SML}}
-\GNextB
-	{\T{\{} ID \T{\}}}
-\GNextB
-	{\T{[} \T{\^{ }}$^?$ $($ char \T{-} char $|$ char $)^+$ \T{]}}
-\GNextB
-	{re re}
+\GNextC
+	{\T{\{} ID \T{\}}}	{\kw{let}-bound abbreviation}
+\GNextC
+	{\T{[} \T{\^{ }}$^?$ $($ char \T{-} char $|$ char $)^+$ \T{]} \quad\phantom{.}}
+				{a character class}
+\GNextC
+	{\T{.}}			{wildcard (all single charcters except texttt{{$\backslash$}n})}
 \GNextB
 	{\T{(} re \T{)}}
-\GNextB
-	{\T{.}}
-\GNextB
-	{\T{\_}}
+\GNextC
+	{re \T{*}}		{Kleene-closure (0 or more)}
+\GNextC
+	{re \T{?}}		{Optional (0 or 1)}
+\GNextC
+	{re \T{+}}		{Positive-closure (1 or more)}
+\GNextC
+	{re \T{\{} INT \T{\}}}	{Match exactly {\it INT} repetitions}
+\GNextC
+	{re re}			{Concatenation}
+\GNextC
+	{\T{\^{ }} re}		{Negation (anything except \textit{re})}
+\GNextC
+	{re \T{\&} re}		{Intersection}
+\GNextC
+	{re \T{|} re}		{Union}
+%\GNextB
+%	{re \T{/} re}
+%\GNextB
+%	{re \T{\$}}
+%\GNextB
+%	{\T{\_}}
 }
-\caption{The \ulex{} grammar for regular expressions}
+\caption{The \ulex{} grammar for regular expressions}\label{ulex-rule-syntax}
 \end{figure}
+
+The syntax of regular expressions is given in Figure~\ref{ulex-rule-syntax}; constructs are listed in precedence order, from most tightly-binding to least.  Escape codes are the same as in SML, but also include \texttt{$\backslash$uxxxx} and \texttt{$\backslash$Uxxxxxxxx}, where \texttt{xxxx} represents a hexidecimal number which in turn represents a Unicode symbol.  The specification format itself freely accepts Unicode characters, and they may be used within a quoted string, or by themselves.
+
+Some examples:
+\[
+\begin{array}{rcl}
+{\tt 0 | 1 | 2 | 3}	& \textit{denotes} &
+    \{ \texttt{0}, \texttt{1}, \texttt{2}, \texttt{3} \}	\\
+{\tt [0123]}	& \textit{denotes} &
+    \{ \texttt{0}, \texttt{1}, \texttt{2}, \texttt{3} \}	\\
+{\tt 0123}	& \textit{denotes} &
+    \{ \texttt{0123} \}						\\
+{\tt 0*}	& \textit{denotes} &
+    \{ \epsilon, \texttt{0}, \texttt{00}, \dots \}		\\
+{\tt 00*}	& \textit{denotes} &
+    \{ \texttt{0}, \texttt{00}, \dots \}		\\
+{\tt 0+}	& \textit{denotes} &
+    \{ \texttt{0}, \texttt{00}, \dots \}		\\
+{\tt [0-9]\{3\}}	& \textit{denotes} &
+    \{ \texttt{000}, \texttt{001}, \texttt{002}, \dots, \texttt{999} \}	\\
+{\tt 0* \& (..)*}	& \textit{denotes} &
+    \{ \epsilon, \texttt{00}, \texttt{0000}, \dots \}	\\
+{\tt ^(abc)}	& \textit{denotes} &
+    \Sigma^* \setminus \{ \texttt{abc} \}
+\end{array}
+\]
+
+\subsection{Actions}\label{sec:ulex-actions}
+
+Actions are arbitrary SML code enclosed in parentheses.  The following names are in scope:
+\vskip 12pt
+\begin{tabular}{lp{0.65\textwidth}}
+  {\tt YYBEGIN} & a function taking a start state and returning unit; changes to that start state.	\\
+  {\tt yytext} & the matched text as a string.	\\
+  {\tt yysubstr} & the matched text as a substring (avoids copying).	\\
+  {\tt yyunicode} & the matched \emph{Unicode} text as a list of Word32.words \\
+  {\tt continue} & a unit to ``token'' function which recursively calls the lexer on the input following the matched prefix, and returns its result.	\\
+  {\tt yylineno} & the current line number, starting from 0.	\\
+  {\tt yypos} & the current character, starting from 0.	\\
+  ? & any name bound in the \kw{defs} section.
+\end{tabular}
 
 \section{Using the generated code}
 
-\section{An example}
+The generated lexer module has a signature including the following:
+\begin{verbatim}
+  type prestrm
+  type strm = prestrm * start_state
+  val streamify : (int -> string) -> strm
+  val lex : strm -> (token, strm) option
+\end{verbatim}
+where \texttt{token} is the result type of the lexer actions, and \texttt{start\_state} is an algebraic datatype with nullary constructors for each defined start state.  In this interface, lexer start states are conceptually part of the input stream; thus, from an external viewpoint start states can be totally ignored.  However, it is sometimes easier to control the lexer start state externally, since more contextual information may be available.  This is why the \texttt{strm} type includes a concrete \texttt{start\_state} component.
 
+\section{An example}
 \begin{verbatim}
 %name CalcLex;
 
@@ -140,3 +229,5 @@ in      => ( KW_in );
 \end{verbatim}
 
 \section{{\tt ml-lex} compatibility}\label{sec:lex-compat}
+
+Running \ulex{} with the {\tt --ml-lex-mode} option will cause it to process its input file using the ML-Lex format, and interpret the actions in a ML-Lex-compatible way.  The compatibility extends to the bugs in ML-Lex, so in particular \texttt{yylineno} starts at 2 in {\tt --ml-lex-mode}.

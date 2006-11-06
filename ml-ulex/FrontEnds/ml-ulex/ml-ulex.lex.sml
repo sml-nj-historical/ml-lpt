@@ -86,6 +86,7 @@ structure MLULexLex  = struct
 	val mkStream : (int -> string) -> stream
 	val getc : stream -> (Char.char * stream) option
 	val getpos : stream -> int
+	val getline : stream -> int
 	val subtract : stream * stream -> Substring.substring
 	val eof : stream -> bool
 
@@ -93,7 +94,7 @@ structure MLULexLex  = struct
 
         val chunkSize = 4096
 
-        datatype stream = S of (buf * int)
+        datatype stream = S of (buf * int * int) 
 	and buf = B of {
 	    data : string,
 	    basePos : int,
@@ -106,14 +107,18 @@ structure MLULexLex  = struct
 	      (S (B {data = "", basePos = 0, 
 		     more = ref UNKNOWN,
 		     inputN = inputN},
-		  0))
+		  0, 0))
 
-	fun getc (S (buf as B {data, basePos, more, inputN}, pos)) = 
-	      if pos < String.size data then
-		SOME (String.sub (data, pos), S (buf, pos+1))
+	fun getc (S (buf as B {data, basePos, more, inputN}, pos, line)) = 
+	      if pos < String.size data then let
+		val c = String.sub (data, pos)
+		val line' = if c = #"\n" then line+1 else line
+		in
+		  SOME (c, S (buf, pos+1, line'))
+		end
 	      else (case !more
 		     of NO => NONE
-		      | YES buf' => getc (S (buf', 0))
+		      | YES buf' => getc (S (buf', 0, line))
 		      | UNKNOWN => 
 			  (case inputN chunkSize
 			    of "" => (more := NO; NONE)
@@ -125,17 +130,18 @@ structure MLULexLex  = struct
 					       inputN = inputN}
 			         in
 				   more := YES buf';
-				   getc (S (buf', 0))
+				   getc (S (buf', 0, line))
 			         end
 			   (* end case *))
 		    (* end case *))
 
-	fun getpos (S (B {basePos, ...}, pos)) = basePos + pos
+	fun getpos (S (B {basePos, ...}, pos, _)) = basePos + pos
+	fun getline (S (_, _, line)) = line
 
 	fun subtract (new, old) = let
-	      val (S (B {data = ndata, basePos = nbasePos, ...}, npos)) = new
+	      val (S (B {data = ndata, basePos = nbasePos, ...}, npos, _)) = new
 	      val (S (B {data = odata, basePos = obasePos, 
-			 more, inputN}, opos)) = old
+			 more, inputN}, opos, _)) = old
 	      in
 	        if nbasePos = obasePos then
 		  Substring.substring (ndata, opos, npos-opos)
@@ -146,11 +152,11 @@ structure MLULexLex  = struct
 			   Substring.extract (
 			     Substring.concat [
 			       Substring.extract (odata, opos, NONE),
-			       subtract (new, S (buf, 0))],
+			       subtract (new, S (buf, 0, 0))],
 			     0, NONE)
 	      end
 
-	fun eof (S (B {data, more, ...}, pos)) = 
+	fun eof (S (B {data, more, ...}, pos, _)) = 
 	      pos >= String.size data andalso 
 	      (case !more
 		of NO => true
@@ -203,12 +209,12 @@ COM | CODE | STRING | CHARSET | CHARCLASS | RESTRING | INITIAL | DIRECTIVE
 
     exception yyEOF
 
-    fun mk yyins = let
+    fun innerLex (yystrm_, yyss_) = let
         (* current start state *)
-          val yyss = ref INITIAL
+          val yyss = ref yyss_
 	  fun YYBEGIN ss = (yyss := ss)
 	(* current input stream *)
-          val yystrm = ref yyins
+          val yystrm = ref yystrm_
 	(* get one char of input *)
 	  val yygetc = yyUTF8.getu yyInput.getc 
 	(* create yytext *)
@@ -218,11 +224,11 @@ COM | CODE | STRING | CHARSET | CHARCLASS | RESTRING | INITIAL | DIRECTIVE
           open UserDeclarations
           fun lex 
 (yyarg as ()) = let
-            fun yystuck (yyNO_MATCH) = raise Fail "stuck state"
+            fun yystuck (yyNO_MATCH) = raise Fail "lexer reached a stuck state"
 	      | yystuck (yyMATCH (strm, action, old)) = 
 		  action (strm, old)
 	    val yypos = yyInput.getpos (!yystrm)
-	    fun yygetlineNo(_) = 0
+	    val yygetlineNo = yyInput.getline
 	    fun continue() = 
 let
 fun yyAction0 (strm, lastMatch) = (yystrm := strm;  continue())
@@ -1888,16 +1894,35 @@ in
     | DIRECTIVE => yyQ7(!(yystrm), yyNO_MATCH)
   (* end case *))
 end
-	    in continue() end
+	    in (continue(), !yystrm, !yyss) end
           in 
-            lex 
+            lex
 	    handle IO.Io{cause, ...} => raise cause
           end
     
     type tok = UserDeclarations.lex_result
-    datatype str = EVAL of tok * strm | UNEVAL of (unit -> tok)
-    and strm = STRM of str ref
+    datatype prestrm = STRM of yyInput.stream * 
+		(yystart_state * tok * prestrm * yystart_state) option ref
+    type strm = (prestrm * yystart_state)
 
+    fun lex(STRM (yystrm, memo), ss) = (case !memo
+	  of NONE => (let
+	     val (tok, yystrm', ss') = innerLex (yystrm, ss) ()
+	     val strm' = STRM (yystrm', ref NONE);
+	     in 
+	       memo := SOME (ss, tok, strm', ss');
+	       SOME (tok, (strm', ss'))
+	     end
+	     handle yyEOF => NONE)
+	   | SOME (ss', tok, strm', ss'') => 
+	       if ss = ss' then
+		 SOME (tok, (strm', ss''))
+	       else (
+		 memo := NONE;
+		 lex (STRM (yystrm, memo), ss))
+         (* end case *))
+
+(*	  
     fun lex(STRM (ref(EVAL t))) = SOME t
       | lex(STRM (s as ref(UNEVAL f))) = let
 	  val tok = f()
@@ -1909,7 +1934,9 @@ end
 	  handle yyEOF => NONE
 
     fun streamify inputN = STRM(ref(UNEVAL (mk (yyInput.mkStream inputN))))
-
+*)
 (*    fun cons(a,s) = STRM(ref(EVAL(a,s))) *)
+
+    fun streamify inputN = (STRM (yyInput.mkStream inputN, ref NONE), INITIAL)
 
   end
