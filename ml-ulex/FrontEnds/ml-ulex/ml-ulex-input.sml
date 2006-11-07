@@ -21,9 +21,12 @@ structure MLULexInput =
 		 print "\n")
 	  val fstrm = TextIO.openIn fname
 	  val strm = MLULexLex.streamify (fn n => TextIO.inputN (fstrm, n))
-	  val (spec, errors) = P.parse strm
+	  val (spec, _, errors) = P.parse strm
 			       before TextIO.closeIn fstrm
-	  fun errMsg (pos, err) = print (P.repairToString err ^ "\n")
+	  fun errMsg (pos, err) = print (String.concat [
+		"[", Int.toString (MLULexLex.getLineNo pos + 1), "]: ",
+		P.repairToString err, 
+		"\n"])
 	  in
             app errMsg errors;
 	    spec

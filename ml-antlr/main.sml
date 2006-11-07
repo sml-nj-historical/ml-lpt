@@ -26,7 +26,9 @@ structure Main : sig
 			  " nonterminals"]
 	  val _ = Err.debugs [" ", Int.toString (List.length prods), 
 			  " productions"]
+(*
 val _ = app (Err.debug o Prod.toString) prods
+*)
           in
             grm
           end

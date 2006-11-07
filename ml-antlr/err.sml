@@ -40,7 +40,7 @@ structure Err =
     val printDebug = ref true
 
   (* print a debugging message *)
-    fun debug s = (print s; print "\n")
+    fun debug s = if !printDebug then (print s; print "\n") else ()
     fun debugs ss = debug (concat ss)
 
   (* print a status message *)

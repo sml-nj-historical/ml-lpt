@@ -1270,11 +1270,11 @@ fun file_NT (strm) = let
 in
   file_NT(strm)
 end
-        val (ret, _, errors) = launch (parse'
+        val (ret, strm', errors) = launch (parse'
 
 ) (WStream.wrap strm)
         in 
-          (ret, map unwrapErr errors)
+          (ret, strm', map unwrapErr errors)
         end
 
     datatype repair_action

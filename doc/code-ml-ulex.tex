@@ -1,4 +1,4 @@
-\chapter[\ulex]{Implementation: \ulex}\label{sec:code}
+\chapter[\ulex]{Implementation: \ulex}
 
 \section{Organization}
 
@@ -14,8 +14,8 @@ output formats, and a middle component responsible for DFA generation.  The
 together provide DFA generation (see figure~\ref{fig:ml-flex}).  The DFA
 generation algorithm used in \ulex{} is somewhat nonstandard; it is based on
 Brzozowski's notion of regular expression derivatives~\cite{derivatives}. 
-Section~\ref{sec:theory} describes the algorithm, as well as modifications
-necessary to support unicode.  Section~\ref{sec:code} gives more concrete
+Chapter~\ref{ch:ulex-theory} describes the algorithm, as well as modifications
+necessary to support unicode.  This chapter gives more concrete
 details about the code, broken down by module.
 
 \begin{figure}\label{fig:ml-flex}

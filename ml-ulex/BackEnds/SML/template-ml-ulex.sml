@@ -252,4 +252,7 @@
 
     fun streamify inputN = (STRM (yyInput.mkStream inputN, ref NONE), INITIAL)
 
+    fun getLineNo (STRM (strm, _), _) = yyInput.getline strm
+    fun getPos    (STRM (strm, _), _) = yyInput.getpos strm
+
   end

@@ -456,12 +456,12 @@ strm = let
 
 @parser@
 
-        val (ret, _, errors) = launch (parse'
+        val (ret, strm', errors) = launch (parse'
 @args@
 
 ) (WStream.wrap strm)
         in 
-          (ret, map unwrapErr errors)
+          (ret, strm', map unwrapErr errors)
         end
 
     datatype repair_action
