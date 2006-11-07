@@ -10,8 +10,8 @@ CMD=$0
 
 ROOT="ml-ulex"
 HEAP_IMAGE=""
-ROOT=`pwd`/../..
-BIN=${INSTALLDIR:-$ROOT}/bin
+SMLNJROOT=`pwd`/../..
+BIN=${INSTALLDIR:-$SMLNJROOT}/bin
 BUILD=$BIN/ml-build
 
 #
