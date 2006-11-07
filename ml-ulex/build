@@ -10,8 +10,8 @@ CMD=$0
 
 ROOT="ml-ulex"
 HEAP_IMAGE=""
-ONEUP=`pwd`/..
-BIN=${INSTALLDIR:-$ONEUP}/bin
+ROOT=`pwd`/../..
+BIN=${INSTALLDIR:-$ROOT}/bin
 BUILD=$BIN/ml-build
 
 #
