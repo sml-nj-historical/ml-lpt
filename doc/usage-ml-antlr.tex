@@ -204,7 +204,7 @@ This is essentially \emph{left-factoring}.  Again, see Section~\ref{sec:antlr-ll
 
 \subsection{Semantic predicates}
 
-A production can be qualified by a \emph{semantic predicate} by introducting a \kw{where} clause.  Even if the production is syntactically matched by the input, it will not be used unless its semantic predicate evaluates to true.  A \kw{where} clause can thus introduce context-sensitivity to a grammar.  The following example uses an inherited {\tt env} attribute, containing a variable-value environment:
+A production can be qualified by a \emph{semantic predicate} by introducting a \kw{where} clause.  Even if the production is syntactically matched by the input, it will not be used unless its semantic predicate evaluates to {\tt true}.  A \kw{where} clause can thus introduce context-sensitivity into a grammar.  The following example uses an inherited {\tt env} attribute, containing a variable-value environment:
 \begin{verbatim}
     atomicExp(env)
       : ID %where ( AtomMap.inDomain(env, Atom.atom ID) )
@@ -255,9 +255,111 @@ since {\tt "+"} and {\tt ";"} represent nullary token values.
 
 \section{The $LL(k)$ restriction}\label{sec:antlr-llk}
 
+When working with any parser, one must be aware of the restrictions is algorithm places on grammars.
+When \antlr{} analyzes a grammar, it attempts to create a prediction-
+decision tree for each nonterminal.  In the usual case, this decision
+is made using lookahead token sets.  The tool will start with $k = 1$
+lookahead and increment to a set value (normally $k = 3$) until it can
+uniquely predict each production.  Subtrees of the decision tree
+remember the tokens chosen by their parents, and take this into account
+when computing lookahead.  For example, suppose we have two productions
+at the top level that generate the following sentences:
+\begin{verbatim}
+    prod1 ==> AA
+    prod1 ==> AB
+    prod1 ==> BC
+    prod2 ==> AC
+    prod2 ==> C
+\end{verbatim}
+At $k = 1$, the productions can generate the following sets:
+\begin{verbatim}
+    prod1 {A, B}
+    prod2 {A, C}
+\end{verbatim}
+and $k = 2$,
+\begin{verbatim}
+    prod1 {A, B, C}
+    prod2 {C, $}
+\end{verbatim}
+Examining the lookahead sets alone, this grammar fragment looks ambiguous
+even for $k = 2$.  However, \antlr{} will generate the following decision
+tree:
+\begin{verbatim}
+    if LA(0) = A then
+      if LA(1) = A or LA(1) = B then
+        predict prod1
+      else if LA(1) = C then
+        predict prod2
+    else if LA(0) = B then
+      predict prod1
+    else if LA(1) = C then
+      predict prod2
+\end{verbatim}
+
+In \antlr{}, only a small amount of lookahead is used by default (normally $k = 3$).  Thus, the following grammar is ambiguous for \antlr{}:
+\begin{verbatim}
+    foo : A A A B
+        | A A A A
+        ;
+\end{verbatim}
+and will generate the following error message:
+\begin{verbatim}
+    Error: lookahead computation failed for 'foo',
+    with a conflict for the following productions:
+      foo ::= A A A A EOF
+      foo ::= A A A B EOF
+    The conflicting token sets are:
+      k = 1: {A}
+      k = 2: {A}
+      k = 3: {A}
+\end{verbatim}
+Whenever a lookahead ambiguity is detected, an error message of this form is given.  The listed productions are the point of conflict.  The {\tt k = ...} sets together give examples that can cause the ambiguity, in this case an input of {\tt AAA}.
+
+The problem with this example is that the two {\tt foo} productions can only be distinguished by a token at $k = 4$ depth.  This situation can sometimes be resolved using \emph{left-factoring}, which lifts the common prefix of multiple productions into a single production, and then distinguishes the old productions through a subrule:
+\begin{verbatim}
+    foo : A A A (B | A)
+        ;
+\end{verbatim}
+Recall that subrule alternatives can have their own actions:
+\begin{verbatim}
+    foo : A A A ( B => ( "got a B" ) 
+                | A => ( "got an A" )
+                )
+        ;
+\end{verbatim}
+making left-factoring a fairly versatile technique.
+
+Another limitation of predictive parsing is \emph{left-recursion}, where a nonterminal recurs without any intermediate symbols:
+\begin{verbatim}
+    foo : foo A A
+        | B
+        ;
+\end{verbatim}
+Left-recursion breaks predictive parsing, because it is impossible to make a prediction for a left-recursive production without already having a prediction in hand.  Usually, this is quite easily resolved using EBNF operators, since left-recursion is most often used for specifying lists.  Thus, the previous example can be rewritten as
+\begin{verbatim}
+    foo : B (A A)*
+        ;
+\end{verbatim}
+which is both more readable and more amenable to $LL(k)$ parsing.
+
 \section{Handling precedence}
 
 \section{Using the generated code}
+
+The generated parser functor includes the following:
+\begin{verbatim}
+    datatype repair_action
+      = Insert of Tok.token list
+      | Delete of Tok.token list
+      | Subst of {
+            old : Tok.token list,
+            new : Tok.token list
+        }
+
+    val parse : strm -> ty * strm * (strm * repair_action) list
+    val repairToString : repair_action -> string
+\end{verbatim}
+where {\tt ty} is the type of the semantic action for the grammar's start symbol.  The result of a parse is the semantic yield of the parse, the value of the stream at the end of the parse, and a list of error repairs.  Each error repair includes a stream component and a repair action.  The stream component can be used to determine the position of the error, assuming that the underlying stream supports this.  If \ulex{} is used to create the lexer for the parser, the lexer functions {\tt getLineNo} and {\tt getPos} can be used to get the position information.  The {\tt repairToString} function gives a simple message corresponding to a repair.  If token abbreviations are defined ({\tt "("} for {\tt LPAREN}, for example), those abbreviations are used in the default repair message.
 
 \section{An example}
 
