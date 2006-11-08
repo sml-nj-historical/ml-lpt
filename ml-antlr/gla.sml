@@ -178,7 +178,7 @@ structure GLA :>
             if NodeSet.member (leftSet, n) then
 	      if isInitial n then (
 	        print (String.concat 
-		  ["LEFT RECURSION DETECTED: ", Nonterm.qualName (ntOf n), " -> ",
+		  ["Left recursion detected: ", Nonterm.qualName (ntOf n), " -> ",
 		   Nonterm.qualName (ntOf n), " ...\n"]);
 		(TSet.empty, leftSet'))
 	      else 
