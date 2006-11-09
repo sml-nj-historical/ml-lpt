@@ -224,7 +224,14 @@ fun prim_re_PROD_5_prim_re_SR1_PROD_1_ACT (LSB, env, CARAT) =
 fun prim_re_PROD_5_prim_re_SR1_PROD_2_ACT (LSB, env) = 
   ( fn x => x)
 fun prim_re_PROD_5_prim_re_SR2_PROD_1_ACT (LSB, SR1, env, DASH, char1, char2) = 
-  ( SIS.interval (char1, char2))
+  ( 
+	    if char1 <= char2 then
+	       SIS.interval (char1, char2)
+	     else (print (String.concat [
+	       "Error: malformed character class: ",
+	       Word32.toString char1, " - ",
+	       Word32.toString char2, ".\n"]);
+	       SIS.universe))
 fun prim_re_PROD_5_prim_re_SR2_PROD_2_ACT (LSB, SR1, env, char) = 
   ( SIS.singleton char)
 fun prim_re_PROD_5_ACT (LSB, RSB, SR1, SR2, env) = 
