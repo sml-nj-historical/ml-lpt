@@ -488,7 +488,11 @@ strm = let
           (WStream.unwrap deleteFrom, 
   	   Delete (WStream.getDiff (deleteTo, deleteFrom)))
 
-    val parse = innerParse unwrapErr
+    fun parse
+@args@
+strm = innerParse unwrapErr
+@args@
+strm
 
     fun toksToString toks = String.concatWith " " (map Tok.toString toks)
 
