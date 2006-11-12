@@ -279,7 +279,7 @@ structure SMLOutput =
           val casesExp = ML_Case (ML_Var "tok", List.map mkMat toks)
           in
             TextIO.output (strm, toksDT ^ "\n\n");
-            TextIO.output (strm, "    fun toString tok = \n");
+            TextIO.output (strm, "    fun toString tok =\n");
 	    ML.ppML (ppStrm, casesExp);
 	    TextIO.output (strm, "\n")
           end
