@@ -67,6 +67,7 @@ tyvar="'"{idchars}*;
 <INITIAL>"%name"	=> (Tok.KW_name		(!yylineno, !yylineno));
 <INITIAL>"%header"	=> (Tok.KW_header	(!yylineno, !yylineno));
 <INITIAL>"%start"	=> (Tok.KW_start	(!yylineno, !yylineno));
+<INITIAL>"%entry"	=> (Tok.KW_entry	(!yylineno, !yylineno));
 <INITIAL>"%try"		=> (Tok.KW_try		(!yylineno, !yylineno));
 <INITIAL>"%where"       => (YYBEGIN CODE; clrText();
 			    Tok.KW_where	(!yylineno, !yylineno));

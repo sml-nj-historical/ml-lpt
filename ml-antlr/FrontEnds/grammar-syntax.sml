@@ -56,7 +56,9 @@ structure GrammarSyntax =
 	defs : action,
 	rules : rule list,
 	toks : constr list,
-	actionStyle : action_style
+	actionStyle : action_style,
+	startSym : Atom.atom option,
+	entryPoints : Atom.atom list
       }
 
     fun mkGrammar() = GRAMMAR {
@@ -66,46 +68,58 @@ structure GrammarSyntax =
 	  defs = (0, ""),
 	  rules = [],
 	  toks = [],
-	  actionStyle = ActNormal
+	  actionStyle = ActNormal,
+	  startSym = NONE,
+	  entryPoints = []
         }
 
     fun updHeader (g, new) = let
-          val GRAMMAR {import, importChanges, header, defs, rules, toks, actionStyle} = g
+          val GRAMMAR {import, importChanges, header, defs, rules, toks, actionStyle, startSym, entryPoints} = g
           in GRAMMAR {import = import, importChanges = importChanges, header = new, defs = defs, rules = rules, 
-		      toks = toks, actionStyle = actionStyle} end
+		      toks = toks, actionStyle = actionStyle, startSym = startSym, entryPoints = entryPoints} end
 
     fun updDefs (g, new) = let
-          val GRAMMAR {import, importChanges, header, defs, rules, toks, actionStyle} = g
+          val GRAMMAR {import, importChanges, header, defs, rules, toks, actionStyle, startSym, entryPoints} = g
           in GRAMMAR {import = import, importChanges = importChanges, header = header, defs = new, rules = rules, 
-		      toks = toks, actionStyle = actionStyle} end
+		      toks = toks, actionStyle = actionStyle, startSym = startSym, entryPoints = entryPoints} end
 
     fun updToks (g, new) = let
-          val GRAMMAR {import, importChanges, header, defs, rules, toks, actionStyle} = g
+          val GRAMMAR {import, importChanges, header, defs, rules, toks, actionStyle, startSym, entryPoints} = g
           in GRAMMAR {import = import, importChanges = importChanges, header = header, defs = defs, rules = rules, 
-		      toks = new, actionStyle = actionStyle} end
+		      toks = new, actionStyle = actionStyle, startSym = startSym, entryPoints = entryPoints} end
 
     fun updActionStyle (g, new) = let
-          val GRAMMAR {import, importChanges, header, defs, rules, toks, actionStyle} = g
+          val GRAMMAR {import, importChanges, header, defs, rules, toks, actionStyle, startSym, entryPoints} = g
           in GRAMMAR {import = import, importChanges = importChanges, header = header, defs = defs, rules = rules, 
-		      toks = toks, actionStyle = new} end
+		      toks = toks, actionStyle = new, startSym = startSym, entryPoints = entryPoints} end
 
     fun debugAct g = updActionStyle (g, ActDebug)
     fun unitAct g = updActionStyle (g, ActUnit)
 
     fun addRule (g, new) = let
-          val GRAMMAR {import, importChanges, header, defs, rules, toks, actionStyle} = g
+          val GRAMMAR {import, importChanges, header, defs, rules, toks, actionStyle, startSym, entryPoints} = g
           in GRAMMAR {import = import, importChanges = importChanges, header = header, defs = defs, rules = rules@[new], 
-		      toks = toks, actionStyle = actionStyle} end
+		      toks = toks, actionStyle = actionStyle, startSym = startSym, entryPoints = entryPoints} end
 
     fun addImportChange (g, new) = let
-          val GRAMMAR {import, importChanges, header, defs, rules, toks, actionStyle} = g
+          val GRAMMAR {import, importChanges, header, defs, rules, toks, actionStyle, startSym, entryPoints} = g
           in GRAMMAR {import = import, importChanges = importChanges@[new], header = header, defs = defs, rules = rules, 
-		      toks = toks, actionStyle = actionStyle} end
+		      toks = toks, actionStyle = actionStyle, startSym = startSym, entryPoints = entryPoints} end
 
-    fun updImport (GRAMMAR {import = NONE, importChanges, header, defs, rules, toks, actionStyle}, new) =
+    fun updImport (GRAMMAR {import = NONE, importChanges, header, defs, rules, toks, actionStyle, startSym, entryPoints}, new) =
           GRAMMAR {import = SOME new, importChanges = importChanges, header = header, defs = defs, rules = rules, 
-		   toks = toks, actionStyle = actionStyle}
+		   toks = toks, actionStyle = actionStyle, startSym = startSym, entryPoints = entryPoints}
       | updImport (g, _) = (Err.errMsg ["Error: multiple %imports are not allowed"]; g)
+
+    fun updStartSym (GRAMMAR {import = import, importChanges, header, defs, rules, toks, actionStyle, startSym = NONE, entryPoints}, new) =
+          GRAMMAR {import = import, importChanges = importChanges, header = header, defs = defs, rules = rules, 
+		   toks = toks, actionStyle = actionStyle, startSym = SOME new, entryPoints = entryPoints}
+      | updStartSym (g, _) = (Err.errMsg ["Error: multiple %start symbols are not allowed"]; g)
+
+    fun updEntryPoints (GRAMMAR {import = import, importChanges, header, defs, rules, toks, actionStyle, startSym, entryPoints = []}, new) =
+          GRAMMAR {import = import, importChanges = importChanges, header = header, defs = defs, rules = rules, 
+		   toks = toks, actionStyle = actionStyle, startSym = startSym, entryPoints = new}
+      | updEntryPoints (g, _) = (Err.errMsg ["Error: multiple %entry directives not allowed"]; g)
 
     fun setToTry (ALT {items, action, try, pred}) = 
 	  ALT {items = items, action = action, try = true, pred = pred}

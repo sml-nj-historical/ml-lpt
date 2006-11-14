@@ -29,6 +29,7 @@ structure CheckGrammar : sig
 	    List.foldl cnt 0 rules
 	  end
 
+  (* load the %tokens definition into a tokTbl : atom -> LLKSpec.token *)
     fun loadToks (nextGlobalID, toks) = let
 	  val tokTbl = ATbl.mkTable (64, Fail "token table")
 	  val tokList = ref []
@@ -52,8 +53,13 @@ structure CheckGrammar : sig
 
     structure AMap = AtomMap
 
+  (* recursively import grammars, applying changes (%drop, %replace, %extend)
+   * as the grammar is imported.  note that grammars are integrated directly
+   * from the parse tree form (GrammarSyntax.grammar) rather than the processed
+   * form that the check function below produces (LLKSpec.grammar).
+   *)
     fun appImport (Syn.GRAMMAR {import = SOME file, importChanges, header, defs, 
-				rules, toks, actionStyle}) = let
+				rules, toks, actionStyle, startSym, entryPoints}) = let
 	  val Syn.GRAMMAR {rules = prules, ...} = appImport (ParseFile.parse file)
 	  fun ins (rule as Syn.RULE{lhs, ...}, map) =
 	        if AMap.inDomain (map, lhs) then
@@ -81,7 +87,7 @@ structure CheckGrammar : sig
           in
             Syn.GRAMMAR {import = SOME file, importChanges = importChanges, header = header,
 			 defs = defs, rules = (AMap.listItems map')@rules, toks = toks, 
-			 actionStyle = actionStyle}
+			 actionStyle = actionStyle, startSym = startSym, entryPoints = entryPoints}
           end
       | appImport (g as Syn.GRAMMAR {importChanges = [], ...}) = g
       | appImport g = (Err.errMsg ["Error: import alterations (%drop, %extend...) ",
@@ -116,19 +122,30 @@ structure CheckGrammar : sig
 	    (userNames, numberBindings (map (binding tokTbl) items))
     end
 
+  (* check a GrammarSyntax.grammar value for errors, while transforming
+   * it into an LLKSpec.grammar suitable for analysis and parser generation.
+   *)
     fun check (g : Syn.grammar) = let
 	  val _ = Err.status "checking grammar"
 	  val nextGlobalID = nextId (ref 0)
-	  val Syn.GRAMMAR {header, defs, rules, toks, actionStyle, ...} = 
-	        appImport g
+	(* inherit any %import-ed grammars, and apply all modifications to 
+	 * imported nonterminal definitions
+	 *)
+	  val Syn.GRAMMAR {header, defs, rules, toks, actionStyle, 
+			   startSym, entryPoints, ...} = 
+	        appImport g  
+	  val _ = if List.length toks = 0 then
+		    Err.errMsg ["Error: no tokens defined."]
+		  else ()
           val (tokList, tokTbl) = 
 	        loadToks (nextGlobalID, (Atom.atom "EOF", NONE, NONE)::toks)
 	  fun lookupTok name = (case ATbl.find tokTbl name
-		 of NONE => raise Fail ("Token '" ^
-					Atom.toString name ^
-					"' is undefined")
+		 of NONE => (
+		      Err.errMsg ["Token ", Atom.toString name, " is undefined"];
+		      lookupTok (Atom.atom "EOF")) (* return EOF as a default token *)
 		  | SOME info => info
 		(* end case *))
+	  val eofTok = lookupTok (Atom.atom "EOF")
 	(* keep track of nonterminals *)
 	  val numNTerms = ref 0
 	  val ntTbl = ATbl.mkTable (64, Fail "nonterm table")
@@ -137,7 +154,9 @@ structure CheckGrammar : sig
 	        (ATbl.insert ntTbl (name, nt);
 		 ntList := nt :: !ntList;
 		 nt)
-	(* map a non-terminal name to its info record *)
+	(* map a non-terminal name to its info record, creating a new nonterminal 
+	 * record if none is found.
+	 *)
 	  fun lookupNTerm name = (case ATbl.find ntTbl name
 		 of NONE => insNTerm (S.NT{name = name, id = nextGlobalID(), formals = ref [],
 						 binding = S.TOP, prods = ref[], isEBNF = false}) 
@@ -150,6 +169,7 @@ structure CheckGrammar : sig
 (* val _ = print(concat["chkRule: ", Atom.toString lhs, "\n"]); *)
 		val S.NT{prods, formals, ...} = nt
 		val nextProdID = nextId (ref 1)
+             (* check an alternative, creating a production *)
 		fun doAlt (rhs) = let
 		      val Syn.ALT {items, action, try, pred} = rhs
 		      val (userNames, items) = ListPair.unzip items
@@ -171,12 +191,12 @@ structure CheckGrammar : sig
 			    if ATbl.inDomain tokTbl name
 			    then if not (isSome args)
 			         then S.TOK(lookupTok name)
-			         else raise Fail 
-				   ("Attempted to apply arguments to token '" 
-				    ^ (Atom.toString name)
-				    ^ "'")
+			         else (
+				   Err.errMsg ["Attempted to apply arguments to token ",
+					       Atom.toString name, "."];
+				   S.TOK eofTok)
 			    else S.NONTERM(lookupNTerm name, 
-						  Option.map Action.action args)				 
+					   Option.map Action.action args)				 
 			| doPreitem (Syn.SUBRULE alts) =
 			    S.NONTERM(doSubrule (false, alts), NONE)
 			| doPreitem (Syn.CLOS itm) =
@@ -215,17 +235,21 @@ structure CheckGrammar : sig
 			prods := prod :: !prods		(* add to lhs's prod list *)
 		      end
 		in
+	          if List.length (!prods) > 0 
+		    then Err.errMsg ["Error: duplicate definition for nonterminal ",
+				     Nonterm.name nt, "."]
+		    else ();
 		  formals := newFormals;
 		  List.app doAlt alts
 		end
 	(* check a rule *)
 	  fun chkRule (Syn.RULE{lhs, formals, alts}) = loadNTerm(lookupNTerm lhs, formals, alts)
         (* check the grammar *)
-	  val ((Syn.RULE{lhs, formals, alts})::rest) = 
+	  val ((Syn.RULE{lhs, formals, alts}), rest) = 
 	        (case rules
 		  of [] => (Err.errMsg ["Error: no rules given."];
 			    raise Err.Abort)
-		   | _  => rules)
+		   | fst::rest  => (fst, rest))
 	  fun addEOF (Syn.ALT {items, action, try, pred}) = 
 	        Syn.ALT {items = items @ [(NONE, Syn.SYMBOL (Atom.atom "EOF", NONE))], 
 			 action = action, try = try, pred = pred}
@@ -241,19 +265,43 @@ structure CheckGrammar : sig
 		in
 		  List.app chkNT (!ntList)
 		end
-	  val _ = Err.abortIfErr()
 	  val nterms = rev(!ntList)
-	  val startnt = hd (nterms)
+	(* note : safe to assume length nterms > 0, else would've aborted already *)
+	  fun findNT errStr sym = (case ATbl.find ntTbl sym
+		of NONE => (Err.errMsg ["Error: ", errStr, " symbol ", 
+					Atom.toString sym,
+					" is not defined."];
+		            hd nterms)
+		 | SOME nt => nt
+	       (* end case *))
+	  val startnt = case startSym
+			 of NONE => hd nterms
+			  | SOME sym => findNT "%start" sym
+	  val entryPoints' = map (findNT "%entry") entryPoints
+	  val sortedTops = Nonterm.topsort startnt
+	  val topsSet = AtomSet.addList 
+			  (AtomSet.empty, 
+			   map (Atom.atom o Nonterm.name) (List.concat sortedTops))
+	  fun checkNTInTops nt = 
+	        if Nonterm.isSubrule nt = false then
+		  if AtomSet.member (topsSet, Atom.atom (Nonterm.name nt)) = false 
+		  then Err.warning ["Warning: nonterminal ", Nonterm.name nt,
+				    " is not reachable from the %start symbol."]
+		  else ()
+		else ()
+	  val _ = app checkNTInTops nterms
+	  val _ = Err.abortIfErr()
 	  in S.Grammar {
 	    header = header,
 	    defs = Action.action defs,
 	    toks = tokList,
 	    nterms = nterms,
 	    prods = List.rev(!prodList),
-	    eof = lookupTok (Atom.atom "EOF"),
-	    sortedTops = Nonterm.topsort startnt,
+	    eof = eofTok,
+	    sortedTops = sortedTops,
 	    startnt = startnt,
-	    actionStyle = actionStyle
+	    actionStyle = actionStyle,
+	    entryPoints = entryPoints'
 	  } end
 
   end

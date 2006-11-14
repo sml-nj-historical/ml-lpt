@@ -74,7 +74,8 @@ structure LLKSpec =
 				(* topologically sorted nonterms *)
 	sortedTops : nonterm list list,
 	startnt : nonterm,
-	actionStyle : action_style
+	actionStyle : action_style,
+	entryPoints : nonterm list
       }
 
   end

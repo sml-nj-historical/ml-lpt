@@ -15,7 +15,7 @@ type code = Int.int * String.string
 %name MLY
 
 %term EOF
-    | KW_tokens | KW_defs | KW_keywords | KW_import | KW_name | KW_start
+    | KW_tokens | KW_defs | KW_keywords | KW_import | KW_name | KW_start | KW_entry
     | KW_try | KW_where | KW_debugact | KW_unitact | KW_header
     | KW_drop | KW_extend | KW_replace
     | LP | RP		(* ( ) *)
@@ -72,7 +72,6 @@ type code = Int.int * String.string
 %arg (errFn) : (string * int * int) -> unit
 
 %pos int
-%pure
 %eop EOF
 %noshift EOF
 %start File
@@ -91,6 +90,10 @@ Decls
 		(GS.mkGrammar())
 	| Decls KW_name ID SEMI
 		(GS.updHeader (Decls, "functor " ^ ID ^ "(Lex : LEXER)"))
+	| Decls KW_start ID SEMI
+		(GS.updStartSym (Decls, Atom.atom ID))
+	| Decls KW_entry IDList SEMI
+		(GS.updEntryPoints (Decls, map Atom.atom IDList))
 	| Decls KW_header STRING SEMI
 		(GS.updHeader (Decls, STRING))
 	| Decls KW_defs Code SEMI

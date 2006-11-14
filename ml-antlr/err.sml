@@ -24,6 +24,9 @@ structure Err =
 	  anyErrors := true;
 	  TextIO.output(TextIO.stdErr, String.concat l ^ "\n"))
 
+    fun warning l = 
+	  TextIO.output(TextIO.stdErr, String.concat l ^ "\n")
+
   (* error function for lexers *)
     fun lexErr filename (lnum, msg) = errMsg [
 	    "Error [", filename, ":", Int.toString lnum, "]: ", msg
