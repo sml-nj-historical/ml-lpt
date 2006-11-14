@@ -22,10 +22,10 @@ structure CalcTest =
       | fragToToks (SMLofNJ.ANTIQUOTE i) = [Tok.DummyExp i]
 
     fun % frags = let
-      val (r, _, errs) = CP.parseexp AtomMap.empty (List.concat (map fragToToks frags))
+      val (r, s', errs) = CP.parseexp AtomMap.empty (List.concat (map fragToToks frags))
     in
       app (fn (_, repair) => print (CP.repairToString repair ^ "\n")) errs;
-      r
+      (r, s')
     end
 
 (*    val _ = Control.quotation := true *)

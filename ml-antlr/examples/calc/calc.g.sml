@@ -540,23 +540,10 @@ print (case r
     fun mk () = let
         val eh = Err.mkErrHandler()
 	fun wrap f = Err.wrap eh f
-(*	val launch = Err.launch eh *)
 	val whileDisabled = Err.whileDisabled eh
 	fun tryProds (strm, prods) = 
 	      (wrap (pretryProds eh prods)) strm
-(*
-        fun wrapParse f x s = let
-	      val (ret, strm', errors) = launch (f x) (WStream.wrap s)
-	      in
-	        (ret, strm', map unwrapErr errors)
-	      end
-        fun wrapParseNoArg f s = let
-	      val (ret, strm', errors) = launch f (WStream.wrap s)
-	      in
-	        (ret, strm', map unwrapErr errors)
-	      end
-*)
-	fun unwrap (ret, strm, errors) = (ret, strm, map unwrapErr errors)
+	fun unwrap (ret, strm, errors) = (ret, WStream.unwrap strm, map unwrapErr errors)
 	val lex = WStream.get1
 val matchEOF = wrap (fn strm => (case (lex(strm))
  of (Tok.EOF, strm') => ((), strm')

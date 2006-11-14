@@ -480,7 +480,7 @@ print (case r
 	val whileDisabled = Err.whileDisabled eh
 	fun tryProds (strm, prods) = 
 	      (wrap (pretryProds eh prods)) strm
-	fun unwrap (ret, strm, errors) = (ret, strm, map unwrapErr errors)
+	fun unwrap (ret, strm, errors) = (ret, WStream.unwrap strm, map unwrapErr errors)
 	val lex = WStream.get1
 @matchfns@
 
