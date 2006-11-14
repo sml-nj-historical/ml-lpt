@@ -1,0 +1,11 @@
+Library
+
+  structure CalcTest
+
+is
+  $/basis.cm
+  $/smlnj-lib.cm
+
+  calc.g.sml
+  calc.lex.sml
+  calc-test.sml

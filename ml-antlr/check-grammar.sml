@@ -137,6 +137,7 @@ structure CheckGrammar : sig
 	  val _ = if List.length toks = 0 then
 		    Err.errMsg ["Error: no tokens defined."]
 		  else ()
+	(* load the tokens.  note that EOF is implicitly defined *)
           val (tokList, tokTbl) = 
 	        loadToks (nextGlobalID, (Atom.atom "EOF", NONE, NONE)::toks)
 	  fun lookupTok name = (case ATbl.find tokTbl name
@@ -146,6 +147,23 @@ structure CheckGrammar : sig
 		  | SOME info => info
 		(* end case *))
 	  val eofTok = lookupTok (Atom.atom "EOF")
+	(* add EOF to the end of all entry point nonterminal productions *)
+	  val entrySet = AtomSet.addList 
+			   ((case startSym
+			      of SOME sym => AtomSet.singleton sym
+			       | NONE => (case rules
+					   of (Syn.RULE {lhs, ...})::_ => AtomSet.singleton lhs
+					    | _ => AtomSet.empty)),
+			    entryPoints)
+	  fun addEOFToAlt (Syn.ALT {items, action, try, pred}) = 
+	        Syn.ALT {items = items @ [(NONE, Syn.SYMBOL (Atom.atom "EOF", NONE))], 
+			 action = action, try = try, pred = pred}
+	  fun addEOFToRule (r as Syn.RULE {lhs, formals, alts}) = 
+	        if AtomSet.member (entrySet, lhs) then
+		  Syn.RULE{lhs = lhs, formals = formals,
+			   alts = map addEOFToAlt alts}
+		else r
+	  val rules = map addEOFToRule rules
 	(* keep track of nonterminals *)
 	  val numNTerms = ref 0
 	  val ntTbl = ATbl.mkTable (64, Fail "nonterm table")
@@ -245,17 +263,11 @@ structure CheckGrammar : sig
 	(* check a rule *)
 	  fun chkRule (Syn.RULE{lhs, formals, alts}) = loadNTerm(lookupNTerm lhs, formals, alts)
         (* check the grammar *)
-	  val ((Syn.RULE{lhs, formals, alts}), rest) = 
-	        (case rules
-		  of [] => (Err.errMsg ["Error: no rules given."];
-			    raise Err.Abort)
-		   | fst::rest  => (fst, rest))
-	  fun addEOF (Syn.ALT {items, action, try, pred}) = 
-	        Syn.ALT {items = items @ [(NONE, Syn.SYMBOL (Atom.atom "EOF", NONE))], 
-			 action = action, try = try, pred = pred}
-	  val fst' = Syn.RULE{lhs = lhs, formals = formals,
-			      alts = map addEOF alts}
-	  val _ = List.app chkRule (fst'::rest)
+	  val _ = if List.length rules = 0 then (
+		    Err.errMsg ["Error: no rules defined."];
+		    raise Err.Abort)
+		  else ()
+	  val _ = app chkRule rules
 	(* check for undefined nonterminals, while reversing the order of productions *)
 	  val _ = let
 		fun chkNT (S.NT{name, prods, ...}) = (case !prods
@@ -266,7 +278,7 @@ structure CheckGrammar : sig
 		  List.app chkNT (!ntList)
 		end
 	  val nterms = rev(!ntList)
-	(* note : safe to assume length nterms > 0, else would've aborted already *)
+	(* node: safe to assume length nterms > 0, otherwise aborted above *)
 	  fun findNT errStr sym = (case ATbl.find ntTbl sym
 		of NONE => (Err.errMsg ["Error: ", errStr, " symbol ", 
 					Atom.toString sym,
@@ -278,7 +290,7 @@ structure CheckGrammar : sig
 			 of NONE => hd nterms
 			  | SOME sym => findNT "%start" sym
 	  val entryPoints' = map (findNT "%entry") entryPoints
-	  val sortedTops = Nonterm.topsort startnt
+	  val sortedTops = Nonterm.topsort (startnt::entryPoints')
 	  val topsSet = AtomSet.addList 
 			  (AtomSet.empty, 
 			   map (Atom.atom o Nonterm.name) (List.concat sortedTops))
@@ -286,7 +298,7 @@ structure CheckGrammar : sig
 	        if Nonterm.isSubrule nt = false then
 		  if AtomSet.member (topsSet, Atom.atom (Nonterm.name nt)) = false 
 		  then Err.warning ["Warning: nonterminal ", Nonterm.name nt,
-				    " is not reachable from the %start symbol."]
+				    " is not reachable from any entry point."]
 		  else ()
 		else ()
 	  val _ = app checkNTInTops nterms

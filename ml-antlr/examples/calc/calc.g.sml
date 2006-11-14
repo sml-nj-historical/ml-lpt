@@ -1,6 +1,35 @@
 structure Tok = struct
 
-@tokens@
+    datatype token = EOF
+      | DummyExp of int
+      | SEMI
+      | RP
+      | LP
+      | MINUS
+      | TIMES
+      | PLUS
+      | EQ
+      | NUM of Int.int
+      | ID of string
+      | KW_in
+      | KW_let
+
+    fun toString tok =
+(case (tok)
+ of (EOF) => "EOF"
+  | (DummyExp(_)) => "DummyExp"
+  | (SEMI) => ";"
+  | (RP) => ")"
+  | (LP) => "("
+  | (MINUS) => "-"
+  | (TIMES) => "*"
+  | (PLUS) => "+"
+  | (EQ) => "="
+  | (NUM(_)) => "NUM"
+  | (ID(_)) => "ID"
+  | (KW_in) => "in"
+  | (KW_let) => "let"
+(* end case *))
 
 
 end (* structure Tok *)
@@ -46,8 +75,7 @@ signature REPAIRABLE = sig
 
 end
 
-@header@
-(* : sig
+functor CalcParse(Lex : LEXER)(* : sig
 
     datatype repair_action
       = Insert of Tok.token list
@@ -63,7 +91,42 @@ end
 
     structure UserCode = struct
 
-@defs@
+
+
+fun exp_PROD_1_ACT (EQ, ID, EOF, env, exp1, exp2, KW_in, KW_let) = 
+  (  exp2 )
+fun addExp_PROD_1_ACT (SR, env, multExp) = 
+  (  List.foldl op+ multExp SR )
+fun multExp_PROD_1_ACT (SR, env, prefixExp) = 
+  (  List.foldl op* prefixExp SR )
+fun prefixExp_PROD_2_ACT (env, MINUS, prefixExp) = 
+  (  ~prefixExp )
+fun atomicExp_PROD_1_ACT (ID, env) = 
+  (  valOf(AtomMap.find (env, Atom.atom ID)) )
+fun atomicExp_PROD_1_PRED (ID, env) = 
+  (  AtomMap.inDomain (env, Atom.atom ID) )
+fun ARGS_1 () = 
+  (AtomMap.empty)
+fun ARGS_3 (EQ, ID, env, KW_let) = 
+  (env)
+fun ARGS_4 (EQ, ID, env, exp1, KW_in, KW_let) = 
+  (AtomMap.insert(env, Atom.atom ID, exp1))
+fun ARGS_5 (env) = 
+  (env)
+fun ARGS_8 (env, PLUS, multExp) = 
+  (env)
+fun ARGS_7 (env) = 
+  (env)
+fun ARGS_11 (env, TIMES, prefixExp) = 
+  (env)
+fun ARGS_10 (env) = 
+  (env)
+fun ARGS_12 (env) = 
+  (env)
+fun ARGS_14 (env, MINUS) = 
+  (env)
+fun ARGS_17 (LP, env) = 
+  (env)
 
     end
 
@@ -156,7 +219,7 @@ end
 	| Insertion of Tok.token
 	| Substitution of Tok.token
 
-@repairs@
+    val allRepairs = [Deletion, Insertion Tok.EOF, Insertion Tok.SEMI, Insertion Tok.RP, Insertion Tok.LP, Insertion Tok.MINUS, Insertion Tok.TIMES, Insertion Tok.PLUS, Insertion Tok.EQ, Insertion Tok.KW_in, Insertion Tok.KW_let, Substitution Tok.EOF, Substitution Tok.SEMI, Substitution Tok.RP, Substitution Tok.LP, Substitution Tok.MINUS, Substitution Tok.TIMES, Substitution Tok.PLUS, Substitution Tok.EQ, Substitution Tok.KW_in, Substitution Tok.KW_let]
 
 
       fun applyRepair ([], repair) = 
@@ -477,13 +540,230 @@ print (case r
     fun mk () = let
         val eh = Err.mkErrHandler()
 	fun wrap f = Err.wrap eh f
+(*	val launch = Err.launch eh *)
 	val whileDisabled = Err.whileDisabled eh
 	fun tryProds (strm, prods) = 
 	      (wrap (pretryProds eh prods)) strm
+(*
+        fun wrapParse f x s = let
+	      val (ret, strm', errors) = launch (f x) (WStream.wrap s)
+	      in
+	        (ret, strm', map unwrapErr errors)
+	      end
+        fun wrapParseNoArg f s = let
+	      val (ret, strm', errors) = launch f (WStream.wrap s)
+	      in
+	        (ret, strm', map unwrapErr errors)
+	      end
+*)
 	fun unwrap (ret, strm, errors) = (ret, strm, map unwrapErr errors)
 	val lex = WStream.get1
-@matchfns@
+val matchEOF = wrap (fn strm => (case (lex(strm))
+ of (Tok.EOF, strm') => ((), strm')
+  | _ => raise(ParseError)
+(* end case *)))
+val matchDummyExp = wrap (fn strm => (case (lex(strm))
+ of (Tok.DummyExp(x), strm') => (x, strm')
+  | _ => raise(ParseError)
+(* end case *)))
+val matchSEMI = wrap (fn strm => (case (lex(strm))
+ of (Tok.SEMI, strm') => ((), strm')
+  | _ => raise(ParseError)
+(* end case *)))
+val matchRP = wrap (fn strm => (case (lex(strm))
+ of (Tok.RP, strm') => ((), strm')
+  | _ => raise(ParseError)
+(* end case *)))
+val matchLP = wrap (fn strm => (case (lex(strm))
+ of (Tok.LP, strm') => ((), strm')
+  | _ => raise(ParseError)
+(* end case *)))
+val matchMINUS = wrap (fn strm => (case (lex(strm))
+ of (Tok.MINUS, strm') => ((), strm')
+  | _ => raise(ParseError)
+(* end case *)))
+val matchTIMES = wrap (fn strm => (case (lex(strm))
+ of (Tok.TIMES, strm') => ((), strm')
+  | _ => raise(ParseError)
+(* end case *)))
+val matchPLUS = wrap (fn strm => (case (lex(strm))
+ of (Tok.PLUS, strm') => ((), strm')
+  | _ => raise(ParseError)
+(* end case *)))
+val matchEQ = wrap (fn strm => (case (lex(strm))
+ of (Tok.EQ, strm') => ((), strm')
+  | _ => raise(ParseError)
+(* end case *)))
+val matchNUM = wrap (fn strm => (case (lex(strm))
+ of (Tok.NUM(x), strm') => (x, strm')
+  | _ => raise(ParseError)
+(* end case *)))
+val matchID = wrap (fn strm => (case (lex(strm))
+ of (Tok.ID(x), strm') => (x, strm')
+  | _ => raise(ParseError)
+(* end case *)))
+val matchKW_in = wrap (fn strm => (case (lex(strm))
+ of (Tok.KW_in, strm') => ((), strm')
+  | _ => raise(ParseError)
+(* end case *)))
+val matchKW_let = wrap (fn strm => (case (lex(strm))
+ of (Tok.KW_let, strm') => ((), strm')
+  | _ => raise(ParseError)
+(* end case *)))
 
-@parser@
+val (prog_NT, exp_NT) = 
+let
+fun exp_NT (env_RES) (strm) = let
+      fun exp_PROD_1 (strm) = let
+            val (KW_let_RES, strm') = matchKW_let(strm)
+            val (ID_RES, strm') = matchID(strm')
+            val (EQ_RES, strm') = matchEQ(strm')
+            val (exp1_RES, strm') = (wrap (exp_NT (UserCode.ARGS_3 (EQ_RES, ID_RES, env_RES, KW_let_RES))))(strm')
+            val (KW_in_RES, strm') = matchKW_in(strm')
+            val (exp2_RES, strm') = (wrap (exp_NT (UserCode.ARGS_4 (EQ_RES, ID_RES, env_RES, exp1_RES, KW_in_RES, KW_let_RES))))(strm')
+            val (EOF_RES, strm') = matchEOF(strm')
+            in
+              (UserCode.exp_PROD_1_ACT (EQ_RES, ID_RES, EOF_RES, env_RES, exp1_RES, exp2_RES, KW_in_RES, KW_let_RES),
+                strm')
+            end
+      fun exp_PROD_2 (strm) = let
+            val (addExp_RES, strm') = (wrap (addExp_NT (UserCode.ARGS_5 (env_RES))))(strm)
+            val (EOF_RES, strm') = matchEOF(strm')
+            in
+              (addExp_RES, strm')
+            end
+      in
+        (case (lex(strm))
+         of (Tok.DummyExp(_), strm') => exp_PROD_2(strm)
+          | (Tok.LP, strm') => exp_PROD_2(strm)
+          | (Tok.MINUS, strm') => exp_PROD_2(strm)
+          | (Tok.NUM(_), strm') => exp_PROD_2(strm)
+          | (Tok.ID(_), strm') => exp_PROD_2(strm)
+          | (Tok.KW_let, strm') => exp_PROD_1(strm)
+          | _ => raise(ParseError)
+        (* end case *))
+      end
+and addExp_NT (env_RES) (strm) = let
+      val (multExp_RES, strm') = (wrap (multExp_NT (UserCode.ARGS_7 (env_RES))))(strm)
+      fun SR1_NT (strm) = let
+            val (PLUS_RES, strm') = matchPLUS(strm)
+            val (multExp_RES, strm') = (wrap (multExp_NT (UserCode.ARGS_8 (env_RES, PLUS_RES, multExp_RES))))(strm')
+            in
+              (multExp_RES, strm')
+            end
+      fun SR1_PRED (strm) = (case (lex(strm))
+             of (Tok.PLUS, strm') => true
+              | _ => false
+            (* end case *))
+      val (SR_RES, strm') = EBNF.closure(SR1_PRED, (wrap SR1_NT), strm')
+      in
+        (UserCode.addExp_PROD_1_ACT (SR_RES, env_RES, multExp_RES), strm')
+      end
+and multExp_NT (env_RES) (strm) = let
+      val (prefixExp_RES, strm') = (wrap (prefixExp_NT (UserCode.ARGS_10 (env_RES))))(strm)
+      fun SR1_NT (strm) = let
+            val (TIMES_RES, strm') = matchTIMES(strm)
+            val (prefixExp_RES, strm') = (wrap (prefixExp_NT (UserCode.ARGS_11 (env_RES, TIMES_RES, prefixExp_RES))))(strm')
+            in
+              (prefixExp_RES, strm')
+            end
+      fun SR1_PRED (strm) = (case (lex(strm))
+             of (Tok.TIMES, strm') => true
+              | _ => false
+            (* end case *))
+      val (SR_RES, strm') = EBNF.closure(SR1_PRED, (wrap SR1_NT), strm')
+      in
+        (UserCode.multExp_PROD_1_ACT (SR_RES, env_RES, prefixExp_RES), strm')
+      end
+and prefixExp_NT (env_RES) (strm) = let
+      fun prefixExp_PROD_1 (strm) = let
+            val (atomicExp_RES, strm') = (wrap (atomicExp_NT (UserCode.ARGS_12 (env_RES))))(strm)
+            in
+              (atomicExp_RES, strm')
+            end
+      fun prefixExp_PROD_2 (strm) = let
+            val (MINUS_RES, strm') = matchMINUS(strm)
+            val (prefixExp_RES, strm') = (wrap (prefixExp_NT (UserCode.ARGS_14 (env_RES, MINUS_RES))))(strm')
+            in
+              (UserCode.prefixExp_PROD_2_ACT (env_RES, MINUS_RES, prefixExp_RES),
+                strm')
+            end
+      in
+        (case (lex(strm))
+         of (Tok.MINUS, strm') => prefixExp_PROD_2(strm)
+          | (Tok.DummyExp(_), strm') => prefixExp_PROD_1(strm)
+          | (Tok.LP, strm') => prefixExp_PROD_1(strm)
+          | (Tok.NUM(_), strm') => prefixExp_PROD_1(strm)
+          | (Tok.ID(_), strm') => prefixExp_PROD_1(strm)
+          | _ => raise(ParseError)
+        (* end case *))
+      end
+and atomicExp_NT (env_RES) (strm) = let
+      fun atomicExp_PROD_1 (strm) = let
+            val (ID_RES, strm') = matchID(strm)
+            in
+              if (UserCode.atomicExp_PROD_1_PRED (ID_RES, env_RES))
+                then (UserCode.atomicExp_PROD_1_ACT (ID_RES, env_RES), strm')
+                else raise ParseError
+            end
+      fun atomicExp_PROD_2 (strm) = let
+            val (NUM_RES, strm') = matchNUM(strm)
+            in
+              (NUM_RES, strm')
+            end
+      fun atomicExp_PROD_3 (strm) = let
+            val (LP_RES, strm') = matchLP(strm)
+            val (exp_RES, strm') = (wrap (exp_NT (UserCode.ARGS_17 (LP_RES, env_RES))))(strm')
+            val (RP_RES, strm') = matchRP(strm')
+            in
+              (exp_RES, strm')
+            end
+      fun atomicExp_PROD_4 (strm) = let
+            val (DummyExp_RES, strm') = matchDummyExp(strm)
+            in
+              (DummyExp_RES, strm')
+            end
+      in
+        (case (lex(strm))
+         of (Tok.DummyExp(_), strm') => atomicExp_PROD_4(strm)
+          | (Tok.NUM(_), strm') => atomicExp_PROD_2(strm)
+          | (Tok.ID(_), strm') => atomicExp_PROD_1(strm)
+          | (Tok.LP, strm') => atomicExp_PROD_3(strm)
+          | _ => raise(ParseError)
+        (* end case *))
+      end
+fun prog_NT (strm) = let
+      fun SR1_NT (strm) = let
+            val (exp_RES, strm') = (wrap (exp_NT (UserCode.ARGS_1 ())))(strm)
+            val (SEMI_RES, strm') = matchSEMI(strm')
+            in
+              (exp_RES, strm')
+            end
+      fun SR1_PRED (strm) = (case (lex(strm))
+             of (Tok.DummyExp(_), strm') => true
+              | (Tok.LP, strm') => true
+              | (Tok.MINUS, strm') => true
+              | (Tok.NUM(_), strm') => true
+              | (Tok.ID(_), strm') => true
+              | (Tok.KW_let, strm') => true
+              | _ => false
+            (* end case *))
+      val (SR_RES, strm') = EBNF.closure(SR1_PRED, (wrap SR1_NT), strm)
+      val (EOF_RES, strm') = matchEOF(strm')
+      in
+        (SR_RES, strm')
+      end
+in
+  (prog_NT, exp_NT)
+end
+val prog_NT =  fn s => unwrap (Err.launch eh (prog_NT ) (WStream.wrap s))
+val exp_NT =  fn x => fn s => unwrap (Err.launch eh (exp_NT x ) (WStream.wrap s))
+
+in (prog_NT, exp_NT) end
+
+fun parse s = let val (prog_NT, exp_NT) = mk() in prog_NT s end
+
+fun parseexp x s = let val (prog_NT, exp_NT) = mk() in exp_NT x s end
+
 
 end (* structure Parser *)

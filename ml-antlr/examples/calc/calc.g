@@ -1,10 +1,16 @@
 %name CalcParse;
+%entry exp;
 %tokens
   : KW_let ("let")   |  KW_in   ("in")
   | ID of string     |  NUM of Int.int
   | EQ       ("=")   |  PLUS    ("+")
   | TIMES    ("*")   |  MINUS   ("-")
   | LP       ("(")   |  RP      (")")
+  | SEMI     (";")
+  | DummyExp of int
+  ;
+prog
+  : (exp@(AtomMap.empty) ";")*
   ;
 exp(env)
   : "let" ID "=" exp@(env)
@@ -31,4 +37,5 @@ atomicExp(env)
       => ( valOf(AtomMap.find (env, Atom.atom ID)) )
   | NUM
   | "(" exp@(env) ")"
+  | DummyExp
   ;

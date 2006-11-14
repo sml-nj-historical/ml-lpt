@@ -66,9 +66,9 @@ structure Nonterm =
     structure S = LLKSpec
 
   (* topologically sort the nonterminal dependency graph
-   * rooted at start; return a list of nonterm lists
+   * rooted at starts; return a list of nonterm lists
    *)
-    fun topsort (start) = let
+    fun topsort (starts) = let
           fun prodItems (S.PROD {rhs, ...}) = !rhs
 	  fun sym (S.ITEM {sym, ...}) = sym
           fun followItem (S.NONTERM (nt, _)) = 
@@ -82,7 +82,7 @@ structure Nonterm =
 	  and follow nt =
 	        List.concat (map (followItems o prodItems) 
 				 (prods nt))
-	  val scc = SCC.topOrder {root = start, follow = follow}
+	  val scc = SCC.topOrder' {roots = starts, follow = follow}
 	  fun compToList (SCC.SIMPLE nt) = [nt]
 	    | compToList (SCC.RECURSIVE nts) = nts
 	  in

@@ -38,7 +38,7 @@ structure Tok = struct
       | AMP
       | BAR
 
-    fun toString tok = 
+    fun toString tok =
 (case (tok)
  of (EOF) => "EOF"
   | (BOGUS) => "BOGUS"
@@ -650,16 +650,60 @@ print (case r
 
     exception ParseError = RepairableStrm.RepairableError
 
-    fun innerParse
-unwrapErr
+    datatype repair_action
+      = Insert of Tok.token list
+      | Delete of Tok.token list
+      | Subst of {
+	    old : Tok.token list, 
+	    new : Tok.token list
+	}
 
-strm = let
+    structure R = RepairableStrm
+
+    fun unwrapErr (Err.Primary {errorAt, repair = R.Deletion}) =
+          (WStream.unwrap errorAt, Delete [(#1 (WStream.get1 errorAt))])
+      | unwrapErr (Err.Primary {errorAt, repair = R.Insertion t}) =
+          (WStream.unwrap errorAt, Insert [t])
+      | unwrapErr (Err.Primary {errorAt, repair = R.Substitution t}) = 
+          (WStream.unwrap errorAt, 
+  	   Subst {
+  	     old = [(#1 (WStream.get1 errorAt))],
+  	     new = [t]
+           })
+      | unwrapErr (Err.Secondary {deleteFrom, deleteTo}) = 
+          (WStream.unwrap deleteFrom, 
+  	   Delete (WStream.getDiff (deleteTo, deleteFrom)))
+
+    fun toksToString toks = String.concatWith " " (map Tok.toString toks)
+
+    fun repairToString repair = (case repair
+          of Insert toks => "inserting " ^ toksToString toks
+	   | Delete toks => "deleting " ^ toksToString toks
+	   | Subst {old, new} => 
+	       "substituting " ^ toksToString new ^ " for "
+	       ^ toksToString old
+         (* end case *))
+
+    fun mk () = let
         val eh = Err.mkErrHandler()
 	fun wrap f = Err.wrap eh f
-	val launch = Err.launch eh
+(*	val launch = Err.launch eh *)
 	val whileDisabled = Err.whileDisabled eh
 	fun tryProds (strm, prods) = 
 	      (wrap (pretryProds eh prods)) strm
+(*
+        fun wrapParse f x s = let
+	      val (ret, strm', errors) = launch (f x) (WStream.wrap s)
+	      in
+	        (ret, strm', map unwrapErr errors)
+	      end
+        fun wrapParseNoArg f s = let
+	      val (ret, strm', errors) = launch f (WStream.wrap s)
+	      in
+	        (ret, strm', map unwrapErr errors)
+	      end
+*)
+	fun unwrap (ret, strm, errors) = (ret, strm, map unwrapErr errors)
 	val lex = WStream.get1
 val matchEOF = wrap (fn strm => (case (lex(strm))
  of (Tok.EOF, strm') => ((), strm')
@@ -810,7 +854,7 @@ val matchBAR = wrap (fn strm => (case (lex(strm))
   | _ => raise(ParseError)
 (* end case *)))
 
-fun parse'  strm = 
+val (file_NT) = 
 let
 fun char_NT (strm) = let
       fun char_PROD_1 (strm) = let
@@ -1275,49 +1319,13 @@ fun file_NT (strm) = let
         (decls_RES, strm')
       end
 in
-  file_NT(strm)
+  (file_NT)
 end
-        val (ret, strm', errors) = launch (parse'
+val file_NT =  fn s => unwrap (Err.launch eh (file_NT ) (WStream.wrap s))
 
-) (WStream.wrap strm)
-        in 
-          (ret, strm', map unwrapErr errors)
-        end
+in (file_NT) end
 
-    datatype repair_action
-      = Insert of Tok.token list
-      | Delete of Tok.token list
-      | Subst of {
-	    old : Tok.token list, 
-	    new : Tok.token list
-	}
+fun parse s = let val (file_NT) = mk() in file_NT s end
 
-    structure R = RepairableStrm
-
-    fun unwrapErr (Err.Primary {errorAt, repair = R.Deletion}) =
-          (WStream.unwrap errorAt, Delete [(#1 (WStream.get1 errorAt))])
-      | unwrapErr (Err.Primary {errorAt, repair = R.Insertion t}) =
-          (WStream.unwrap errorAt, Insert [t])
-      | unwrapErr (Err.Primary {errorAt, repair = R.Substitution t}) = 
-          (WStream.unwrap errorAt, 
-  	   Subst {
-  	     old = [(#1 (WStream.get1 errorAt))],
-  	     new = [t]
-           })
-      | unwrapErr (Err.Secondary {deleteFrom, deleteTo}) = 
-          (WStream.unwrap deleteFrom, 
-  	   Delete (WStream.getDiff (deleteTo, deleteFrom)))
-
-    val parse = innerParse unwrapErr
-
-    fun toksToString toks = String.concatWith " " (map Tok.toString toks)
-
-    fun repairToString repair = (case repair
-          of Insert toks => "inserting " ^ toksToString toks
-	   | Delete toks => "deleting " ^ toksToString toks
-	   | Subst {old, new} => 
-	       "substituting " ^ toksToString new ^ " for "
-	       ^ toksToString old
-         (* end case *))
 
 end (* structure Parser *)

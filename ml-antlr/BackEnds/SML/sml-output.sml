@@ -228,24 +228,36 @@ structure SMLOutput =
 
   (* output the main parser body *)
     fun parserHook spec strm = let
-          val (grm as S.Grammar {toks, nterms, startnt, sortedTops, ...}, pm) = spec
+          val (grm as S.Grammar {toks, nterms, startnt, sortedTops, entryPoints, ...}, 
+	       pm) = spec
           val ppStrm = TextIOPP.openOut {dst = strm, wid = 80}
-	  val args = if length (Nonterm.formals startnt) > 0 
-		     then " args "
-		     else ""
-	  val innerExp = ML_App (NTFnName startnt ^ args, [ML_Var "strm"])
+	  val entries = map (fn x => NTFnName x) (startnt :: entryPoints)
+	  val entriesVal = "val (" ^ String.concatWith ", " entries ^ ") = "
+	  val innerExp = ML_Tuple (map ML_Var entries)
 	  val parser = List.foldl (mkNonterms (grm, pm)) innerExp sortedTops
+	  fun optParam nt = if length (Nonterm.formals nt) > 0 then " x " else " "
+	  fun optParamFn nt = if length (Nonterm.formals nt) > 0 then " fn x => " else " "
+	  fun wrWrapParse nt = TextIO.output (strm, String.concat [
+		"val ", NTFnName nt, " = ", optParamFn nt, 
+		"fn s => unwrap (Err.launch eh (", NTFnName nt, optParam nt, ") (WStream.wrap s))\n"])
+	  fun wrEntry (name, nt) = TextIO.output (strm, String.concat [
+		"fun ", name, optParam nt,
+		"s = let ", entriesVal, "mk() in ", NTFnName nt,
+		if length (Nonterm.formals nt) > 0
+		  then  " x "
+		  else " ",
+		"s end\n\n"])
+		  
           in
-            TextIO.output (strm, "fun parse' " ^ args ^ " strm = \n");
-            ML.ppML (ppStrm, parser)
-          end
-
-    fun argsHook spec strm = let
-          val (grm as S.Grammar {startnt, ...}, _) = spec
-          in
-            if length (Nonterm.formals startnt) > 0
-	    then TextIO.output (strm, "args")
-	    else ()
+            TextIO.output (strm, entriesVal ^ "\n");
+            ML.ppML (ppStrm, parser);
+	    TextIO.output (strm, "\n");
+	    app wrWrapParse (startnt::entryPoints);
+            TextIO.output (strm, "\nin ("
+	      ^ String.concatWith ", " entries
+	      ^ ") end\n\n");
+	    wrEntry ("parse", startnt);
+	    app (wrEntry o (fn x => ("parse" ^ Nonterm.name x, x))) entryPoints
           end
 
   (* make a match function for a token *)
@@ -352,7 +364,6 @@ structure SMLOutput =
 		       ("repairs",  repairsHook (grm, pm)),
 		       ("header",   headerHook (grm, pm)),
 		       ("defs",     defsHook (grm, pm)),
-		       ("args",     argsHook (grm, pm)),
 		       ("matchfns", matchfnsHook (grm, pm))]
 	    }
 
