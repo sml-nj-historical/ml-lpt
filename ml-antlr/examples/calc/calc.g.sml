@@ -93,7 +93,7 @@ functor CalcParse(Lex : LEXER)(* : sig
 
 
 
-fun exp_PROD_1_ACT (EQ, ID, EOF, env, exp1, exp2, KW_in, KW_let) = 
+fun exp_PROD_1_ACT (EQ, ID, env, exp1, exp2, KW_in, KW_let) = 
   (  exp2 )
 fun addExp_PROD_1_ACT (SR, env, multExp) = 
   (  List.foldl op+ multExp SR )
@@ -608,14 +608,12 @@ fun exp_NT (env_RES) (strm) = let
             val (exp1_RES, strm') = (wrap (exp_NT (UserCode.ARGS_3 (EQ_RES, ID_RES, env_RES, KW_let_RES))))(strm')
             val (KW_in_RES, strm') = matchKW_in(strm')
             val (exp2_RES, strm') = (wrap (exp_NT (UserCode.ARGS_4 (EQ_RES, ID_RES, env_RES, exp1_RES, KW_in_RES, KW_let_RES))))(strm')
-            val (EOF_RES, strm') = matchEOF(strm')
             in
-              (UserCode.exp_PROD_1_ACT (EQ_RES, ID_RES, EOF_RES, env_RES, exp1_RES, exp2_RES, KW_in_RES, KW_let_RES),
+              (UserCode.exp_PROD_1_ACT (EQ_RES, ID_RES, env_RES, exp1_RES, exp2_RES, KW_in_RES, KW_let_RES),
                 strm')
             end
       fun exp_PROD_2 (strm) = let
             val (addExp_RES, strm') = (wrap (addExp_NT (UserCode.ARGS_5 (env_RES))))(strm)
-            val (EOF_RES, strm') = matchEOF(strm')
             in
               (addExp_RES, strm')
             end

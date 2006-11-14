@@ -147,19 +147,18 @@ structure CheckGrammar : sig
 		  | SOME info => info
 		(* end case *))
 	  val eofTok = lookupTok (Atom.atom "EOF")
-	(* add EOF to the end of all entry point nonterminal productions *)
-	  val entrySet = AtomSet.addList 
-			   ((case startSym
-			      of SOME sym => AtomSet.singleton sym
-			       | NONE => (case rules
-					   of (Syn.RULE {lhs, ...})::_ => AtomSet.singleton lhs
-					    | _ => AtomSet.empty)),
-			    entryPoints)
+	(* add EOF to the end of start symbol *)
+	  val startSymName = 
+	        case startSym
+		 of SOME sym => sym
+		  | NONE => (case rules
+			      of (Syn.RULE {lhs, ...})::_ => lhs
+			       | _ => Atom.atom "EOF")
 	  fun addEOFToAlt (Syn.ALT {items, action, try, pred}) = 
 	        Syn.ALT {items = items @ [(NONE, Syn.SYMBOL (Atom.atom "EOF", NONE))], 
 			 action = action, try = try, pred = pred}
 	  fun addEOFToRule (r as Syn.RULE {lhs, formals, alts}) = 
-	        if AtomSet.member (entrySet, lhs) then
+	        if Atom.same (lhs, startSymName) then
 		  Syn.RULE{lhs = lhs, formals = formals,
 			   alts = map addEOFToAlt alts}
 		else r
