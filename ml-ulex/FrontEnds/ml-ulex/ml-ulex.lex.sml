@@ -164,11 +164,6 @@ structure MLULexLex  = struct
 
       end
 
-    datatype 'a yymatch 
-      = yyNO_MATCH
-      | yyMATCH of yyInput.stream * 'a action * 'a yymatch
-    withtype 'a action = yyInput.stream * 'a yymatch -> 'a
-
     datatype yystart_state = 
 COM | CODE | STRING | CHARSET | CHARCLASS | RESTRING | INITIAL | DIRECTIVE
     structure UserDeclarations = 
@@ -206,6 +201,11 @@ COM | CODE | STRING | CHARSET | CHARCLASS | RESTRING | INITIAL | DIRECTIVE
 
 
       end
+
+    datatype yymatch 
+      = yyNO_MATCH
+      | yyMATCH of yyInput.stream * action * yymatch
+    withtype action = yyInput.stream * yymatch -> UserDeclarations.lex_result
 
     exception yyEOF
 

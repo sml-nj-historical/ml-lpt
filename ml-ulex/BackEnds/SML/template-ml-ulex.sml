@@ -165,11 +165,6 @@
 
       end
 
-    datatype 'a yymatch 
-      = yyNO_MATCH
-      | yyMATCH of yyInput.stream * 'a action * 'a yymatch
-    withtype 'a action = yyInput.stream * 'a yymatch -> 'a
-
     datatype yystart_state = 
 @startstates@
 
@@ -180,6 +175,11 @@
 
 
       end
+
+    datatype yymatch 
+      = yyNO_MATCH
+      | yyMATCH of yyInput.stream * action * yymatch
+    withtype action = yyInput.stream * yymatch -> UserDeclarations.lex_result
 
     exception yyEOF
 

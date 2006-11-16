@@ -56,6 +56,12 @@ structure Main =
 	  in
             OS.Process.success
           end
+
+    fun main (_, args) = let
+	  val _ = List.app Options.procArg args
+	  in 
+	    mlULex()
+          end
 	    handle ex => (
 	      TextIO.output(TextIO.stdErr, concat[
 		  "uncaught exception ", General.exnName ex,
@@ -66,11 +72,5 @@ structure Main =
 	        ]))
 	        (SMLofNJ.exnHistory ex);
 	      OS.Process.exit OS.Process.failure)
-
-    fun main (_, args) = let
-	  val _ = List.app Options.procArg args
-	  in 
-	    mlULex()
-          end
 
   end

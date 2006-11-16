@@ -129,7 +129,7 @@ structure LexSpec =
 	       }
 	  fun clearRule (rspec, action) = (rspec, "()")
           in Spec {
-	         decls = "fun eof() = ()", 
+	         decls = "fun eof() = ()\ntype lex_result = unit", 
 		 conf = conf', 
 		 rules = List.map clearRule rules
                }

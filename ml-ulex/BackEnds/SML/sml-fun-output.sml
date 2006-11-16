@@ -5,7 +5,7 @@
  * Aaron Turon (adrassi@gmail.com)
  * All rights reserved.
  *
- * Code generation for SML, using control-flow
+ * Code generation for SML, using mutually recursive functions for states.
  *)
 
 structure SMLFunOutput : OUTPUT = 
@@ -211,7 +211,7 @@ structure SMLFunOutput : OUTPUT =
 			    ("yytext", 
 			     ML_App("yymktext", [ML_Var "strm"]), 
 			     lets)
-		     else lets
+ 		     else lets
 	  val letu = if hasyyunicode action 
 		     then ML_Let 
 			    ("yyunicode", 
