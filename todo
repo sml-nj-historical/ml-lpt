@@ -26,7 +26,7 @@
      x implement heuristic for primary repair
      x implement secondary recovery
      x work on error messages
-     - position details -- WSTREAM
+     x position details -- WSTREAM
      - limit metric measurement to ~25 tokens, rather than to EOF
      - deal with keywords
      - preferred replacements
@@ -36,8 +36,7 @@
  x custom names for return values
  x move actions into separate functions
  x reverse order of %where and => actions
- - region information
-     - add position info to default syntax error message
+ x region information
 
  - add signature to generated parser
      - add type for %arg
@@ -64,3 +63,19 @@
  - (*#line directive
      - ran into problems with ordering in generated file not matching 
        ordering in source
+
+
+
+
+
+================================================
+
+add built-in Unicode character classes
+%keywords directive
+look into OCaml-style rules (starting with | rather than :)
+nonterminal type annotations
+decrease lexer size and compile time
+check that nonterminals with parameters are given parameters
+
+speculative:
+higher-order nonterminal definitions

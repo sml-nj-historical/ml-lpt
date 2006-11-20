@@ -482,6 +482,8 @@ print (case r
 
       type err_handler
       val mkErrHandler : unit -> err_handler
+      val getAnns	: err_handler -> UserCode.antlr_annotation list
+      val setAnns	: err_handler * UserCode.antlr_annotation list -> unit
       val addAnnotation : err_handler -> UserCode.antlr_annotation -> unit
       val whileDisabled : err_handler -> (unit -> 'a) -> 'a
 
@@ -665,9 +667,14 @@ print (case r
 
     fun pretryProds eh prods strm = let
 	fun try [] = raise RepairableStrm.RepairableError
-	  | try (prod :: prods) = 
-	      Err.whileDisabled eh (fn () => prod strm)
-	      handle _ => try (prods)
+	  | try (prod :: prods) = let 
+	      val anns = Err.getAnns eh
+	      in
+	        Err.whileDisabled eh (fn () => prod strm)
+		handle _ => 
+		  (Err.setAnns (eh, anns);
+		   try (prods))
+	      end
         in
           try prods
         end
