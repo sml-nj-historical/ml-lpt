@@ -61,7 +61,7 @@
 (* %charset utf8; *)
 
 <INITIAL,DIRECTIVE,CHARSET,CHARCLASS>{ws}+	
-	=> (continue());
+	=> (skip());
 
 <INITIAL>"%defs"	=> (YYBEGIN CODE; clrText(); Tok.KW_defs);
 <INITIAL>"%name"	=> (YYBEGIN DIRECTIVE; Tok.KW_name);

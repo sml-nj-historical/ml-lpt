@@ -11,7 +11,8 @@
 structure MLULexInput =
   struct
 
-    structure P = Parser(MLULexLex)
+    structure L = MLULexLex
+    structure P = Parser(L)
 
     fun parseFile fname = let
           fun parseErr (msg, line, _) = 
@@ -20,15 +21,20 @@ structure MLULexInput =
 		 print msg;
 		 print "\n")
 	  val fstrm = TextIO.openIn fname
-	  val strm = MLULexLex.streamify (fn n => TextIO.inputN (fstrm, n))
-	  val (spec, _, errors) = P.parse strm
-			       before TextIO.closeIn fstrm
-	  fun errMsg (pos, err) = print (String.concat [
-		"[", Int.toString (MLULexLex.getLineNo pos + 1), "]: ",
-		P.repairToString err, 
-		"\n"])
+	  val strm = L.streamify (fn n => TextIO.inputN (fstrm, n))
+	  val (spec, strm', errors, anns) = 
+	        P.parse strm
+		before TextIO.closeIn fstrm
+	  fun errMsg ty (pos, err) = print (String.concat [
+		" ", fname, ":",
+		     Int.toString (L.getLineNo (strm', pos)), ".",
+		     Int.toString (L.getColNo (strm', pos)), 
+		ty, err, "\n"])
 	  in
-            app errMsg errors;
+            app (errMsg " Syntax error: ") 
+	        (map (fn (p, e) => (p, P.repairToString e)) errors);
+	    app (errMsg " ") 
+		(map (fn ((p, _), e) => (p, e)) anns);
 	    spec
 	  end
 

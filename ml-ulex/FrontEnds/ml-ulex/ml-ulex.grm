@@ -13,6 +13,9 @@
   fun charToSym c = Word32.fromInt (Char.ord c)
 
   fun flip (x, y) = (y, x)
+
+  type antlr_annotation = Lex.span * string
+
 );
 
 %tokens
@@ -133,8 +136,8 @@ prim_re(env)
   : ID
       => (case (AMap.find (env, Atom.atom ID))
 	   of SOME re => re
-	    | NONE => (print (String.concat [
-		"Error: ", ID, " is undefined.\n"]);
+	    | NONE => (addAnnotation (ID_SPAN, String.concat [
+		"Error: {", ID, "} is undefined."]);
 		RE.any))
   | "(" re@(env) ")"
   | char
@@ -149,10 +152,10 @@ prim_re(env)
         ( char "-" char => 
 	    (if char1 <= char2 then
 	       SIS.interval (char1, char2)
-	     else (print (String.concat [
+	     else (addAnnotation (FULL_SPAN, String.concat [
 	       "Error: malformed character class: ",
 	       Word32.toString char1, " - ",
-	       Word32.toString char2, ".\n"]);
+	       Word32.toString char2, "."]);
 	       SIS.universe))
         | char => (SIS.singleton char)
         )+

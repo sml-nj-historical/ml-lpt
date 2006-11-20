@@ -37,7 +37,11 @@ end (* structure Tok *)
 signature LEXER = sig
 
   type strm
-  val lex : strm -> (Tok.token * strm) option
+  type pos
+  type span = pos * pos
+
+  val lex : strm -> (Tok.token * span * strm) option
+  val getPos : strm -> pos
 
 end (* signature LEXER *)
 
@@ -91,17 +95,19 @@ functor CalcParse(Lex : LEXER)(* : sig
 
     structure UserCode = struct
 
+      type antlr_annotation = unit
 
 
-fun exp_PROD_1_ACT (EQ, ID, env, exp1, exp2, KW_in, KW_let) = 
+
+fun exp_PROD_1_ACT (EQ, ID, EOF, env, exp1, exp2, KW_in, KW_let, EQ_SPAN : Lex.span, ID_SPAN : Lex.span, EOF_SPAN : Lex.span, exp1_SPAN : Lex.span, exp2_SPAN : Lex.span, KW_in_SPAN : Lex.span, KW_let_SPAN : Lex.span, addAnnotation, FULL_SPAN : Lex.span) = 
   (  exp2 )
-fun addExp_PROD_1_ACT (SR, env, multExp) = 
+fun addExp_PROD_1_ACT (SR, env, multExp, SR_SPAN : Lex.span, multExp_SPAN : Lex.span, addAnnotation, FULL_SPAN : Lex.span) = 
   (  List.foldl op+ multExp SR )
-fun multExp_PROD_1_ACT (SR, env, prefixExp) = 
+fun multExp_PROD_1_ACT (SR, env, prefixExp, SR_SPAN : Lex.span, prefixExp_SPAN : Lex.span, addAnnotation, FULL_SPAN : Lex.span) = 
   (  List.foldl op* prefixExp SR )
-fun prefixExp_PROD_2_ACT (env, MINUS, prefixExp) = 
+fun prefixExp_PROD_2_ACT (env, MINUS, prefixExp, MINUS_SPAN : Lex.span, prefixExp_SPAN : Lex.span, addAnnotation, FULL_SPAN : Lex.span) = 
   (  ~prefixExp )
-fun atomicExp_PROD_1_ACT (ID, env) = 
+fun atomicExp_PROD_1_ACT (ID, env, ID_SPAN : Lex.span, addAnnotation, FULL_SPAN : Lex.span) = 
   (  valOf(AtomMap.find (env, Atom.atom ID)) )
 fun atomicExp_PROD_1_PRED (ID, env) = 
   (  AtomMap.inDomain (env, Atom.atom ID) )
@@ -136,7 +142,7 @@ fun ARGS_17 (LP, env) =
     structure WStream = struct
 
       datatype 'a wstream = WSTREAM of {
-	prefix : Tok.token list,
+	prefix : (Tok.token * Lex.span) list,
 	curTok : int,
 	strm : 'a
       }
@@ -144,13 +150,13 @@ fun ARGS_17 (LP, env) =
       fun wrap strm =  WSTREAM {prefix = [], strm = strm, curTok = 0}
       fun unwrap (WSTREAM {strm, ...}) = strm
 
-      fun get1 (WSTREAM {prefix = tok::toks, strm, curTok}) = 
-	    (tok, WSTREAM {prefix = toks, strm = strm, curTok = curTok + 1})
+      fun get1 (WSTREAM {prefix = (tok, span)::toks, strm, curTok}) = 
+	    (tok, span, WSTREAM {prefix = toks, strm = strm, curTok = curTok + 1})
 	| get1 (WSTREAM {prefix = [], strm, curTok}) = let
-	    val (tok, strm') = case Lex.lex strm
-				of SOME x => x
-				 | NONE => (Tok.EOF, strm)
-	    in (tok, WSTREAM {prefix = [], strm = strm', curTok = curTok + 1})
+	    val (tok, span, strm') = case Lex.lex strm
+		of SOME x => x
+		 | NONE => (Tok.EOF, (Lex.getPos strm, Lex.getPos strm), strm)
+	    in (tok, span, WSTREAM {prefix = [], strm = strm', curTok = curTok + 1})
 	    end
 
       fun prepend (toks, WSTREAM {prefix, strm, curTok}) = 
@@ -162,9 +168,12 @@ fun ARGS_17 (LP, env) =
       fun getDiff (ws1, ws2) =
 	    if subtract (ws1, ws2) <= 0 then []
 	    else let 
-		val (t, ws2') = get1 ws2
-	        in t :: (getDiff (ws1, ws2'))
+		val (t, s, ws2') = get1 ws2
+	        in (t, s) :: (getDiff (ws1, ws2'))
                 end
+
+      fun getPos ws = let val (_, (left, _), _) = get1 ws in left end
+      fun getSpan ws = (getPos ws, getPos ws)
 
     end (* structure WStream *)
     
@@ -173,29 +182,29 @@ fun ARGS_17 (LP, env) =
       fun optional (pred, parse, strm) = 
 	    if pred strm
     	    then let
-	      val (y, strm') = parse strm
+	      val (y, span, strm') = parse strm
 	      in 
-		(SOME y, strm')
+		(SOME y, span, strm')
 	      end
-	    else (NONE, strm)
+	    else (NONE, WStream.getSpan strm, strm)
 
       fun closure (pred, parse, strm) = let
-            fun iter (strm, ys) = 
+            fun iter (strm, (left, right), ys) = 
 	          if pred strm
 		  then let
-		    val (y, strm') = parse strm
-		    in iter (strm', y::ys)
+		    val (y, (_, right'), strm') = parse strm
+		    in iter (strm', (left, right'), y::ys)
 		    end
-		  else (List.rev ys, strm)
+		  else (List.rev ys, (left, right), strm)
             in
-              iter (strm, [])
+              iter (strm, WStream.getSpan strm, [])
             end
 
       fun posclos (pred, parse, strm) = let
-            val (y, strm') = parse strm
-	    val (ys, strm'') = closure (pred, parse, strm')
+            val (y, (left, _), strm') = parse strm
+	    val (ys, (_, right), strm'') = closure (pred, parse, strm')
             in
-              (y::ys, strm'')
+              (y::ys, (left, right), strm'')
             end
 
     end (* structure EBNF *)
@@ -225,21 +234,23 @@ fun ARGS_17 (LP, env) =
       fun applyRepair ([], repair) = 
 	    raise Fail "applyRepair: expected nonempty working list"
 	| applyRepair (working, Deletion) = tl working
-	| applyRepair (working, Insertion tok) = tok :: working
-	| applyRepair (working, Substitution tok) = tok :: (tl working)
+	| applyRepair ((t, span)::working, Insertion tok) = 
+	    (tok, (#2 span, #2 span)) :: (t, span) :: working
+	| applyRepair ((_, span)::working, Substitution tok) = 
+	    (tok, span) :: working
 
       fun getWorking (strm, n, accum) = 
 	    if n = 0 
 	    then (strm, rev accum)
 	    else let
-	      val (tok, strm') = WS.get1 strm
+	      val (tok, s, strm') = WS.get1 strm
 	      in case tok
-		  of Tok.EOF => (strm', rev (Tok.EOF :: accum))
-		   | _ => getWorking (strm', n-1, tok::accum)
+		  of Tok.EOF => (strm', rev ((Tok.EOF, WStream.getSpan strm') :: accum))
+		   | _ => getWorking (strm', n-1, (tok, s)::accum)
 	      end
 
       fun skip (strm, 0) = strm
-	| skip (strm, n) = skip (#2 (WS.get1 strm), n - 1)
+	| skip (strm, n) = skip (#3 (WS.get1 strm), n - 1)
       fun isEmpty strm = (case (#1 (WS.get1 strm))
 			   of Tok.EOF => true
 			    | _ => false)
@@ -296,7 +307,7 @@ print (case r
 				      | Insertion _ => ~1
 				      | Substitution _ => 0)
 			         - scoreOffset
-		   val kw = involvesKW (r, hd working)
+		   val kw = involvesKW (r, #1 (hd working))
 		   val cand = (r, List.length prefix, strm, score, kw)
 		   val valid = if kw
 			       then score > minAdvance + 2
@@ -321,6 +332,7 @@ print (case r
 
       type err_handler
       val mkErrHandler : unit -> err_handler
+      val addAnnotation : err_handler -> UserCode.antlr_annotation -> unit
       val whileDisabled : err_handler -> (unit -> 'a) -> 'a
 
       datatype repair 
@@ -335,8 +347,8 @@ print (case r
 
 (*      val wrap   : err_handler -> (R.T -> ('a * R.T)) -> R.T -> ('a * R.T) *)
       val wrap   : err_handler -> (R.T -> 'a) -> R.T -> 'a
-      val launch : err_handler -> (R.T -> ('a * R.T)) -> 
-		   R.T -> ('a * R.T * repair list)
+      val launch : err_handler -> (R.T -> ('a * 'b * R.T)) -> 
+		   R.T -> ('a * R.T * repair list * UserCode.antlr_annotation list)
 
     end = struct
 
@@ -358,20 +370,27 @@ print (case r
       datatype err_handler = EH of {
 	cont : repair_cont option ref, 
 	enabled : bool ref,
-	repairs : repair list ref
+	repairs : repair list ref,
+	annotations : UserCode.antlr_annotation list ref
       }
 
       fun getCont    (EH {cont,    ...}) = !cont
       fun getEnabled (EH {enabled, ...}) = !enabled
       fun getRepairs (EH {repairs, ...}) = !repairs
+      fun getAnns    (EH {annotations, ...}) = !annotations
 
       fun setCont    (EH {cont,    ...}, n) = cont := n
       fun setEnabled (EH {enabled, ...}, n) = enabled := n
       fun addRepair  (EH {repairs, ...}, n) = repairs := (!repairs) @ [n]
+      fun setAnns    (EH {annotations, ...}, n) = annotations := n
 
       fun mkErrHandler () = EH {cont = ref NONE, 
 				enabled = ref true,
-				repairs = ref []}
+				repairs = ref [],
+			        annotations = ref []}
+
+      fun addAnnotation eh a = setAnns (eh, a :: (getAnns eh))
+
       fun whileDisabled eh f = let
 	    val oldEnabled = getEnabled eh
             in
@@ -386,9 +405,11 @@ print (case r
 
       fun wrap eh f t = if getEnabled eh then let
 	    val cont_ref : retry_cont option ref = ref NONE
+	    val anns = getAnns eh
 	    val t' = SMLofNJ.Cont.callcc (fn k => (cont_ref := SOME k; t))
 	    val retry = (t', valOf (!cont_ref))
             in
+	      setAnns (eh, anns);
 	      f t'
 	      handle R.RepairableError => (
 		       throwIfEH (eh, t');
@@ -476,7 +497,7 @@ print (case r
            (* end case *))
 
       fun launch eh f t = let
-	    val (x, t') = wrap eh f t 
+	    val (x, _, t') = wrap eh f t 
 		handle JumpOut stack => let
 		  val (r, cont, t') = repair (eh, stack)
 		  in
@@ -485,7 +506,7 @@ print (case r
 		  end
             in
 	      throwIfEH (eh, t');
-	      (x, t', getRepairs eh)
+	      (x, t', getRepairs eh, getAnns eh)
             end
 
     end (* functor ErrHandlerFn *)
@@ -514,18 +535,18 @@ print (case r
     structure R = RepairableStrm
 
     fun unwrapErr (Err.Primary {errorAt, repair = R.Deletion}) =
-          (WStream.unwrap errorAt, Delete [(#1 (WStream.get1 errorAt))])
+          (WStream.getPos errorAt, Delete [(#1 (WStream.get1 errorAt))])
       | unwrapErr (Err.Primary {errorAt, repair = R.Insertion t}) =
-          (WStream.unwrap errorAt, Insert [t])
+          (WStream.getPos errorAt, Insert [t])
       | unwrapErr (Err.Primary {errorAt, repair = R.Substitution t}) = 
-          (WStream.unwrap errorAt, 
+          (WStream.getPos errorAt, 
   	   Subst {
   	     old = [(#1 (WStream.get1 errorAt))],
   	     new = [t]
            })
       | unwrapErr (Err.Secondary {deleteFrom, deleteTo}) = 
-          (WStream.unwrap deleteFrom, 
-  	   Delete (WStream.getDiff (deleteTo, deleteFrom)))
+          (WStream.getPos deleteFrom, 
+  	   Delete (map #1 (WStream.getDiff (deleteTo, deleteFrom))))
 
     fun toksToString toks = String.concatWith " " (map Tok.toString toks)
 
@@ -541,60 +562,61 @@ print (case r
         val eh = Err.mkErrHandler()
 	fun wrap f = Err.wrap eh f
 	val whileDisabled = Err.whileDisabled eh
+	val addAnnotation = Err.addAnnotation eh
 	fun tryProds (strm, prods) = 
 	      (wrap (pretryProds eh prods)) strm
-	fun unwrap (ret, strm, errors) = (ret, WStream.unwrap strm, map unwrapErr errors)
+	fun unwrap (ret, strm, errors, anns) = (ret, WStream.unwrap strm, map unwrapErr errors, anns)
 	val lex = WStream.get1
 val matchEOF = wrap (fn strm => (case (lex(strm))
- of (Tok.EOF, strm') => ((), strm')
+ of (Tok.EOF, span, strm') => ((), span, strm')
   | _ => raise(ParseError)
 (* end case *)))
 val matchDummyExp = wrap (fn strm => (case (lex(strm))
- of (Tok.DummyExp(x), strm') => (x, strm')
+ of (Tok.DummyExp(x), span, strm') => (x, span, strm')
   | _ => raise(ParseError)
 (* end case *)))
 val matchSEMI = wrap (fn strm => (case (lex(strm))
- of (Tok.SEMI, strm') => ((), strm')
+ of (Tok.SEMI, span, strm') => ((), span, strm')
   | _ => raise(ParseError)
 (* end case *)))
 val matchRP = wrap (fn strm => (case (lex(strm))
- of (Tok.RP, strm') => ((), strm')
+ of (Tok.RP, span, strm') => ((), span, strm')
   | _ => raise(ParseError)
 (* end case *)))
 val matchLP = wrap (fn strm => (case (lex(strm))
- of (Tok.LP, strm') => ((), strm')
+ of (Tok.LP, span, strm') => ((), span, strm')
   | _ => raise(ParseError)
 (* end case *)))
 val matchMINUS = wrap (fn strm => (case (lex(strm))
- of (Tok.MINUS, strm') => ((), strm')
+ of (Tok.MINUS, span, strm') => ((), span, strm')
   | _ => raise(ParseError)
 (* end case *)))
 val matchTIMES = wrap (fn strm => (case (lex(strm))
- of (Tok.TIMES, strm') => ((), strm')
+ of (Tok.TIMES, span, strm') => ((), span, strm')
   | _ => raise(ParseError)
 (* end case *)))
 val matchPLUS = wrap (fn strm => (case (lex(strm))
- of (Tok.PLUS, strm') => ((), strm')
+ of (Tok.PLUS, span, strm') => ((), span, strm')
   | _ => raise(ParseError)
 (* end case *)))
 val matchEQ = wrap (fn strm => (case (lex(strm))
- of (Tok.EQ, strm') => ((), strm')
+ of (Tok.EQ, span, strm') => ((), span, strm')
   | _ => raise(ParseError)
 (* end case *)))
 val matchNUM = wrap (fn strm => (case (lex(strm))
- of (Tok.NUM(x), strm') => (x, strm')
+ of (Tok.NUM(x), span, strm') => (x, span, strm')
   | _ => raise(ParseError)
 (* end case *)))
 val matchID = wrap (fn strm => (case (lex(strm))
- of (Tok.ID(x), strm') => (x, strm')
+ of (Tok.ID(x), span, strm') => (x, span, strm')
   | _ => raise(ParseError)
 (* end case *)))
 val matchKW_in = wrap (fn strm => (case (lex(strm))
- of (Tok.KW_in, strm') => ((), strm')
+ of (Tok.KW_in, span, strm') => ((), span, strm')
   | _ => raise(ParseError)
 (* end case *)))
 val matchKW_let = wrap (fn strm => (case (lex(strm))
- of (Tok.KW_let, strm') => ((), strm')
+ of (Tok.KW_let, span, strm') => ((), span, strm')
   | _ => raise(ParseError)
 (* end case *)))
 
@@ -602,141 +624,163 @@ val (prog_NT, exp_NT) =
 let
 fun exp_NT (env_RES) (strm) = let
       fun exp_PROD_1 (strm) = let
-            val (KW_let_RES, strm') = matchKW_let(strm)
-            val (ID_RES, strm') = matchID(strm')
-            val (EQ_RES, strm') = matchEQ(strm')
-            val (exp1_RES, strm') = (wrap (exp_NT (UserCode.ARGS_3 (EQ_RES, ID_RES, env_RES, KW_let_RES))))(strm')
-            val (KW_in_RES, strm') = matchKW_in(strm')
-            val (exp2_RES, strm') = (wrap (exp_NT (UserCode.ARGS_4 (EQ_RES, ID_RES, env_RES, exp1_RES, KW_in_RES, KW_let_RES))))(strm')
+            val (KW_let_RES, KW_let_SPAN, strm') = matchKW_let(strm)
+            val (ID_RES, ID_SPAN, strm') = matchID(strm')
+            val (EQ_RES, EQ_SPAN, strm') = matchEQ(strm')
+            val (exp1_RES, exp1_SPAN, strm') = (wrap (exp_NT (UserCode.ARGS_3 (EQ_RES, ID_RES, env_RES, KW_let_RES))))(strm')
+            val (KW_in_RES, KW_in_SPAN, strm') = matchKW_in(strm')
+            val (exp2_RES, exp2_SPAN, strm') = (wrap (exp_NT (UserCode.ARGS_4 (EQ_RES, ID_RES, env_RES, exp1_RES, KW_in_RES, KW_let_RES))))(strm')
+            val (EOF_RES, EOF_SPAN, strm') = matchEOF(strm')
+            val FULL_SPAN = (#1(KW_let_SPAN), #2(EOF_SPAN))
             in
-              (UserCode.exp_PROD_1_ACT (EQ_RES, ID_RES, env_RES, exp1_RES, exp2_RES, KW_in_RES, KW_let_RES),
-                strm')
+              (UserCode.exp_PROD_1_ACT (EQ_RES, ID_RES, EOF_RES, env_RES, exp1_RES, exp2_RES, KW_in_RES, KW_let_RES, EQ_SPAN : Lex.span, ID_SPAN : Lex.span, EOF_SPAN : Lex.span, exp1_SPAN : Lex.span, exp2_SPAN : Lex.span, KW_in_SPAN : Lex.span, KW_let_SPAN : Lex.span, addAnnotation, FULL_SPAN : Lex.span),
+                FULL_SPAN, strm')
             end
       fun exp_PROD_2 (strm) = let
-            val (addExp_RES, strm') = (wrap (addExp_NT (UserCode.ARGS_5 (env_RES))))(strm)
+            val (addExp_RES, addExp_SPAN, strm') = (wrap (addExp_NT (UserCode.ARGS_5 (env_RES))))(strm)
+            val (EOF_RES, EOF_SPAN, strm') = matchEOF(strm')
+            val FULL_SPAN = (#1(addExp_SPAN), #2(EOF_SPAN))
             in
-              (addExp_RES, strm')
+              (addExp_RES, FULL_SPAN, strm')
             end
       in
         (case (lex(strm))
-         of (Tok.DummyExp(_), strm') => exp_PROD_2(strm)
-          | (Tok.LP, strm') => exp_PROD_2(strm)
-          | (Tok.MINUS, strm') => exp_PROD_2(strm)
-          | (Tok.NUM(_), strm') => exp_PROD_2(strm)
-          | (Tok.ID(_), strm') => exp_PROD_2(strm)
-          | (Tok.KW_let, strm') => exp_PROD_1(strm)
+         of (Tok.DummyExp(_), _, strm') => exp_PROD_2(strm)
+          | (Tok.LP, _, strm') => exp_PROD_2(strm)
+          | (Tok.MINUS, _, strm') => exp_PROD_2(strm)
+          | (Tok.NUM(_), _, strm') => exp_PROD_2(strm)
+          | (Tok.ID(_), _, strm') => exp_PROD_2(strm)
+          | (Tok.KW_let, _, strm') => exp_PROD_1(strm)
           | _ => raise(ParseError)
         (* end case *))
       end
 and addExp_NT (env_RES) (strm) = let
-      val (multExp_RES, strm') = (wrap (multExp_NT (UserCode.ARGS_7 (env_RES))))(strm)
+      val (multExp_RES, multExp_SPAN, strm') = (wrap (multExp_NT (UserCode.ARGS_7 (env_RES))))(strm)
       fun SR1_NT (strm) = let
-            val (PLUS_RES, strm') = matchPLUS(strm)
-            val (multExp_RES, strm') = (wrap (multExp_NT (UserCode.ARGS_8 (env_RES, PLUS_RES, multExp_RES))))(strm')
+            val (PLUS_RES, PLUS_SPAN, strm') = matchPLUS(strm)
+            val (multExp_RES, multExp_SPAN, strm') = (wrap (multExp_NT (UserCode.ARGS_8 (env_RES, PLUS_RES, multExp_RES))))(strm')
+            val FULL_SPAN = (#1(PLUS_SPAN), #2(multExp_SPAN))
             in
-              (multExp_RES, strm')
+              (multExp_RES, FULL_SPAN, strm')
             end
       fun SR1_PRED (strm) = (case (lex(strm))
-             of (Tok.PLUS, strm') => true
+             of (Tok.PLUS, _, strm') => true
               | _ => false
             (* end case *))
-      val (SR_RES, strm') = EBNF.closure(SR1_PRED, (wrap SR1_NT), strm')
+      val (SR_RES, SR_SPAN, strm') = EBNF.closure(SR1_PRED, (wrap SR1_NT), strm')
+      val FULL_SPAN = (#1(multExp_SPAN), #2(SR_SPAN))
       in
-        (UserCode.addExp_PROD_1_ACT (SR_RES, env_RES, multExp_RES), strm')
+        (UserCode.addExp_PROD_1_ACT (SR_RES, env_RES, multExp_RES, SR_SPAN : Lex.span, multExp_SPAN : Lex.span, addAnnotation, FULL_SPAN : Lex.span),
+          FULL_SPAN, strm')
       end
 and multExp_NT (env_RES) (strm) = let
-      val (prefixExp_RES, strm') = (wrap (prefixExp_NT (UserCode.ARGS_10 (env_RES))))(strm)
+      val (prefixExp_RES, prefixExp_SPAN, strm') = (wrap (prefixExp_NT (UserCode.ARGS_10 (env_RES))))(strm)
       fun SR1_NT (strm) = let
-            val (TIMES_RES, strm') = matchTIMES(strm)
-            val (prefixExp_RES, strm') = (wrap (prefixExp_NT (UserCode.ARGS_11 (env_RES, TIMES_RES, prefixExp_RES))))(strm')
+            val (TIMES_RES, TIMES_SPAN, strm') = matchTIMES(strm)
+            val (prefixExp_RES, prefixExp_SPAN, strm') = (wrap (prefixExp_NT (UserCode.ARGS_11 (env_RES, TIMES_RES, prefixExp_RES))))(strm')
+            val FULL_SPAN = (#1(TIMES_SPAN), #2(prefixExp_SPAN))
             in
-              (prefixExp_RES, strm')
+              (prefixExp_RES, FULL_SPAN, strm')
             end
       fun SR1_PRED (strm) = (case (lex(strm))
-             of (Tok.TIMES, strm') => true
+             of (Tok.TIMES, _, strm') => true
               | _ => false
             (* end case *))
-      val (SR_RES, strm') = EBNF.closure(SR1_PRED, (wrap SR1_NT), strm')
+      val (SR_RES, SR_SPAN, strm') = EBNF.closure(SR1_PRED, (wrap SR1_NT), strm')
+      val FULL_SPAN = (#1(prefixExp_SPAN), #2(SR_SPAN))
       in
-        (UserCode.multExp_PROD_1_ACT (SR_RES, env_RES, prefixExp_RES), strm')
+        (UserCode.multExp_PROD_1_ACT (SR_RES, env_RES, prefixExp_RES, SR_SPAN : Lex.span, prefixExp_SPAN : Lex.span, addAnnotation, FULL_SPAN : Lex.span),
+          FULL_SPAN, strm')
       end
 and prefixExp_NT (env_RES) (strm) = let
       fun prefixExp_PROD_1 (strm) = let
-            val (atomicExp_RES, strm') = (wrap (atomicExp_NT (UserCode.ARGS_12 (env_RES))))(strm)
+            val (atomicExp_RES, atomicExp_SPAN, strm') = (wrap (atomicExp_NT (UserCode.ARGS_12 (env_RES))))(strm)
+            val FULL_SPAN = (#1(atomicExp_SPAN), #2(atomicExp_SPAN))
             in
-              (atomicExp_RES, strm')
+              (atomicExp_RES, FULL_SPAN, strm')
             end
       fun prefixExp_PROD_2 (strm) = let
-            val (MINUS_RES, strm') = matchMINUS(strm)
-            val (prefixExp_RES, strm') = (wrap (prefixExp_NT (UserCode.ARGS_14 (env_RES, MINUS_RES))))(strm')
+            val (MINUS_RES, MINUS_SPAN, strm') = matchMINUS(strm)
+            val (prefixExp_RES, prefixExp_SPAN, strm') = (wrap (prefixExp_NT (UserCode.ARGS_14 (env_RES, MINUS_RES))))(strm')
+            val FULL_SPAN = (#1(MINUS_SPAN), #2(prefixExp_SPAN))
             in
-              (UserCode.prefixExp_PROD_2_ACT (env_RES, MINUS_RES, prefixExp_RES),
-                strm')
+              (UserCode.prefixExp_PROD_2_ACT (env_RES, MINUS_RES, prefixExp_RES, MINUS_SPAN : Lex.span, prefixExp_SPAN : Lex.span, addAnnotation, FULL_SPAN : Lex.span),
+                FULL_SPAN, strm')
             end
       in
         (case (lex(strm))
-         of (Tok.MINUS, strm') => prefixExp_PROD_2(strm)
-          | (Tok.DummyExp(_), strm') => prefixExp_PROD_1(strm)
-          | (Tok.LP, strm') => prefixExp_PROD_1(strm)
-          | (Tok.NUM(_), strm') => prefixExp_PROD_1(strm)
-          | (Tok.ID(_), strm') => prefixExp_PROD_1(strm)
+         of (Tok.MINUS, _, strm') => prefixExp_PROD_2(strm)
+          | (Tok.DummyExp(_), _, strm') => prefixExp_PROD_1(strm)
+          | (Tok.LP, _, strm') => prefixExp_PROD_1(strm)
+          | (Tok.NUM(_), _, strm') => prefixExp_PROD_1(strm)
+          | (Tok.ID(_), _, strm') => prefixExp_PROD_1(strm)
           | _ => raise(ParseError)
         (* end case *))
       end
 and atomicExp_NT (env_RES) (strm) = let
       fun atomicExp_PROD_1 (strm) = let
-            val (ID_RES, strm') = matchID(strm)
+            val (ID_RES, ID_SPAN, strm') = matchID(strm)
             in
               if (UserCode.atomicExp_PROD_1_PRED (ID_RES, env_RES))
-                then (UserCode.atomicExp_PROD_1_ACT (ID_RES, env_RES), strm')
+                then let
+                  val FULL_SPAN = (#1(ID_SPAN), #2(ID_SPAN))
+                  in
+                    (UserCode.atomicExp_PROD_1_ACT (ID_RES, env_RES, ID_SPAN : Lex.span, addAnnotation, FULL_SPAN : Lex.span),
+                      FULL_SPAN, strm')
+                  end
                 else raise ParseError
             end
       fun atomicExp_PROD_2 (strm) = let
-            val (NUM_RES, strm') = matchNUM(strm)
+            val (NUM_RES, NUM_SPAN, strm') = matchNUM(strm)
+            val FULL_SPAN = (#1(NUM_SPAN), #2(NUM_SPAN))
             in
-              (NUM_RES, strm')
+              (NUM_RES, FULL_SPAN, strm')
             end
       fun atomicExp_PROD_3 (strm) = let
-            val (LP_RES, strm') = matchLP(strm)
-            val (exp_RES, strm') = (wrap (exp_NT (UserCode.ARGS_17 (LP_RES, env_RES))))(strm')
-            val (RP_RES, strm') = matchRP(strm')
+            val (LP_RES, LP_SPAN, strm') = matchLP(strm)
+            val (exp_RES, exp_SPAN, strm') = (wrap (exp_NT (UserCode.ARGS_17 (LP_RES, env_RES))))(strm')
+            val (RP_RES, RP_SPAN, strm') = matchRP(strm')
+            val FULL_SPAN = (#1(LP_SPAN), #2(RP_SPAN))
             in
-              (exp_RES, strm')
+              (exp_RES, FULL_SPAN, strm')
             end
       fun atomicExp_PROD_4 (strm) = let
-            val (DummyExp_RES, strm') = matchDummyExp(strm)
+            val (DummyExp_RES, DummyExp_SPAN, strm') = matchDummyExp(strm)
+            val FULL_SPAN = (#1(DummyExp_SPAN), #2(DummyExp_SPAN))
             in
-              (DummyExp_RES, strm')
+              (DummyExp_RES, FULL_SPAN, strm')
             end
       in
         (case (lex(strm))
-         of (Tok.DummyExp(_), strm') => atomicExp_PROD_4(strm)
-          | (Tok.NUM(_), strm') => atomicExp_PROD_2(strm)
-          | (Tok.ID(_), strm') => atomicExp_PROD_1(strm)
-          | (Tok.LP, strm') => atomicExp_PROD_3(strm)
+         of (Tok.DummyExp(_), _, strm') => atomicExp_PROD_4(strm)
+          | (Tok.NUM(_), _, strm') => atomicExp_PROD_2(strm)
+          | (Tok.ID(_), _, strm') => atomicExp_PROD_1(strm)
+          | (Tok.LP, _, strm') => atomicExp_PROD_3(strm)
           | _ => raise(ParseError)
         (* end case *))
       end
 fun prog_NT (strm) = let
       fun SR1_NT (strm) = let
-            val (exp_RES, strm') = (wrap (exp_NT (UserCode.ARGS_1 ())))(strm)
-            val (SEMI_RES, strm') = matchSEMI(strm')
+            val (exp_RES, exp_SPAN, strm') = (wrap (exp_NT (UserCode.ARGS_1 ())))(strm)
+            val (SEMI_RES, SEMI_SPAN, strm') = matchSEMI(strm')
+            val FULL_SPAN = (#1(exp_SPAN), #2(SEMI_SPAN))
             in
-              (exp_RES, strm')
+              (exp_RES, FULL_SPAN, strm')
             end
       fun SR1_PRED (strm) = (case (lex(strm))
-             of (Tok.DummyExp(_), strm') => true
-              | (Tok.LP, strm') => true
-              | (Tok.MINUS, strm') => true
-              | (Tok.NUM(_), strm') => true
-              | (Tok.ID(_), strm') => true
-              | (Tok.KW_let, strm') => true
+             of (Tok.DummyExp(_), _, strm') => true
+              | (Tok.LP, _, strm') => true
+              | (Tok.MINUS, _, strm') => true
+              | (Tok.NUM(_), _, strm') => true
+              | (Tok.ID(_), _, strm') => true
+              | (Tok.KW_let, _, strm') => true
               | _ => false
             (* end case *))
-      val (SR_RES, strm') = EBNF.closure(SR1_PRED, (wrap SR1_NT), strm)
-      val (EOF_RES, strm') = matchEOF(strm')
+      val (SR_RES, SR_SPAN, strm') = EBNF.closure(SR1_PRED, (wrap SR1_NT), strm)
+      val (EOF_RES, EOF_SPAN, strm') = matchEOF(strm')
+      val FULL_SPAN = (#1(SR_SPAN), #2(EOF_SPAN))
       in
-        (SR_RES, strm')
+        (SR_RES, FULL_SPAN, strm')
       end
 in
   (prog_NT, exp_NT)

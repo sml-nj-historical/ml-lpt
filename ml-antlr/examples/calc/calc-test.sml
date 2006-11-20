@@ -4,7 +4,10 @@ structure CalcTest =
     structure ListLex = struct
       type strm = Tok.token list
       fun lex [] = NONE
-	| lex (t::ts) = SOME (t, ts)
+	| lex (t::ts) = SOME (t, ((), ()), ts)
+      type pos = unit
+      type span = pos * pos
+      fun getPos _ = ()
     end
 
     structure CP = CalcParse(ListLex)
@@ -15,14 +18,14 @@ structure CalcTest =
 			  (sref := false; s)
 			else ""
           fun loop (NONE, accum) = rev accum
-	    | loop (SOME (s, strm), accum) = loop (CalcLex.lex strm, s::accum)
+	    | loop (SOME (s, _, strm), accum) = loop (CalcLex.lex strm, s::accum)
           in
             loop (CalcLex.lex (CalcLex.streamify input), [])
           end
       | fragToToks (SMLofNJ.ANTIQUOTE i) = [Tok.DummyExp i]
 
     fun % frags = let
-      val (r, s', errs) = CP.parseexp AtomMap.empty (List.concat (map fragToToks frags))
+      val (r, s', errs, _) = CP.parseexp AtomMap.empty (List.concat (map fragToToks frags))
     in
       app (fn (_, repair) => print (CP.repairToString repair ^ "\n")) errs;
       (r, s')

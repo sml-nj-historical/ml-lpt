@@ -45,9 +45,10 @@ structure Prod =
 *)
 
     fun bindingsAtAction p = let
-          val leftBindings = case Nonterm.parent (lhs p)
-		of NONE => AtomSet.addList (AtomSet.empty,
-			     Nonterm.formals (lhs p))
+          val (leftBindings, formals) = case Nonterm.parent (lhs p)
+		of NONE => (AtomSet.empty,
+			    AtomSet.addList (AtomSet.empty,
+			      Nonterm.formals (lhs p)))
 		 | SOME p' => let
 		     fun isProdItm (itm) = (case Item.nt itm
                            of SOME nt => Nonterm.same (nt, lhs p)
@@ -57,7 +58,7 @@ structure Prod =
 		       Item.bindingsLeftOf (prodItm, p')
 		     end
 	  in
-	    AtomSet.addList (leftBindings, map Atom.atom (itemBindings p))
+	    (AtomSet.addList (leftBindings, map Atom.atom (itemBindings p)), formals)
 	  end
 
     structure Set = RedBlackSetFn (

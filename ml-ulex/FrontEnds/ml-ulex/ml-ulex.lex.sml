@@ -86,7 +86,6 @@ structure MLULexLex  = struct
 	val mkStream : (int -> string) -> stream
 	val getc : stream -> (Char.char * stream) option
 	val getpos : stream -> int
-	val getline : stream -> int
 	val subtract : stream * stream -> Substring.substring
 	val eof : stream -> bool
 
@@ -94,7 +93,7 @@ structure MLULexLex  = struct
 
         val chunkSize = 4096
 
-        datatype stream = S of (buf * int * int) 
+        datatype stream = S of (buf * int) 
 	and buf = B of {
 	    data : string,
 	    basePos : int,
@@ -107,18 +106,17 @@ structure MLULexLex  = struct
 	      (S (B {data = "", basePos = 0, 
 		     more = ref UNKNOWN,
 		     inputN = inputN},
-		  0, 0))
+		  0))
 
-	fun getc (S (buf as B {data, basePos, more, inputN}, pos, line)) = 
+	fun getc (S (buf as B {data, basePos, more, inputN}, pos)) = 
 	      if pos < String.size data then let
 		val c = String.sub (data, pos)
-		val line' = if c = #"\n" then line+1 else line
 		in
-		  SOME (c, S (buf, pos+1, line'))
+		  SOME (c, S (buf, pos+1))
 		end
 	      else (case !more
 		     of NO => NONE
-		      | YES buf' => getc (S (buf', 0, line))
+		      | YES buf' => getc (S (buf', 0))
 		      | UNKNOWN => 
 			  (case inputN chunkSize
 			    of "" => (more := NO; NONE)
@@ -130,18 +128,17 @@ structure MLULexLex  = struct
 					       inputN = inputN}
 			         in
 				   more := YES buf';
-				   getc (S (buf', 0, line))
+				   getc (S (buf', 0))
 			         end
 			   (* end case *))
 		    (* end case *))
 
-	fun getpos (S (B {basePos, ...}, pos, _)) = basePos + pos
-	fun getline (S (_, _, line)) = line
+	fun getpos (S (B {basePos, ...}, pos)) = basePos + pos
 
 	fun subtract (new, old) = let
-	      val (S (B {data = ndata, basePos = nbasePos, ...}, npos, _)) = new
+	      val (S (B {data = ndata, basePos = nbasePos, ...}, npos)) = new
 	      val (S (B {data = odata, basePos = obasePos, 
-			 more, inputN}, opos, _)) = old
+			 more, inputN}, opos)) = old
 	      in
 	        if nbasePos = obasePos then
 		  Substring.substring (ndata, opos, npos-opos)
@@ -152,11 +149,11 @@ structure MLULexLex  = struct
 			   Substring.extract (
 			     Substring.concat [
 			       Substring.extract (odata, opos, NONE),
-			       subtract (new, S (buf, 0, 0))],
+			       subtract (new, S (buf, 0))],
 			     0, NONE)
 	      end
 
-	fun eof (S (B {data, more, ...}, pos, _)) = 
+	fun eof (S (B {data, more, ...}, pos)) = 
 	      pos >= String.size data andalso 
 	      (case !more
 		of NO => true
@@ -209,29 +206,51 @@ COM | CODE | STRING | CHARSET | CHARCLASS | RESTRING | INITIAL | DIRECTIVE
 
     exception yyEOF
 
-    fun innerLex (yystrm_, yyss_) = let
+    type yysourcemap = (int * int) list ref
+    fun yyfindLB ((lineNo, pos)::sm, pos') = 
+	  if pos <= pos' then (lineNo, pos)
+	  else yyfindLB(sm, pos')
+      | yyfindLB _ = (1, ~1)
+    fun yylineNo (sm, pos) = #1 (yyfindLB(!sm, pos))
+    fun yycolNo  (sm, pos) = pos - (#2 (yyfindLB(!sm, pos))) 
+
+    fun innerLex (yystrm_, yyss_, yysm) = let
         (* current start state *)
           val yyss = ref yyss_
 	  fun YYBEGIN ss = (yyss := ss)
 	(* current input stream *)
           val yystrm = ref yystrm_
+	  fun yygetPos() = yyInput.getpos (!yystrm)
+        (* start position of token -- can be updated via skip() *)
+	  val yystartPos = ref (yygetPos())
 	(* get one char of input *)
-	  val yygetc = yyUTF8.getu yyInput.getc 
+	  fun yygetc strm = (case yyUTF8.getu yyInput.getc strm
+                of (SOME (0w10, s')) => let
+	             val (curLine, pos) = case !yysm
+					   of x::_ => x
+					    | nil => (1, ~1)
+		     val newPos = yyInput.getpos strm
+	             in
+	               (if pos < newPos then
+		          yysm := (curLine + 1, newPos)::(!yysm)
+			else ());
+		       SOME (0w10, s')
+	             end
+		 | x => x)
 	(* create yytext *)
 	  fun yymksubstr(strm) = yyInput.subtract (strm, !yystrm)
 	  fun yymktext(strm) = Substring.string (yymksubstr strm)
 	  fun yymkunicode(strm) = yyUTF8.getList Substring.getc (yymksubstr strm)
           open UserDeclarations
-          fun lex 
-(yyarg as ()) = let
+          fun lex () = let
             fun yystuck (yyNO_MATCH) = raise Fail "lexer reached a stuck state"
 	      | yystuck (yyMATCH (strm, action, old)) = 
 		  action (strm, old)
-	    val yypos = yyInput.getpos (!yystrm)
-	    val yygetlineNo = yyInput.getline
+	    val yypos = yygetPos()
+	    fun yygetlineNo strm = yylineNo (yysm, yyInput.getpos strm)
 	    fun continue() = 
 let
-fun yyAction0 (strm, lastMatch) = (yystrm := strm;  continue())
+fun yyAction0 (strm, lastMatch) = (yystrm := strm;  skip())
 fun yyAction1 (strm, lastMatch) = (yystrm := strm;
        YYBEGIN CODE; clrText(); Tok.KW_defs)
 fun yyAction2 (strm, lastMatch) = (yystrm := strm;
@@ -1894,32 +1913,35 @@ in
     | DIRECTIVE => yyQ7(!(yystrm), yyNO_MATCH)
   (* end case *))
 end
-	    in (continue(), !yystrm, !yyss) end
+            and skip() = (yystartPos := yygetPos(); continue())
+	    in (continue(), (!yystartPos, yygetPos()), !yystrm, !yyss) end
           in 
-            lex
-	    handle IO.Io{cause, ...} => raise cause
+            lex()
           end
-    
+
+    type pos = int
+    type span = pos * pos
     type tok = UserDeclarations.lex_result
-    datatype prestrm = STRM of yyInput.stream * 
-		(yystart_state * tok * prestrm * yystart_state) option ref
+
+    datatype prestrm = STRM of yyInput.stream * yysourcemap *
+		(yystart_state * tok * span * prestrm * yystart_state) option ref
     type strm = (prestrm * yystart_state)
 
-    fun lex(STRM (yystrm, memo), ss) = (case !memo
+    fun lex(STRM (yystrm, sm, memo), ss) = (case !memo
 	  of NONE => (let
-	     val (tok, yystrm', ss') = innerLex (yystrm, ss) ()
-	     val strm' = STRM (yystrm', ref NONE);
+	     val (tok, span, yystrm', ss') = innerLex (yystrm, ss, sm)
+	     val strm' = STRM (yystrm', sm, ref NONE);
 	     in 
-	       memo := SOME (ss, tok, strm', ss');
-	       SOME (tok, (strm', ss'))
+	       memo := SOME (ss, tok, span, strm', ss');
+	       SOME (tok, span, (strm', ss'))
 	     end
 	     handle yyEOF => NONE)
-	   | SOME (ss', tok, strm', ss'') => 
+	   | SOME (ss', tok, span, strm', ss'') => 
 	       if ss = ss' then
-		 SOME (tok, (strm', ss''))
+		 SOME (tok, span, (strm', ss''))
 	       else (
 		 memo := NONE;
-		 lex (STRM (yystrm, memo), ss))
+		 lex (STRM (yystrm, sm, memo), ss))
          (* end case *))
 
 (*	  
@@ -1937,9 +1959,12 @@ end
 *)
 (*    fun cons(a,s) = STRM(ref(EVAL(a,s))) *)
 
-    fun streamify inputN = (STRM (yyInput.mkStream inputN, ref NONE), INITIAL)
+    fun streamify inputN = (STRM (yyInput.mkStream inputN, ref [], ref NONE), 
+			    INITIAL)
 
-    fun getLineNo (STRM (strm, _), _) = yyInput.getline strm
-    fun getPos    (STRM (strm, _), _) = yyInput.getpos strm
+(*    fun getLineNo (STRM (strm, _), _) = yyInput.getline strm *)
+    fun getPos (STRM (strm, _, _), _) = yyInput.getpos strm
+    fun getLineNo ((STRM (_, sm, _), _), pos) = yylineNo (sm, pos)
+    fun getColNo  ((STRM (_, sm, _), _), pos) = yycolNo (sm, pos)
 
   end

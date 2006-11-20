@@ -32,8 +32,9 @@ structure Item =
 	   | S.TOK _ => NONE
          (* end case *))
 
-  (* return the SET of bound names to the left of an item is a production.
-   * we use a set rather than a list because names might be 
+  (* return the SET of bound names to the left of an item in a production,
+   * and the SET of the formal parameters available to the item.
+   * we use sets rather than lists because names might be 
    * repeated in the bindings.
    *)
     fun bindingsLeftOf (item, prod) = let
@@ -44,8 +45,9 @@ structure Item =
 	    | leftOf ((i, name)::is, accum) = 
 	        if same (i, item) then accum
 		else leftOf (is, AtomSet.add(accum, Atom.atom name))
-	  val parentBindings = case Nonterm.parent (lhs prod)
-		of NONE => AtomSet.addList (AtomSet.empty, Nonterm.formals (lhs prod))
+	  val (parentBindings, formals) = case Nonterm.parent (lhs prod)
+		of NONE => (AtomSet.empty,
+			    AtomSet.addList (AtomSet.empty, Nonterm.formals (lhs prod)))
 		 | SOME prod' => let
 		     fun isProdItm (itm) = (case nt itm
                            of SOME nt => Nonterm.same (nt, lhs prod)
@@ -55,8 +57,9 @@ structure Item =
 		       bindingsLeftOf (prodItm, prod')
 		     end
           in
-            leftOf (ListPair.zip (items prod, itemBindings prod), 
-		    parentBindings)
+            (leftOf (ListPair.zip (items prod, itemBindings prod), 
+		     parentBindings),
+	     formals)
           end
 
     structure Set = RedBlackSetFn (

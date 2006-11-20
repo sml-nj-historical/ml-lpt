@@ -8,7 +8,11 @@ end (* structure Tok *)
 signature LEXER = sig
 
   type strm
-  val lex : strm -> (Tok.token * strm) option
+  type pos
+  type span = pos * pos
+
+  val lex : strm -> (Tok.token * span * strm) option
+  val getPos : strm -> pos
 
 end (* signature LEXER *)
 
@@ -63,6 +67,8 @@ end
 
     structure UserCode = struct
 
+      type antlr_annotation = unit
+
 @defs@
 
     end
@@ -73,7 +79,7 @@ end
     structure WStream = struct
 
       datatype 'a wstream = WSTREAM of {
-	prefix : Tok.token list,
+	prefix : (Tok.token * Lex.span) list,
 	curTok : int,
 	strm : 'a
       }
@@ -81,13 +87,13 @@ end
       fun wrap strm =  WSTREAM {prefix = [], strm = strm, curTok = 0}
       fun unwrap (WSTREAM {strm, ...}) = strm
 
-      fun get1 (WSTREAM {prefix = tok::toks, strm, curTok}) = 
-	    (tok, WSTREAM {prefix = toks, strm = strm, curTok = curTok + 1})
+      fun get1 (WSTREAM {prefix = (tok, span)::toks, strm, curTok}) = 
+	    (tok, span, WSTREAM {prefix = toks, strm = strm, curTok = curTok + 1})
 	| get1 (WSTREAM {prefix = [], strm, curTok}) = let
-	    val (tok, strm') = case Lex.lex strm
-				of SOME x => x
-				 | NONE => (Tok.EOF, strm)
-	    in (tok, WSTREAM {prefix = [], strm = strm', curTok = curTok + 1})
+	    val (tok, span, strm') = case Lex.lex strm
+		of SOME x => x
+		 | NONE => (Tok.EOF, (Lex.getPos strm, Lex.getPos strm), strm)
+	    in (tok, span, WSTREAM {prefix = [], strm = strm', curTok = curTok + 1})
 	    end
 
       fun prepend (toks, WSTREAM {prefix, strm, curTok}) = 
@@ -99,9 +105,12 @@ end
       fun getDiff (ws1, ws2) =
 	    if subtract (ws1, ws2) <= 0 then []
 	    else let 
-		val (t, ws2') = get1 ws2
-	        in t :: (getDiff (ws1, ws2'))
+		val (t, s, ws2') = get1 ws2
+	        in (t, s) :: (getDiff (ws1, ws2'))
                 end
+
+      fun getPos ws = let val (_, (left, _), _) = get1 ws in left end
+      fun getSpan ws = (getPos ws, getPos ws)
 
     end (* structure WStream *)
     
@@ -110,29 +119,29 @@ end
       fun optional (pred, parse, strm) = 
 	    if pred strm
     	    then let
-	      val (y, strm') = parse strm
+	      val (y, span, strm') = parse strm
 	      in 
-		(SOME y, strm')
+		(SOME y, span, strm')
 	      end
-	    else (NONE, strm)
+	    else (NONE, WStream.getSpan strm, strm)
 
       fun closure (pred, parse, strm) = let
-            fun iter (strm, ys) = 
+            fun iter (strm, (left, right), ys) = 
 	          if pred strm
 		  then let
-		    val (y, strm') = parse strm
-		    in iter (strm', y::ys)
+		    val (y, (_, right'), strm') = parse strm
+		    in iter (strm', (left, right'), y::ys)
 		    end
-		  else (List.rev ys, strm)
+		  else (List.rev ys, (left, right), strm)
             in
-              iter (strm, [])
+              iter (strm, WStream.getSpan strm, [])
             end
 
       fun posclos (pred, parse, strm) = let
-            val (y, strm') = parse strm
-	    val (ys, strm'') = closure (pred, parse, strm')
+            val (y, (left, _), strm') = parse strm
+	    val (ys, (_, right), strm'') = closure (pred, parse, strm')
             in
-              (y::ys, strm'')
+              (y::ys, (left, right), strm'')
             end
 
     end (* structure EBNF *)
@@ -162,21 +171,23 @@ end
       fun applyRepair ([], repair) = 
 	    raise Fail "applyRepair: expected nonempty working list"
 	| applyRepair (working, Deletion) = tl working
-	| applyRepair (working, Insertion tok) = tok :: working
-	| applyRepair (working, Substitution tok) = tok :: (tl working)
+	| applyRepair ((t, span)::working, Insertion tok) = 
+	    (tok, (#2 span, #2 span)) :: (t, span) :: working
+	| applyRepair ((_, span)::working, Substitution tok) = 
+	    (tok, span) :: working
 
       fun getWorking (strm, n, accum) = 
 	    if n = 0 
 	    then (strm, rev accum)
 	    else let
-	      val (tok, strm') = WS.get1 strm
+	      val (tok, s, strm') = WS.get1 strm
 	      in case tok
-		  of Tok.EOF => (strm', rev (Tok.EOF :: accum))
-		   | _ => getWorking (strm', n-1, tok::accum)
+		  of Tok.EOF => (strm', rev ((Tok.EOF, WStream.getSpan strm') :: accum))
+		   | _ => getWorking (strm', n-1, (tok, s)::accum)
 	      end
 
       fun skip (strm, 0) = strm
-	| skip (strm, n) = skip (#2 (WS.get1 strm), n - 1)
+	| skip (strm, n) = skip (#3 (WS.get1 strm), n - 1)
       fun isEmpty strm = (case (#1 (WS.get1 strm))
 			   of Tok.EOF => true
 			    | _ => false)
@@ -233,7 +244,7 @@ print (case r
 				      | Insertion _ => ~1
 				      | Substitution _ => 0)
 			         - scoreOffset
-		   val kw = involvesKW (r, hd working)
+		   val kw = involvesKW (r, #1 (hd working))
 		   val cand = (r, List.length prefix, strm, score, kw)
 		   val valid = if kw
 			       then score > minAdvance + 2
@@ -258,6 +269,7 @@ print (case r
 
       type err_handler
       val mkErrHandler : unit -> err_handler
+      val addAnnotation : err_handler -> UserCode.antlr_annotation -> unit
       val whileDisabled : err_handler -> (unit -> 'a) -> 'a
 
       datatype repair 
@@ -272,8 +284,8 @@ print (case r
 
 (*      val wrap   : err_handler -> (R.T -> ('a * R.T)) -> R.T -> ('a * R.T) *)
       val wrap   : err_handler -> (R.T -> 'a) -> R.T -> 'a
-      val launch : err_handler -> (R.T -> ('a * R.T)) -> 
-		   R.T -> ('a * R.T * repair list)
+      val launch : err_handler -> (R.T -> ('a * 'b * R.T)) -> 
+		   R.T -> ('a * R.T * repair list * UserCode.antlr_annotation list)
 
     end = struct
 
@@ -295,20 +307,27 @@ print (case r
       datatype err_handler = EH of {
 	cont : repair_cont option ref, 
 	enabled : bool ref,
-	repairs : repair list ref
+	repairs : repair list ref,
+	annotations : UserCode.antlr_annotation list ref
       }
 
       fun getCont    (EH {cont,    ...}) = !cont
       fun getEnabled (EH {enabled, ...}) = !enabled
       fun getRepairs (EH {repairs, ...}) = !repairs
+      fun getAnns    (EH {annotations, ...}) = !annotations
 
       fun setCont    (EH {cont,    ...}, n) = cont := n
       fun setEnabled (EH {enabled, ...}, n) = enabled := n
       fun addRepair  (EH {repairs, ...}, n) = repairs := (!repairs) @ [n]
+      fun setAnns    (EH {annotations, ...}, n) = annotations := n
 
       fun mkErrHandler () = EH {cont = ref NONE, 
 				enabled = ref true,
-				repairs = ref []}
+				repairs = ref [],
+			        annotations = ref []}
+
+      fun addAnnotation eh a = setAnns (eh, a :: (getAnns eh))
+
       fun whileDisabled eh f = let
 	    val oldEnabled = getEnabled eh
             in
@@ -323,9 +342,11 @@ print (case r
 
       fun wrap eh f t = if getEnabled eh then let
 	    val cont_ref : retry_cont option ref = ref NONE
+	    val anns = getAnns eh
 	    val t' = SMLofNJ.Cont.callcc (fn k => (cont_ref := SOME k; t))
 	    val retry = (t', valOf (!cont_ref))
             in
+	      setAnns (eh, anns);
 	      f t'
 	      handle R.RepairableError => (
 		       throwIfEH (eh, t');
@@ -413,7 +434,7 @@ print (case r
            (* end case *))
 
       fun launch eh f t = let
-	    val (x, t') = wrap eh f t 
+	    val (x, _, t') = wrap eh f t 
 		handle JumpOut stack => let
 		  val (r, cont, t') = repair (eh, stack)
 		  in
@@ -422,7 +443,7 @@ print (case r
 		  end
             in
 	      throwIfEH (eh, t');
-	      (x, t', getRepairs eh)
+	      (x, t', getRepairs eh, getAnns eh)
             end
 
     end (* functor ErrHandlerFn *)
@@ -451,18 +472,18 @@ print (case r
     structure R = RepairableStrm
 
     fun unwrapErr (Err.Primary {errorAt, repair = R.Deletion}) =
-          (WStream.unwrap errorAt, Delete [(#1 (WStream.get1 errorAt))])
+          (WStream.getPos errorAt, Delete [(#1 (WStream.get1 errorAt))])
       | unwrapErr (Err.Primary {errorAt, repair = R.Insertion t}) =
-          (WStream.unwrap errorAt, Insert [t])
+          (WStream.getPos errorAt, Insert [t])
       | unwrapErr (Err.Primary {errorAt, repair = R.Substitution t}) = 
-          (WStream.unwrap errorAt, 
+          (WStream.getPos errorAt, 
   	   Subst {
   	     old = [(#1 (WStream.get1 errorAt))],
   	     new = [t]
            })
       | unwrapErr (Err.Secondary {deleteFrom, deleteTo}) = 
-          (WStream.unwrap deleteFrom, 
-  	   Delete (WStream.getDiff (deleteTo, deleteFrom)))
+          (WStream.getPos deleteFrom, 
+  	   Delete (map #1 (WStream.getDiff (deleteTo, deleteFrom))))
 
     fun toksToString toks = String.concatWith " " (map Tok.toString toks)
 
@@ -478,9 +499,10 @@ print (case r
         val eh = Err.mkErrHandler()
 	fun wrap f = Err.wrap eh f
 	val whileDisabled = Err.whileDisabled eh
+	val addAnnotation = Err.addAnnotation eh
 	fun tryProds (strm, prods) = 
 	      (wrap (pretryProds eh prods)) strm
-	fun unwrap (ret, strm, errors) = (ret, WStream.unwrap strm, map unwrapErr errors)
+	fun unwrap (ret, strm, errors, anns) = (ret, WStream.unwrap strm, map unwrapErr errors, anns)
 	val lex = WStream.get1
 @matchfns@
 
