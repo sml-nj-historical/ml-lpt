@@ -45,6 +45,25 @@
   | MULOP of string
   ;
 
+%keywords 
+  KW_program,
+  KW_var,
+  KW_array,
+  KW_of,
+  KW_integer,
+  KW_real,
+  KW_function,
+  KW_procedure,
+  KW_begin,
+  KW_end,
+  KW_if,
+  KW_then,
+  KW_else,
+  KW_while,
+  KW_do,
+  KW_not
+  ;
+
 program
   : "program" ID LP id_list RP SEMI
       (declaration)*
@@ -59,7 +78,7 @@ program
   ;
 
 id_list
-  : ID (COMMA ID)* => ( catCm (ID::SR1) )
+  : ID (COMMA ID)* => ( catCm (ID::SR) )
   ;
 
 declaration
@@ -83,7 +102,7 @@ id_list_type
 
 subprogram_declaration
   : subprogram_head (declaration)* compound_statement SEMI
-      => ( catNl [subprogram_head, catNl SR1, compound_statement ^ ";"] )
+      => ( catNl [subprogram_head, catNl SR, compound_statement ^ ";"] )
   ;
 
 subprogram_head
@@ -99,12 +118,12 @@ arguments
   ;
 
 parameter_list
-  : id_list_type (SEMI id_list_type)* => ( catSemi (id_list_type::SR1) )
+  : id_list_type (SEMI id_list_type)* => ( catSemi (id_list_type::SR) )
   ;
 
 compound_statement
-  : KW_begin (statement (SEMI statement)* => ( catSemiNl (statement::SR1) ))? KW_end
-    => ( catNl ["begin", getOpt(SR1, ""), "end"] )
+  : KW_begin (statement (SEMI statement)* => ( catSemiNl (statement::SR) ))? KW_end
+    => ( catNl ["begin", getOpt(SR, ""), "end"] )
   ;
 
 statement
@@ -125,17 +144,17 @@ variable
 
 procedure_statement
   : ID
-  | ID LP exp (COMMA exp)* RP => ( cat [ID, "(", catCm (exp::SR1), ")" ] )
+  | ID LP exp (COMMA exp)* RP => ( cat [ID, "(", catCm (exp::SR), ")" ] )
   ;
 
 exp
   : simple_exp (RELOP simple_exp => ( RELOP ^ " " ^ simple_exp ))? 
-      => ( catSp [simple_exp, getOpt(SR1, "")] )
+      => ( catSp [simple_exp, getOpt(SR, "")] )
   ;
 
 simple_exp
   : signed_term (ADDOP signed_term => ( ADDOP ^ " " ^signed_term ))* 
-      => ( catSp (signed_term::SR1) )
+      => ( catSp (signed_term::SR) )
   ;
 
 signed_term
@@ -145,12 +164,12 @@ signed_term
   
 term
   : factor (MULOP factor => ( MULOP ^ " " ^ factor ))* 
-      => ( catSp (factor::SR1) )
+      => ( catSp (factor::SR) )
   ;
 
 factor
   : variable
-  | ID LP exp (COMMA exp)* RP => ( cat [ID, "(", catCm (exp::SR1), ")" ] )
+  | ID LP exp (COMMA exp)* RP => ( cat [ID, "(", catCm (exp::SR), ")" ] )
   | INT			=> ( IntInf.toString INT )
   | REAL		=> ( Real.toString REAL )
   | LP exp RP		=> ( "(" ^ exp ^ ")" )

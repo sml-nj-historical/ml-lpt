@@ -50,6 +50,7 @@
  - improve check-grammar
      x allow for and report multiple errors
      - do additional checking
+        - multiple tokens w/ same abbrev
 
  - figure out syntax for A (X A)* and A ((X | Y | Z) A)*
  - automatic left-factoring?
@@ -69,6 +70,8 @@
 
 
 ================================================
+
+better handling of unrecoverable parse error (e.g. report position, use special exception)
 
 add built-in Unicode character classes
 %keywords directive

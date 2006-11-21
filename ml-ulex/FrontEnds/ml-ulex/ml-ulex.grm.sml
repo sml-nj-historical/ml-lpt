@@ -78,6 +78,46 @@ structure Tok = struct
   | (AMP) => "&"
   | (BAR) => "|"
 (* end case *))
+    fun isKW tok =
+(case (tok)
+ of (EOF) => false
+  | (BOGUS) => false
+  | (CODE(_)) => false
+  | (ID(_)) => false
+  | (UCHAR(_)) => false
+  | (CHAR(_)) => false
+  | (REPEAT(_)) => false
+  | (ASCII8) => false
+  | (ASCII7) => false
+  | (UTF8) => false
+  | (KW_charset) => true
+  | (KW_let) => true
+  | (KW_states) => true
+  | (KW_name) => true
+  | (KW_defs) => true
+  | (EQ) => false
+  | (DARROW) => false
+  | (DASH) => false
+  | (CARAT) => false
+  | (COMMA) => false
+  | (SLASH) => false
+  | (GT) => false
+  | (LT) => false
+  | (RCB) => false
+  | (LCB) => false
+  | (RSB) => false
+  | (LSB) => false
+  | (RP) => false
+  | (LP) => false
+  | (SEMI) => false
+  | (QUERY) => false
+  | (STAR) => false
+  | (PLUS) => false
+  | (DOLLAR) => false
+  | (DOT) => false
+  | (AMP) => false
+  | (BAR) => false
+(* end case *))
 
 
 end (* structure Tok *)
@@ -405,12 +445,10 @@ fun ARGS_43 (LP, env) =
 			   of Tok.EOF => true
 			    | _ => false)
 
-      fun isKW _ = false (* TODO *)
-
       fun involvesKW (r, t) = (case r
-            of Insertion t' => isKW t'
-	     | Deletion => isKW t
-	     | Substitution t' => isKW t orelse isKW t'
+            of Insertion t' => Tok.isKW t'
+	     | Deletion => Tok.isKW t
+	     | Substitution t' => Tok.isKW t orelse Tok.isKW t'
            (* end case *))
 
       infix >>
@@ -520,7 +558,7 @@ print (case r
 	  }
 
       datatype err_handler = EH of {
-	cont : repair_cont option ref, 
+	cont : repair_cont option ref,
 	enabled : bool ref,
 	repairs : repair list ref,
 	annotations : UserCode.antlr_annotation list ref

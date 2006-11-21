@@ -20,7 +20,8 @@ structure LLKSpec =
 	id : Int.int,
 	name : Atom.atom,
 	ty : ty option,
-	abbrev : Atom.atom option
+	abbrev : Atom.atom option,
+	keyword : bool
       }
 
     and nonterm = NT of {

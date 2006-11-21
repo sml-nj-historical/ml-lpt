@@ -30,24 +30,39 @@ structure CheckGrammar : sig
 	  end
 
   (* load the %tokens definition into a tokTbl : atom -> LLKSpec.token *)
-    fun loadToks (nextGlobalID, toks) = let
+    fun loadToks (nextGlobalID, toks, keywords) = let
+          val kwSet = ref (AtomSet.addList (AtomSet.empty, keywords))
 	  val tokTbl = ATbl.mkTable (64, Fail "token table")
 	  val tokList = ref []
+	  fun tryKW (name) = 
+	        if AtomSet.member (!kwSet, name) 
+		then (true before kwSet := AtomSet.delete (!kwSet, name))
+		else false
 	  fun addTok (name, ty, abbrev) = (case ATbl.find tokTbl name
 		 of NONE => let
 		      val id = nextGlobalID()
-		      val info = S.T{name = name, id = id, ty = ty, abbrev = abbrev}
+		      val isKW = tryKW name orelse 
+				 (case abbrev
+				   of SOME a => tryKW a
+				    | NONE => false)
+		      val info = S.T{name = name, id = id, ty = ty, 
+				     abbrev = abbrev, keyword = isKW}
 		      in
 			ATbl.insert tokTbl (name, info); 
 			Option.app (fn a => ATbl.insert tokTbl (a, info)) abbrev;
 			tokList := info :: !tokList
 		      end
-		  | SOME info => raise Fail ("Token '" ^ 
-					     Atom.toString name ^ 
-					     "' defined multiple times")
+		  | SOME info => Err.errMsg ["Error: token '", Atom.toString name, 
+					     "' defined multiple times."]
 		(* end case *))
+	  fun checkNonTokKW () = 
+	        if AtomSet.isEmpty (!kwSet) then ()
+		else Err.errMsg ["Error: ", 
+		  String.concatWith " " (map Atom.toString (AtomSet.listItems (!kwSet))),
+		  " appears in %keywords directive but not in %tokens directive."]
           in
             List.app addTok toks;
+	    checkNonTokKW();
 	    (List.rev (!tokList), tokTbl)
           end
 
@@ -59,7 +74,7 @@ structure CheckGrammar : sig
    * form that the check function below produces (LLKSpec.grammar).
    *)
     fun appImport (Syn.GRAMMAR {import = SOME file, importChanges, header, defs, 
-				rules, toks, actionStyle, startSym, entryPoints}) = let
+				rules, toks, actionStyle, startSym, entryPoints, keywords}) = let
 	  val Syn.GRAMMAR {rules = prules, ...} = appImport (ParseFile.parse file)
 	  fun ins (rule as Syn.RULE{lhs, ...}, map) =
 	        if AMap.inDomain (map, lhs) then
@@ -87,7 +102,8 @@ structure CheckGrammar : sig
           in
             Syn.GRAMMAR {import = SOME file, importChanges = importChanges, header = header,
 			 defs = defs, rules = (AMap.listItems map')@rules, toks = toks, 
-			 actionStyle = actionStyle, startSym = startSym, entryPoints = entryPoints}
+			 actionStyle = actionStyle, startSym = startSym, entryPoints = entryPoints,
+			 keywords = keywords}
           end
       | appImport (g as Syn.GRAMMAR {importChanges = [], ...}) = g
       | appImport g = (Err.errMsg ["Error: import alterations (%drop, %extend...) ",
@@ -132,14 +148,14 @@ structure CheckGrammar : sig
 	 * imported nonterminal definitions
 	 *)
 	  val Syn.GRAMMAR {header, defs, rules, toks, actionStyle, 
-			   startSym, entryPoints, ...} = 
+			   startSym, entryPoints, keywords, ...} = 
 	        appImport g  
 	  val _ = if List.length toks = 0 then
 		    Err.errMsg ["Error: no tokens defined."]
 		  else ()
 	(* load the tokens.  note that EOF is implicitly defined *)
           val (tokList, tokTbl) = 
-	        loadToks (nextGlobalID, (Atom.atom "EOF", NONE, NONE)::toks)
+	        loadToks (nextGlobalID, (Atom.atom "EOF", NONE, NONE)::toks, keywords)
 	  fun lookupTok name = (case ATbl.find tokTbl name
 		 of NONE => (
 		      Err.errMsg ["Token ", Atom.toString name, " is undefined"];

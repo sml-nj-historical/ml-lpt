@@ -300,19 +300,27 @@ structure SMLOutput =
 	    TextIO.output (strm, ")\n")
           end
 
-  (* output the tokens datatype *)
+  (* output the tokens datatype and related functions *)
     fun tokensHook spec strm = let
           val (S.Grammar {toks, ...}, _) = spec
           val ppStrm = TextIOPP.openOut {dst = strm, wid = 80}
 	  val toksDT = 
 	        "    datatype token = "
 		^ (String.concatWith "\n      | " (List.map Token.def toks))
+	(* toString function *)
 	  fun mkMat t = (ML_TupPat [tokConPat' t], rawCode (Token.quoted t))
           val casesExp = ML_Case (ML_Var "tok", List.map mkMat toks)
+        (* isKW function *)
+	  fun mkKWMat t = (ML_TupPat [tokConPat' t], 
+			   ML_Var (if Token.isKW t then "true" else "false"))
+	  val kwCasesExp = ML_Case (ML_Var "tok", List.map mkKWMat toks)
           in
             TextIO.output (strm, toksDT ^ "\n\n");
             TextIO.output (strm, "    fun toString tok =\n");
 	    ML.ppML (ppStrm, casesExp);
+	    TextIO.output (strm, "\n");
+            TextIO.output (strm, "    fun isKW tok =\n");
+	    ML.ppML (ppStrm, kwCasesExp);
 	    TextIO.output (strm, "\n")
           end
 

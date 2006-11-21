@@ -1,6 +1,7 @@
 %defs (
   open Tok;
   fun eof() = EOF
+  type lex_result = Tok.token
 );
 
 %let eol=("\n"|"\013\n"|"\013");

@@ -1,21 +1,23 @@
 structure Main = 
   struct
 
-    structure P = Parser(Streamify)
-
-    fun parse strm = let
-	  val lexer =
-		Mlex.makeLexer (fn n => TextIO.inputN (strm, n))
-	  val (p, errors) = P.parse (Streamify.streamify lexer)
-			       before TextIO.closeIn strm
-	  fun errMsg (pos, err) = print (P.repairToString err ^ "\n")
-	  in
-            app errMsg errors;
-	    p
-	  end
+    structure L = Mlex
+    structure P = Parser(L)
 
     fun errMsg l = 
 	  TextIO.output(TextIO.stdErr, String.concat l)
+
+    fun parse strm = let
+	  val s =
+		Mlex.streamify (fn n => TextIO.inputN (strm, n))
+	  val (p, s', errors, _) = P.parse s before TextIO.closeIn strm
+	  fun doErr (pos, err) = errMsg [" ", Int.toString (L.getLineNo (s', pos)), ".",
+					 Int.toString (L.getColNo  (s', pos)), " ",
+					 "syntax error: ", P.repairToString err, "\n"]
+	  in
+            app doErr errors;
+	    p
+	  end
 
     fun main (_, [file]) = (
 	  print ("\n -- ECHO -- \n\n" ^ (parse (TextIO.openIn file)));

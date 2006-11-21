@@ -53,6 +53,9 @@
   | BOGUS
   ;
 
+%keywords
+  "%defs", "%name", "%states", "%let", "%charset" ;
+
 file
   : decls@(LS.mkSpec(), AMap.empty)
   ;

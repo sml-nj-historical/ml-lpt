@@ -48,6 +48,7 @@ type code = Int.int * String.string
     | Rule of GS.rule
     | Formals of Atom.atom list
     | IDList of string list
+    | SymList of Atom.atom list
     | AltList of GS.alt list
     | Alt of GS.alt
     | IsTry of bool
@@ -94,6 +95,8 @@ Decls
 		(GS.updStartSym (Decls, Atom.atom ID))
 	| Decls KW_entry IDList SEMI
 		(GS.updEntryPoints (Decls, map Atom.atom IDList))
+	| Decls KW_keywords SymList SEMI
+		(GS.updKeywords (Decls, SymList))
 	| Decls KW_header STRING SEMI
 		(GS.updHeader (Decls, STRING))
 	| Decls KW_defs Code SEMI
@@ -138,6 +141,12 @@ IDList
 		([ID])
 	| ID COMMA IDList
 		(ID::IDList)
+
+SymList
+	: Symbol
+		([Symbol])
+	| Symbol COMMA SymList
+		(Symbol::SymList)
 
 AltList
 	: Alt
