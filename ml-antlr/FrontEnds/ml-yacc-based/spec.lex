@@ -60,7 +60,7 @@ tyvar="'"{idchars}*;
 
 <INITIAL>"%tokens"	=> (YYBEGIN CONSTR; 
 			    Tok.KW_tokens	(!yylineno, !yylineno));
-<INITIAL>"%defs"	=> (YYBEGIN CODE;
+	       <INITIAL>"%defs"	=> (YYBEGIN CODE; clrText();
 			    Tok.KW_defs		(!yylineno, !yylineno));
 <INITIAL>"%keywords"	=> (Tok.KW_keywords	(!yylineno, !yylineno));
 <INITIAL>"%import"	=> (Tok.KW_import	(!yylineno, !yylineno));
