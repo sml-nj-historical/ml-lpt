@@ -251,7 +251,7 @@ structure CheckGrammar : sig
 			    val prods = ref []
 			    val sr = S.NT{
 				       name = Atom.atom (concat
-						["SR", Int.toString (nextSRID())]),
+						["subrule", Int.toString (nextSRID())]),
 				       formals = ref [],
 				       binding = S.WITHIN prod,
 				       id = nextGlobalID(),

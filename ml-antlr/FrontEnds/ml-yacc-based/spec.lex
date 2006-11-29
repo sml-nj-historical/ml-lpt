@@ -92,6 +92,7 @@ tyvar="'"{idchars}*;
 <INITIAL>"["	=> (Tok.LSB	(!yylineno, !yylineno));
 <INITIAL>"]"	=> (Tok.RSB	(!yylineno, !yylineno));
 <INITIAL>"/"	=> (Tok.SLASH	(!yylineno, !yylineno));
+<INITIAL>"="	=> (Tok.EQ	(!yylineno, !yylineno));
 <INITIAL>"->"	=> (Tok.ARROW	(!yylineno, !yylineno));
 <INITIAL>"=>"	=> (YYBEGIN CODE; clrText();
 		    Tok.DARROW	(!yylineno, !yylineno));

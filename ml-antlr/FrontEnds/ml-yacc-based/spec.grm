@@ -32,6 +32,7 @@ type code = Int.int * String.string
     | PLUS		(* + *)
     | QUERY		(* ? *)
     | CODE of string
+    | EQ		(* = *)
     | ARROW		(* -> *)
     | DARROW		(* => *)
     | OF
@@ -184,7 +185,7 @@ ItemList
 		(NamedItem :: ItemList)
 
 NamedItem 
-	: ID COLON Item
+	: ID EQ Item
 		(SOME ID, Item)
 	| Item
 		(NONE, Item)

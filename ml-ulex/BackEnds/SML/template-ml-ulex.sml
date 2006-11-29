@@ -235,14 +235,14 @@
     type span = pos * pos
     type tok = UserDeclarations.lex_result
 
-    datatype prestrm = STRM of yyInput.stream * yysourcemap *
+    datatype prestrm = STRM of yyInput.stream * 
 		(yystart_state * tok * span * prestrm * yystart_state) option ref
     type strm = (prestrm * yystart_state)
 
-    fun lex(STRM (yystrm, sm, memo), ss) = (case !memo
+    fun lex sm (STRM (yystrm, memo), ss) = (case !memo
 	  of NONE => (let
 	     val (tok, span, yystrm', ss') = innerLex (yystrm, ss, sm)
-	     val strm' = STRM (yystrm', sm, ref NONE);
+	     val strm' = STRM (yystrm', ref NONE);
 	     in 
 	       memo := SOME (ss, tok, span, strm', ss');
 	       SOME (tok, span, (strm', ss'))
@@ -253,7 +253,7 @@
 		 SOME (tok, span, (strm', ss''))
 	       else (
 		 memo := NONE;
-		 lex (STRM (yystrm, sm, memo), ss))
+		 lex sm (STRM (yystrm, memo), ss))
          (* end case *))
 
 (*	  
@@ -271,12 +271,14 @@
 *)
 (*    fun cons(a,s) = STRM(ref(EVAL(a,s))) *)
 
-    fun streamify inputN = (STRM (yyInput.mkStream inputN, ref [], ref NONE), 
+    fun streamify inputN = (STRM (yyInput.mkStream inputN, ref NONE), 
 			    INITIAL)
 
+    fun mkSourcemap() = ref []
+
 (*    fun getLineNo (STRM (strm, _), _) = yyInput.getline strm *)
-    fun getPos (STRM (strm, _, _), _) = yyInput.getpos strm
-    fun getLineNo ((STRM (_, sm, _), _), pos) = yylineNo (sm, pos)
-    fun getColNo  ((STRM (_, sm, _), _), pos) = yycolNo (sm, pos)
+    fun getPos (STRM (strm, _), _) = yyInput.getpos strm
+    fun getLineNo sm pos = yylineNo (sm, pos)
+    fun getColNo  sm pos = yycolNo (sm, pos)
 
   end

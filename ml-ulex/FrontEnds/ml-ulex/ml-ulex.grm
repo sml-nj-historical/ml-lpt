@@ -14,7 +14,7 @@
 
   fun flip (x, y) = (y, x)
 
-  type antlr_annotation = Lex.span * string
+  type antlr_annotation = (Lex.pos * Lex.pos) * string
 
 );
 

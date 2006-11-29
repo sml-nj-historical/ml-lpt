@@ -22,13 +22,15 @@ structure MLULexInput =
 		 print "\n")
 	  val fstrm = TextIO.openIn fname
 	  val strm = L.streamify (fn n => TextIO.inputN (fstrm, n))
+	  val sm = L.mkSourcemap()
+	  val lex = L.lex sm
 	  val (spec, strm', errors, anns) = 
-	        P.parse strm
+	        P.parse lex strm
 		before TextIO.closeIn fstrm
 	  fun errMsg ty (pos, err) = print (String.concat [
 		" ", fname, ":",
-		     Int.toString (L.getLineNo (strm', pos)), ".",
-		     Int.toString (L.getColNo (strm', pos)), 
+		     Int.toString (L.getLineNo sm pos), ".",
+		     Int.toString (L.getColNo sm pos), 
 		ty, err, "\n"])
 	  in
             app (errMsg " Syntax error: ") 

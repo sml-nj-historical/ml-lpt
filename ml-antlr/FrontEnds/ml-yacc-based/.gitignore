@@ -1,3 +1,1 @@
-/.cm
-/*.grm.*
-/*.lex.*
+/*.cm *.x86-linux *.log *.aux *.pdf *.toc *.depend *.bbl *.backup *.dvi *~

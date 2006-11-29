@@ -54,7 +54,7 @@ structure SMLOutput =
     val bindingSuffix = "_RES"
     val spanSuffix = "_SPAN"
     val fullSpan = "FULL_SPAN"
-    val spanTySuffix = " : Lex.span"
+    val spanTySuffix = " : (Lex.pos * Lex.pos)"
 
     fun actionHeader (name, (bindings, formals), suffix, isPred) = let
 	  val withSuffix = map (fn b => Atom.toString b ^ suffix) 
@@ -258,10 +258,10 @@ structure SMLOutput =
 	  fun optParamFn nt = if length (Nonterm.formals nt) > 0 then " fn x => " else " "
 	  fun wrWrapParse nt = TextIO.output (strm, String.concat [
 		"val ", NTFnName nt, " = ", optParamFn nt, 
-		"fn s => unwrap (Err.launch eh (", NTFnName nt, optParam nt, ") (WStream.wrap s))\n"])
+		"fn s => unwrap (Err.launch eh (", NTFnName nt, optParam nt, ") (WStream.wrap (s, lexFn)))\n"])
 	  fun wrEntry (name, nt) = TextIO.output (strm, String.concat [
-		"fun ", name, optParam nt,
-		"s = let ", entriesVal, "mk() in ", NTFnName nt,
+		"fun ", name, " lexFn ", optParam nt,
+		"s = let ", entriesVal, "mk lexFn in ", NTFnName nt,
 		if length (Nonterm.formals nt) > 0
 		  then  " x "
 		  else " ",

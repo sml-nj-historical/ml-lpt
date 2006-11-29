@@ -9,9 +9,7 @@ signature LEXER = sig
 
   type strm
   type pos
-  type span = pos * pos
 
-  val lex : strm -> (Tok.token * span * strm) option
   val getPos : strm -> pos
 
 end (* signature LEXER *)
@@ -73,31 +71,37 @@ end
 
     end
 
+    type span = Lex.pos * Lex.pos
+
     (* "wrapped" streams, which track the number of tokens read
      * and allow "prepending" a sequence of tokens
      *)
     structure WStream = struct
 
       datatype 'a wstream = WSTREAM of {
-	prefix : (Tok.token * Lex.span) list,
+	prefix : (Tok.token * span) list,
 	curTok : int,
-	strm : 'a
+	strm : 'a,
+	lex : 'a -> (Tok.token * span * 'a) option
       }
 
-      fun wrap strm =  WSTREAM {prefix = [], strm = strm, curTok = 0}
+      fun wrap (strm, lex) =  WSTREAM {prefix = [], strm = strm, curTok = 0, lex = lex}
       fun unwrap (WSTREAM {strm, ...}) = strm
 
-      fun get1 (WSTREAM {prefix = (tok, span)::toks, strm, curTok}) = 
-	    (tok, span, WSTREAM {prefix = toks, strm = strm, curTok = curTok + 1})
-	| get1 (WSTREAM {prefix = [], strm, curTok}) = let
-	    val (tok, span, strm') = case Lex.lex strm
+      fun get1 (WSTREAM {prefix = (tok, span)::toks, strm, curTok, lex}) = 
+	    (tok, span, WSTREAM {prefix = toks, strm = strm, lex = lex, 
+				 curTok = curTok + 1})
+	| get1 (WSTREAM {prefix = [], strm, curTok, lex}) = let
+	    val (tok, span, strm') = case lex strm
 		of SOME x => x
 		 | NONE => (Tok.EOF, (Lex.getPos strm, Lex.getPos strm), strm)
-	    in (tok, span, WSTREAM {prefix = [], strm = strm', curTok = curTok + 1})
+	    in (tok, span, WSTREAM {prefix = [], lex = lex, 
+				    strm = strm', curTok = curTok + 1})
 	    end
 
-      fun prepend (toks, WSTREAM {prefix, strm, curTok}) = 
-	    WSTREAM {prefix = toks @ prefix, strm = strm, curTok = curTok - (List.length toks)}
+      fun prepend (toks, WSTREAM {prefix, strm, curTok, lex}) = 
+	    WSTREAM {prefix = toks @ prefix, strm = strm, lex = lex,
+		     curTok = curTok - (List.length toks)}
 
       fun subtract (WSTREAM {curTok = p1, ...}, WSTREAM {curTok = p2, ...}) = 
 	    p1 - p2
@@ -500,7 +504,7 @@ print (case r
 	       ^ toksToString old
          (* end case *))
 
-    fun mk () = let
+    fun mk lexFn = let
         val eh = Err.mkErrHandler()
 	fun wrap f = Err.wrap eh f
 	val whileDisabled = Err.whileDisabled eh
