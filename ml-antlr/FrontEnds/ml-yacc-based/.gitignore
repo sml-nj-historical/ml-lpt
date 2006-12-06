@@ -1,4 +1,4 @@
-/*.cm
+/.cm
 /*.x86-linux
 /*.log
 /*.aux
@@ -9,3 +9,5 @@
 /*.backup
 /*.dvi
 /*~
+/spec.grm.*
+/spec.lex.*
