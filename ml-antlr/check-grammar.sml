@@ -73,8 +73,8 @@ structure CheckGrammar : sig
    * from the parse tree form (GrammarSyntax.grammar) rather than the processed
    * form that the check function below produces (LLKSpec.grammar).
    *)
-    fun appImport (Syn.GRAMMAR {import = SOME file, importChanges, header, defs, 
-				rules, toks, actionStyle, startSym, entryPoints, keywords}) = let
+    fun appImport (Syn.GRAMMAR {import = SOME file, importChanges, name, defs, 
+				rules, toks, actionStyle, startSym, entryPoints, keywords, refcells}) = let
 	  val Syn.GRAMMAR {rules = prules, ...} = appImport (ParseFile.parse file)
 	  fun ins (rule as Syn.RULE{lhs, ...}, map) =
 	        if AMap.inDomain (map, lhs) then
@@ -100,10 +100,10 @@ structure CheckGrammar : sig
 	  val map = foldl ins AMap.empty prules
 	  val map' = foldl appChg map importChanges
           in
-            Syn.GRAMMAR {import = SOME file, importChanges = importChanges, header = header,
+            Syn.GRAMMAR {import = SOME file, importChanges = importChanges, name = name,
 			 defs = defs, rules = (AMap.listItems map')@rules, toks = toks, 
 			 actionStyle = actionStyle, startSym = startSym, entryPoints = entryPoints,
-			 keywords = keywords}
+			 keywords = keywords, refcells = refcells}
           end
       | appImport (g as Syn.GRAMMAR {importChanges = [], ...}) = g
       | appImport g = (Err.errMsg ["Error: import alterations (%drop, %extend...) ",
@@ -147,8 +147,8 @@ structure CheckGrammar : sig
 	(* inherit any %import-ed grammars, and apply all modifications to 
 	 * imported nonterminal definitions
 	 *)
-	  val Syn.GRAMMAR {header, defs, rules, toks, actionStyle, 
-			   startSym, entryPoints, keywords, ...} = 
+	  val Syn.GRAMMAR {name, defs, rules, toks, actionStyle, 
+			   startSym, entryPoints, keywords, refcells, ...} = 
 	        appImport g  
 	  val _ = if List.length toks = 0 then
 		    Err.errMsg ["Error: no tokens defined."]
@@ -319,7 +319,7 @@ structure CheckGrammar : sig
 	  val _ = app checkNTInTops nterms
 	  val _ = Err.abortIfErr()
 	  in S.Grammar {
-	    header = header,
+	    name = name,
 	    defs = Action.action defs,
 	    toks = tokList,
 	    nterms = nterms,
@@ -328,7 +328,8 @@ structure CheckGrammar : sig
 	    sortedTops = sortedTops,
 	    startnt = startnt,
 	    actionStyle = actionStyle,
-	    entryPoints = entryPoints'
+	    entryPoints = entryPoints',
+	    refcells = map (fn (s, t, c) => (s, t, Action.action c)) refcells
 	  } end
 
   end

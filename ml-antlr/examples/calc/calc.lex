@@ -6,8 +6,10 @@
 %let id = {alpha}({alpha} | {digit})*;
 
 %defs (
-  open Tok
+  open CalcParseToks
   type lex_result = token
+
+  fun eof() = EOF
 );
 
 let     => ( KW_let );

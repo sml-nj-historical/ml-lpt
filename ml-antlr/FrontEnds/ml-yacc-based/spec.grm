@@ -15,7 +15,7 @@ type code = Int.int * String.string
 %name MLY
 
 %term EOF
-    | KW_tokens | KW_defs | KW_keywords | KW_import | KW_name | KW_start | KW_entry
+    | KW_tokens | KW_defs | KW_keywords | KW_import | KW_name | KW_start | KW_entry | KW_refcell
     | KW_try | KW_where | KW_debugact | KW_unitact | KW_header
     | KW_drop | KW_extend | KW_replace
     | LP | RP		(* ( ) *)
@@ -35,6 +35,7 @@ type code = Int.int * String.string
     | EQ		(* = *)
     | ARROW		(* -> *)
     | DARROW		(* => *)
+    | REFSET		(* :== *)
     | OF
     | ID of string
     | STRING of string
@@ -91,15 +92,15 @@ Decls
 	: 
 		(GS.mkGrammar())
 	| Decls KW_name ID SEMI
-		(GS.updHeader (Decls, "functor " ^ ID ^ "(Lex : LEXER)"))
+		(GS.updName (Decls, ID))
 	| Decls KW_start ID SEMI
 		(GS.updStartSym (Decls, Atom.atom ID))
 	| Decls KW_entry IDList SEMI
 		(GS.updEntryPoints (Decls, map Atom.atom IDList))
 	| Decls KW_keywords SymList SEMI
 		(GS.updKeywords (Decls, SymList))
-	| Decls KW_header STRING SEMI
-		(GS.updHeader (Decls, STRING))
+(*	| Decls KW_header STRING SEMI
+		(GS.updHeader (Decls, STRING)) *)
 	| Decls KW_defs Code SEMI
 		(GS.updDefs (Decls, Code))
 	| Decls KW_tokens COLON ConstrList SEMI
@@ -110,6 +111,8 @@ Decls
 		   (Substring.triml 1) o
 		   (Substring.trimr 1) o 
 		   Substring.full) STRING))
+	| Decls KW_refcell ID COLON Ty REFSET Code SEMI
+		(GS.addRefcell (Decls, (ID, Ty, Code)))
 	| Decls Rule SEMI
 		(GS.addRule (Decls, Rule))
 	| Decls KW_extend Rule SEMI

@@ -20,8 +20,6 @@
  ml-antlr
 ================
 
- - deal with functorization issue
-
  - fix error repair
      x implement heuristic for primary repair
      x implement secondary recovery
@@ -79,6 +77,7 @@ look into OCaml-style rules (starting with | rather than :)
 nonterminal type annotations
 decrease lexer size and compile time
 check that nonterminals with parameters are given parameters
+union/insct/containment for stream pos spans
 
 speculative:
 higher-order nonterminal definitions

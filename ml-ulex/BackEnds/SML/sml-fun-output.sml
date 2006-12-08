@@ -144,12 +144,16 @@ structure SMLFunOutput : OUTPUT =
 		 (* end case *))
         (* if start state, check for eof *)
 	  val errAct = if startState
-		       then ML_If (ML_App("yyInput.eof", [ML_Var "strm"]),
-				   if !Options.lexCompat then
-				     ML_App("UserDeclarations.eof", [ML_Var "yyarg"])
-				   else 
-				     ML_Var "raise yyEOF",
-				   errAct')
+		       then 
+			 if !Options.lexCompat 
+			 then
+			   ML_If (ML_App("yyInput.eof", [ML_Var "strm"]), 
+				  ML_App("UserDeclarations.eof", [ML_Var "yyarg"]),
+				  errAct')
+			 else 
+			   ML_If (ML_App("ULexBuffer.eof", [ML_Var "strm"]), 
+				  ML_App("UserDeclarations.eof", [ML_Tuple []]),
+				  errAct')
 		       else errAct'
         (* error transitions = complement(valid transitions) *)
 	  val error = SIS.complement labels

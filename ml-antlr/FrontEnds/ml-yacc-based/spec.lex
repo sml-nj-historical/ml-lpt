@@ -46,7 +46,7 @@ uc=[A-Z];
 alpha=({lc}|{uc});
 digit=[0-9];
 int=digit*;
-idchars=({alpha}|{digit}|"_");
+idchars=({alpha}|{digit}|"_"|"'");
 id={alpha}{idchars}*;
 qualid ={id}".";
 tyvar="'"{idchars}*;
@@ -56,11 +56,11 @@ tyvar="'"{idchars}*;
 %%
 
 <INITIAL>{ws}+	=> (continue());
-<INITIAL>{id}	=> (Tok.ID (yytext, !yylineno, !yylineno));
+<INITIAL>{id}		=> (Tok.ID (yytext, !yylineno, !yylineno));
 
 <INITIAL>"%tokens"	=> (YYBEGIN CONSTR; 
 			    Tok.KW_tokens	(!yylineno, !yylineno));
-	       <INITIAL>"%defs"	=> (YYBEGIN CODE; clrText();
+<INITIAL>"%defs"	=> (YYBEGIN CODE; clrText();
 			    Tok.KW_defs		(!yylineno, !yylineno));
 <INITIAL>"%keywords"	=> (Tok.KW_keywords	(!yylineno, !yylineno));
 <INITIAL>"%import"	=> (Tok.KW_import	(!yylineno, !yylineno));
@@ -76,6 +76,7 @@ tyvar="'"{idchars}*;
 <INITIAL>"%drop"	=> (Tok.KW_drop 	(!yylineno, !yylineno));
 <INITIAL>"%extend"	=> (Tok.KW_extend 	(!yylineno, !yylineno));
 <INITIAL>"%replace"	=> (Tok.KW_replace 	(!yylineno, !yylineno));
+<INITIAL>"%refcell"	=> (Tok.KW_refcell 	(!yylineno, !yylineno));
 
 <INITIAL>"|"	=> (Tok.BAR	(!yylineno, !yylineno)); 
 <INITIAL>"@"	=> (YYBEGIN CODE; clrText();
@@ -96,6 +97,8 @@ tyvar="'"{idchars}*;
 <INITIAL>"->"	=> (Tok.ARROW	(!yylineno, !yylineno));
 <INITIAL>"=>"	=> (YYBEGIN CODE; clrText();
 		    Tok.DARROW	(!yylineno, !yylineno));
+<INITIAL>":=="	=> (YYBEGIN CODE; clrText();
+		    Tok.REFSET	(!yylineno, !yylineno));
 <INITIAL>"\""	
 	        => (YYBEGIN STRING; clrText(); addText yytext;
 		    ignore(continue() before YYBEGIN INITIAL);

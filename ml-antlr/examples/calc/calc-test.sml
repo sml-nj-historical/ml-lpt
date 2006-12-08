@@ -1,13 +1,15 @@
 structure CalcTest = 
   struct
 
+    structure Tok = CalcParseToks
+
     structure ListLex = struct
       type strm = Tok.token list
-      fun lex [] = NONE
-	| lex (t::ts) = SOME (t, ((), ()), ts)
-      type pos = unit
+      fun lex [] = (Tok.EOF, (0, 0), [])
+	| lex (t::ts) = (t, (0, 0), ts)
+      type pos = StreamPos.pos
       type span = pos * pos
-      fun getPos _ = ()
+      fun getPos _ = 0
     end
 
     structure CP = CalcParse(ListLex)
@@ -17,17 +19,20 @@ structure CalcTest =
           fun input _ = if !sref then
 			  (sref := false; s)
 			else ""
-          fun loop (NONE, accum) = rev accum
-	    | loop (SOME (s, _, strm), accum) = loop (CalcLex.lex strm, s::accum)
+	  val lex = CalcLex.lex (StreamPos.mkSourcemap())
+          fun loop ((Tok.EOF, _, _), accum) = rev accum
+	    | loop ((s, _, strm), accum) = loop (lex strm, s::accum)
           in
-            loop (CalcLex.lex (CalcLex.streamify input), [])
+            loop (lex (CalcLex.streamify input), [])
           end
       | fragToToks (SMLofNJ.ANTIQUOTE i) = [Tok.DummyExp i]
 
     fun % frags = let
-      val (r, s', errs, _) = CP.parseexp AtomMap.empty (List.concat (map fragToToks frags))
+      val (r, s', errs, {vars, nums}) = CP.parseexp ListLex.lex AtomMap.empty (List.concat (map fragToToks frags))
     in
-      app (fn (_, repair) => print (CP.repairToString repair ^ "\n")) errs;
+      app (fn (_, repair) => print (Repair.actionToString Tok.toksToString repair ^ "\n")) errs;
+      print (" -- VARS: " ^ (String.concatWith ", " vars) ^ "\n");
+      print (" -- NUMS: " ^ (String.concatWith ", " (map Int.toString nums)) ^ "\n");
       (r, s')
     end
 

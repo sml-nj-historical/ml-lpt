@@ -1,5 +1,6 @@
 %name CalcParse;
 %entry exp;
+
 %tokens
   : KW_let ("let")   |  KW_in   ("in")
   | ID of string     |  NUM of Int.int
@@ -9,13 +10,17 @@
   | SEMI     (";")
   | DummyExp of int
   ;
+
+%refcell vars : string list :== ([]);
+%refcell nums : int list :== ([]);
+
 prog
   : (exp@(AtomMap.empty) ";")*
   ;
 exp(env)
   : "let" ID "=" exp@(env)
     "in" exp@(AtomMap.insert(env, Atom.atom ID, exp1))
-      => ( exp2 )
+      => ( vars :== ID::(!!vars); exp2 )
   | addExp@(env)
   ;
 addExp(env)
@@ -36,6 +41,7 @@ atomicExp(env)
       %where ( AtomMap.inDomain (env, Atom.atom ID) )
       => ( valOf(AtomMap.find (env, Atom.atom ID)) )
   | NUM
+      => ( nums :== NUM::(!!nums); NUM )
   | "(" exp@(env) ")"
   | DummyExp
   ;

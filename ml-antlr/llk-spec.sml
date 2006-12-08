@@ -64,9 +64,10 @@ structure LLKSpec =
     withtype sem_pred = Action.action
 
     datatype action_style = datatype GrammarSyntax.action_style
+    type refcell = string * string * Action.action
 
     datatype grammar = Grammar of {
-        header : string,
+        name : string,
 	defs : Action.action,	(* user definitions *)
         toks : token list,
         nterms : nonterm list,
@@ -76,7 +77,8 @@ structure LLKSpec =
 	sortedTops : nonterm list list,
 	startnt : nonterm,
 	actionStyle : action_style,
-	entryPoints : nonterm list
+	entryPoints : nonterm list,
+	refcells : refcell list
       }
 
   end
