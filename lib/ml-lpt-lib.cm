@@ -1,0 +1,42 @@
+(* ml-lpt-lib.cm
+ *
+ * COPYRIGHT (c) 2006
+ * John Reppy (http://www.cs.uchicago.edu/~jhr)
+ * Aaron Turon (http://www.cs.uchicago.edu/~adrassi)
+ * All rights reserved.
+ *
+ * Sources file for ml-lpt lib
+ *)
+
+Library
+
+  signature LEXER
+  signature TOKENS  
+
+  structure Repair
+  structure StreamPos
+  structure UTF8
+  structure ULexBuffer
+
+  functor WrappedStrm
+  functor RepairableStrm
+  functor EBNF
+  functor ErrHandler
+
+is
+
+  $/basis.cm
+  ebnf.sml
+  err-handler.sml
+  lexer-sig.sml
+  repair.sml
+
+  repairable-strm-sig.sml
+  repairable-strm.sml
+  wrapped-strm.sml
+
+  stream-pos.sml
+  tokens-sig.sml
+
+  utf8.sml
+  ulex-buffer.sml
