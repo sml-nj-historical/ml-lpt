@@ -8,8 +8,6 @@
   structure SIS = RE.SymSet
 
   fun listToASet ls = AtomSet.addList (AtomSet.empty, ls)
-
-  val wildcard = RE.mkSymSet (SIS.complement (SIS.singleton 0w10)) (* all but \n *)
   fun charToSym c = Word32.fromInt (Char.ord c)
 
   fun flip (x, y) = (y, x)
@@ -146,7 +144,7 @@ prim_re(env)
   | char
       => (RE.mkSym char)
   | "."
-      => (wildcard)
+      => (RE.any)
   | "[" 
         ( "^" => (SIS.complement) 
         | => (fn x => x)

@@ -194,7 +194,6 @@ functor Parser(Lex : LEXER)(* : sig
 
   fun listToASet ls = AtomSet.addList (AtomSet.empty, ls)
 
-  val wildcard = RE.mkSymSet (SIS.complement (SIS.singleton 0w10)) 
   fun charToSym c = Word32.fromInt (Char.ord c)
 
   fun flip (x, y) = (y, x)
@@ -265,7 +264,7 @@ fun prim_re_PROD_1_ACT (ID, env, ID_SPAN : (Lex.pos * Lex.pos), addAnnotation, F
 fun prim_re_PROD_3_ACT (env, char, char_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
   ( RE.mkSym char)
 fun prim_re_PROD_4_ACT (DOT, env, DOT_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  ( wildcard)
+  ( RE.any)
 fun prim_re_PROD_5_prim_re_subrule1_PROD_1_ACT (LSB, env, CARAT, LSB_SPAN : (Lex.pos * Lex.pos), CARAT_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
   ( SIS.complement)
 fun prim_re_PROD_5_prim_re_subrule1_PROD_2_ACT (LSB, env, LSB_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
