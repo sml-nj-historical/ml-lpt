@@ -2,6 +2,7 @@ structure CalcLex  = struct
 
     datatype yystart_state = 
 INITIAL
+    local
     structure UserDeclarations = 
       struct
 
@@ -326,7 +327,7 @@ end
           in 
             lex()
           end
-
+  in
     type pos = StreamPos.pos
     type span = StreamPos.span
     type tok = UserDeclarations.lex_result
@@ -357,3 +358,4 @@ end
     fun getPos (STRM (strm, _), _) = ULexBuffer.getpos strm
 
   end
+end

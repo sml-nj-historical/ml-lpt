@@ -65,6 +65,7 @@ functor CalcParse(Lex : LEXER) = struct
 CalcParseToks
     infix :==
 
+    type 'a refcell = (unit -> 'a) * ('a -> unit)
     fun (r, w) :== n = w n
     fun !! (r, w) = r()
 
@@ -109,6 +110,8 @@ fun ARGS_14 (env, MINUS, vars, nums) =
 fun ARGS_18 (LP, env, vars, nums) = 
   (env)
 
+      val ehargs = 
+{vars =  [], nums =  []} : {vars : string list, nums : int list}
     end
 
     structure R = RepairableStrm(Tok)(Lex)
@@ -118,9 +121,7 @@ fun ARGS_18 (LP, env, vars, nums) =
     exception ParseError = Err.RepairableError
 
     fun mk lexFn = let
-        val ehargs = 
-{vars =  [], nums =  []} : {vars : string list, nums : int list}
-        val eh = Err.mkErrHandler ehargs
+        val eh = Err.mkErrHandler UserCode.ehargs
 	fun wrap f = Err.wrap eh f
 	val whileDisabled = Err.whileDisabled eh
 	fun tryProds (strm, prods) = (wrap (Err.tryProds eh prods)) strm

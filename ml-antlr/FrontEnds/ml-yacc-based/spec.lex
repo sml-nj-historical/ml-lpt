@@ -76,7 +76,8 @@ tyvar="'"{idchars}*;
 <INITIAL>"%drop"	=> (Tok.KW_drop 	(!yylineno, !yylineno));
 <INITIAL>"%extend"	=> (Tok.KW_extend 	(!yylineno, !yylineno));
 <INITIAL>"%replace"	=> (Tok.KW_replace 	(!yylineno, !yylineno));
-<INITIAL>"%refcell"	=> (Tok.KW_refcell 	(!yylineno, !yylineno));
+<INITIAL>"%refcell"	=> (YYBEGIN CONSTR;
+			    Tok.KW_refcell 	(!yylineno, !yylineno));
 
 <INITIAL>"|"	=> (Tok.BAR	(!yylineno, !yylineno)); 
 <INITIAL>"@"	=> (YYBEGIN CODE; clrText();
@@ -97,8 +98,6 @@ tyvar="'"{idchars}*;
 <INITIAL>"->"	=> (Tok.ARROW	(!yylineno, !yylineno));
 <INITIAL>"=>"	=> (YYBEGIN CODE; clrText();
 		    Tok.DARROW	(!yylineno, !yylineno));
-<INITIAL>":=="	=> (YYBEGIN CODE; clrText();
-		    Tok.REFSET	(!yylineno, !yylineno));
 <INITIAL>"\""	
 	        => (YYBEGIN STRING; clrText(); addText yytext;
 		    ignore(continue() before YYBEGIN INITIAL);
@@ -167,6 +166,8 @@ tyvar="'"{idchars}*;
 <CONSTR>"\""	=> (YYBEGIN STRING; clrText(); addText yytext;
 		    ignore(continue() before YYBEGIN CONSTR);
 		    Tok.STRING (getText(), !yylineno, !yylineno));
+<CONSTR>":=="	=> (YYBEGIN CODE; clrText();
+		    Tok.REFSET	(!yylineno, !yylineno));
 
 .	=> (err (!yylineno, 
 		 concat["illegal character '", 

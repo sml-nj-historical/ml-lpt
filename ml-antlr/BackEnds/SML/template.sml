@@ -21,12 +21,16 @@ end
 
     infix :==
 
+    type 'a refcell = (unit -> 'a) * ('a -> unit)
     fun (r, w) :== n = w n
     fun !! (r, w) = r()
 
     structure UserCode = struct
 
 @defs@
+
+      val ehargs = 
+@ehargs@
 
     end
 
@@ -37,10 +41,7 @@ end
     exception ParseError = Err.RepairableError
 
     fun mk lexFn = let
-        val ehargs = 
-@ehargs@
-
-        val eh = Err.mkErrHandler ehargs
+        val eh = Err.mkErrHandler UserCode.ehargs
 	fun wrap f = Err.wrap eh f
 	val whileDisabled = Err.whileDisabled eh
 	fun tryProds (strm, prods) = (wrap (Err.tryProds eh prods)) strm

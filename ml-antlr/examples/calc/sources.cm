@@ -1,5 +1,7 @@
 Library
 
+  structure CalcLex
+  functor CalcParse
   structure CalcTest
 
 is
