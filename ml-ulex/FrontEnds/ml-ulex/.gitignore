@@ -9,3 +9,5 @@
 /*.backup
 /*.dvi
 /*~
+/*.ppc-darwin
+/cc.lex.sml
