@@ -8,7 +8,7 @@ Although sophisticated language processing is sometimes done by hand, the use of
 
 This manual describes two new tools, {\tt ml-ulex} and {\tt ml-antlr}, that follow tradition in separating scanning from parsing, but break from tradition in their implementation: {\tt ml-ulex} is based on \emph{regular expression derivatives} rather than subset-construction, and {\tt ml-antlr} is based on $LL(k)$ parsing rather than $LALR(1)$ parsing.   
 
-\section{Motivation}
+\section*{Motivation}
 
 Most parser generators use some variation on $LR$ parsing, a form of \emph{bottom-up} parsing that tracks possible interpretations (reductions) of an input phrase until only a single reduction is possible.  While this is a powerful technique, it has the following downsides:
 \begin{itemize}
@@ -21,6 +21,6 @@ The main alternative to $LR$ parsing is the top-down, $LL$ approach, which is co
 To date, the only mature $LL$ parser based on Parr's technique is his own parser, {\tt antlr}.  While {\tt antlr} is sophisticated and robust, it is designed for and best used within imperative languages.  The primary motivation for the tools this manual describes is to bring practical $LL$ parsing to a functional language.
 Our hope with {\tt ml-ulex} and {\tt ml-antlr} is to modernize and improve the Standard ML language processing infrastructure, while demonstrating the effectiveness of regular expression derivatives and $LL(k)$ parsing.  The tools are more powerful than their predecessors, and they raise the level of discourse in language processing.  
 
-\section{Outline}
+%\section{Outline}
 
-This manual is organized into three parts: usage, theory, and implementation.  Each of these parts is further broken down into two chapters, one on {\tt ml-ulex} and one on {\tt ml-antlr}.  The usage section is self-contained, and gives a fairly complete specification of the two tools.  Full details on the algorithms used are given in the theory section.  Data structures, system organization, and other code-related particulars are described in the implementation section.
+%This manual is organized into three parts: usage, theory, and implementation.  Each of these parts is further broken down into two chapters, one on {\tt ml-ulex} and one on {\tt ml-antlr}.  The usage section is self-contained, and gives a fairly complete specification of the two tools.  Full details on the algorithms used are given in the theory section.  Data structures, system organization, and other code-related particulars are described in the implementation section.

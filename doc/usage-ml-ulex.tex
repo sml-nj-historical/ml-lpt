@@ -1,12 +1,12 @@
-\chapter[\ulex]{Usage: \ulex}
+\chapter{ML-ULex}
 
-\section{Overview}
+%\section{Overview}
 
 Lexers analyze the lexical structure of an input string, and are usually specified using regular expressions.  \textsc{ml-ulex} is a lexer generator for Standard ML.  The module it generates will contain a type {\tt strm} and a function
 \begin{verbatim}
-    val lex : strm -> (token * strm) option
+    val lex : strm -> lex_result * strm
 \end{verbatim}
-where {\tt token} is a type determined by the user of \ulex{}.  Thus, a lexer is a token reader, in the sense of the Basis library {\tt StringCvt.reader} type.  Compared to ML-Lex, \ulex{} offers the following improvements:
+where {\tt lex\_result} is a type that must be defined by the user of \ulex{}.  Note that the lexer always returns a token: we assume that end-of-file will be explicitly represented by a token.  Compared to ML-Lex, \ulex{} offers the following improvements:
 \begin{itemize}
  \item Unicode is fully supported.
  \item Intersection and negation of REs are supported.
@@ -73,7 +73,20 @@ There are a few lexical details of the specification format worth mentioning.  F
 
 \subsection{The \kw{defs} directive}
 
-The \kw{defs} directive is used to include a segment of code in the generated lexer module.  All definitions given will be in scope for the rule actions; see Section~\ref{sec:ulex-rules}.
+The \kw{defs} directive is used to include a segment of code in the generated lexer module, as in the following example:
+\begin{verbatim}
+    %defs (
+      type lex_result = CalcParserToks.token
+      fun eof() = CalcParserToks.EOF
+      fun helperFn x = (* ... *)
+    )
+\end{verbatim}
+The definitions must at least fulfill the following signature:
+\begin{verbatim}
+    type lex_result
+    val eof : unit -> lex_result
+\end{verbatim}
+All semantic actions must yield values of type {\tt lex\_result}.  The {\tt eof} function is called by \ulex{} when the end of file is reached -- it acts as the semantic action for the empty input string.  All definitions given will be in scope for the rule actions (see Section~\ref{sec:ulex-rules}).
 
 \subsection{The \kw{let} directive}
 
@@ -201,14 +214,16 @@ Actions are arbitrary SML code enclosed in parentheses.  The following names are
 
 The generated lexer module has a signature including the following:
 \begin{verbatim}
-  type prestrm
-  type strm = prestrm * start_state
-  val streamify : (int -> string) -> strm
-  val lex : strm -> (token, strm) option
-  val getLineNo : strm -> int
-  val getPos : strm -> int
+    type prestrm
+    type strm = prestrm * start_state
+    val streamify : (int -> string) -> strm
+    val lex : StreamPos.sourcemap -> strm -> token * strm
+    val getPos : strm -> StreamPos.pos
 \end{verbatim}
-where \texttt{token} is the result type of the lexer actions, and \texttt{start\_state} is an algebraic datatype with nullary constructors for each defined start state.  In this interface, lexer start states are conceptually part of the input stream; thus, from an external viewpoint start states can be totally ignored.  However, it is sometimes easier to control the lexer start state externally, since more contextual information may be available.  This is why the \texttt{strm} type includes a concrete \texttt{start\_state} component.
+where \texttt{token} is the result type of the lexer actions, and \texttt{start\_state} is an algebraic datatype with nullary constructors for each defined start state.
+In this interface, lexer start states are conceptually part of the input stream; thus, from an external viewpoint start states can be ignored.  However, it is sometimes helpful to control the lexer start state externally, allowing contextual information to influence the lexer.  This is why the \texttt{strm} type includes a concrete \texttt{start\_state} component.
+
+Note that the {\tt StreamPos} module is part of the {\tt ml-lpt-lib} library described in Chapter~\ref{ch:ml-lpt-lib}.  A {\tt StreamPos.sourcemap} value, combined with a {\tt StreamPos.pos} value, compactly represents position information (line number, column number, and so on).
 
 \section{An example}
 \begin{verbatim}
@@ -221,6 +236,8 @@ where \texttt{token} is the result type of the lexer actions, and \texttt{start\
 
 %defs (
   open CalcParse.Tok
+  type lex_result = token
+  fun eof() = EOF
 );
 
 let     => ( KW_let );

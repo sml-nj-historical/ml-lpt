@@ -1,0 +1,51 @@
+\chapter{The {\tt ml-lpt-lib} library}\label{ch:ml-lpt-lib}
+
+
+
+\section{The {\tt StreamPos} structure}
+
+\begin{verbatim}
+    structure StreamPos : sig
+
+      type pos = Position.int
+      type span = pos * pos
+      type sourcemap
+
+      (* the result of moving forward an integer number of characters *)
+      val forward : pos * int -> pos
+
+      val mkSourcemap : unit -> sourcemap
+      val same : sourcemap * sourcemap -> bool
+
+      (* log a new line occurence *)
+      val markNewLine : sourcemap -> pos -> unit
+
+      val lineNo   : sourcemap -> pos -> int
+      val colNo    : sourcemap -> pos -> int
+      val toString : sourcemap -> pos -> string
+
+    end
+\end{verbatim}
+
+
+\section{The {\tt Repair} structure}
+
+\begin{verbatim}
+    structure Repair : sig
+
+      datatype 'a repair_action
+        = Insert of 'a list
+        | Delete of 'a list
+        | Subst of {
+            old : 'a list,
+            new : 'a list
+          }
+        | FailureAt of 'a
+      
+      type 'a repair = StreamPos.pos * 'a repair_action
+      
+      val repairToString : StreamPos.sourcemap -> ('a list -> string) ->
+                           'a repair -> string
+        
+    end
+\end{verbatim}

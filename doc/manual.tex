@@ -9,8 +9,8 @@
 \newcommand{\mlantlr}{\texttt{ml-antlr}}
 \newcommand{\antlr}{\texttt{ml-antlr}}
 
-\title{SML/NJ Language Processing Tools\\
-DRAFT}
+\title{SML/NJ Language Processing Tools:\\
+User Guide}
 \author{Aaron Turon\\
 \texttt{adrassi@cs.uchicago.edu}}
 %\date{ }
@@ -63,8 +63,8 @@ DRAFT}
 \usepackage{mathpazo}
 \renewcommand{\ttdefault}{cmtt}
 
-\newcommand{\parttext}{}
-\newcommand{\cpart}[1]{\renewcommand{\parttext}{#1}\part{#1}}
+%\newcommand{\parttext}{}
+%\newcommand{\cpart}[1]{\renewcommand{\parttext}{#1}\part{#1}}
 
 \usepackage{fancyhdr}
 
@@ -88,8 +88,8 @@ DRAFT}
 
 \mainmatter
 
-	\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
-	\renewcommand{\sectionmark}[1]{\markright{\thesection. \ #1}{}}
+%	\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+%	\renewcommand{\sectionmark}[1]{\markright{\thesection. \ #1}{}}
 
     \newpage
     \phantom{.}
@@ -104,26 +104,27 @@ DRAFT}
 
 	\input{overview}
 	
-	\renewcommand{\chaptermark}[1]{\markboth{\parttext{}: #1}{}}
+%	\renewcommand{\chaptermark}[1]{\markboth{\parttext{}: #1}{}}
 
-	\cpart{Usage}
+%	\cpart{Usage}
 	
 		\input{usage-ml-ulex}
 		\input{usage-ml-antlr}
+		\input{ml-lpt-lib}
 	
-	\cpart{Theory}
-	
-		\input{theory-ml-ulex}
-		\input{theory-ml-antlr}
+%	\cpart{Theory}
+%	
+%		\input{theory-ml-ulex}
+%		\input{theory-ml-antlr}
 
-	\cpart{Implementation}
+%	\cpart{Implementation}
 
-		\input{code-ml-ulex}
-		\input{code-ml-antlr}
+%		\input{code-ml-ulex}
+%		\input{code-ml-antlr}
 
-\backmatter
+%\backmatter
 
-	\bibliographystyle{plain}
-	\bibliography{deriv.bib}
+%	\bibliographystyle{plain}
+%	\bibliography{deriv.bib}
 
 \end{document}
