@@ -61,7 +61,9 @@ end = struct
         val oldEnabled = getEnabled eh
         in
 	  setEnabled (eh, false);
-	  f () before setEnabled (eh, oldEnabled)
+	  (f () handle e => (setEnabled (eh, oldEnabled);
+			     raise e))
+	  before setEnabled (eh, oldEnabled)
         end
 
   fun throwIfEH (eh, t) = 
@@ -103,7 +105,7 @@ end = struct
         (case SMLofNJ.Cont.callcc (fn k => (setCont (eh, SOME k); NONE))
 	  of NONE => 
 	     (* first time through, try the repair *)
-	       SMLofNJ.Cont.throw cont t		
+	       SMLofNJ.Cont.throw cont t
 	   | SOME t' => 
 	     (* second time through, return the new right-most strm *)
 	       (setCont (eh, NONE); t')
