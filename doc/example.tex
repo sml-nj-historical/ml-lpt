@@ -1,4 +1,4 @@
-\chapter{A complete example}
+\chapter{A complete example}\label{ch:example}
 
 \begin{figure}
 \begin{verbatim}
@@ -29,7 +29,7 @@ in      => ( KW_in );
         => ( continue() );
 .       => ( (* handle error *) );
 \end{verbatim}
-\caption{The ml-ulex specification}
+\caption{The ml-ulex specification: {\tt calc.lex}}
 \end{figure}
 
 \begin{figure}
@@ -74,5 +74,52 @@ atomicExp(env)
   | "(" exp@(env) ")"
   ;
 \end{verbatim}
-\caption{The ml-antlr specification}
+\caption{The ml-antlr specification: {\tt calc.grm}}
+\end{figure}
+
+\begin{figure}
+\begin{verbatim}
+structure CalcTest =
+  struct
+
+    structure CP = CalcParse(CalcLex)
+
+    fun calc str = let
+      val sref = ref str
+      fun input _ = (!sref before sref := "")
+      val sm = StreamPos.mkSourcemap()
+      val lex = CalcLex.lex sm
+      val strm = CalcLex.streamify input
+      val (r, strm', errs) = CP.parse lex AtomMap.empty strm
+    in
+      print (String.concatWith "\n" 
+            (map (Repair.repairToString sm Tok.toksToString) errs));
+      r
+    end
+
+  end
+\end{verbatim}
+\caption{The driver: {\tt calc-test.sml}}
+\end{figure}
+
+\begin{figure}
+\begin{verbatim}
+
+Library
+
+  structure CalcLex
+  functor CalcParse
+  structure CalcTest
+
+is
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/ml-lpt-lib.cm
+
+  calc.grm.sml
+  calc.lex.sml
+  calc-test.sml
+
+\end{verbatim}
+\caption{The CM file: {\tt sources.cm}}
 \end{figure}
