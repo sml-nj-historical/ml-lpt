@@ -69,40 +69,7 @@ A \ulex{} specification is a list of semicolon-terminated \emph{declarations}.  
 
 There are a few lexical details of the specification format worth mentioning.  First, SML-style comments (\texttt{(* ... *)}) are treated as ignored whitespace anywhere they occur in the specification, \emph{except} in segments of code.  The \textit{ID} symbol used in the grammar stands for alpha-numeric-underscore identifiers, starting with an alpha character.  The \textit{code} symbol represents a segment of SML code, enclosed in parentheses.  Extra parentheses occuring within strings or comments in code need not be balanced.
 
-A complete example specification appears in Figure~\ref{fig:ex-ulex}.
-
-\begin{figure}
-\begin{verbatim}
-%name CalcLex;
-
-%let digit = [0-9];
-%let int = {digit}+;
-%let alpha = [a-zA-Z];
-%let id = {alpha}({alpha} | {digit})*;
-
-%defs (
-  open CalcParse.Tok
-  type lex_result = token
-  fun eof() = EOF
-);
-
-let     => ( KW_let );
-in      => ( KW_in );
-{id}    => ( ID (yytext()) );
-{int}   => ( NUM (valOf (Int.fromString (yytext()))) );
-"="     => ( EQ );
-"+"     => ( PLUS );
-"-"     => ( MINUS );
-"*"     => ( TIMES );
-"("     => ( LP );
-")"     => ( RP );
-" " | \n | \t
-        => ( continue() );
-.       => ( (* handle error *) );
-\end{verbatim}
-\caption{An example ml-ulex specification}
-\label{fig:ex-ulex}
-\end{figure}
+A complete example specification appears in Chapter~\ref{ch:example}.
 
 \section{Directives}
 

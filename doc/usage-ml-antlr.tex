@@ -94,52 +94,7 @@ A \antlr{} specification is a list of semicolon-terminated \emph{declarations}. 
 
 There are a few lexical details of the specification format worth mentioning.  First, SML-style comments (\texttt{(* ... *)}) are treated as ignored whitespace anywhere they occur in the specification, \emph{except} in segments of code.  The \textit{ID} symbol used in the grammar stands for alpha-numeric-underscore identifiers, starting with an alpha character.  The \textit{code} symbol represents a segment of SML code, enclosed in parentheses.  Extra parentheses occuring within strings or comments in code need not be balanced.  The \textit{STRING} symbol represents a double-quoted string.  Escape codes may be used, so $\backslash$ is written as $\backslash\backslash$.
 
-A complete example specification appears in Figure~\ref{fig:ex-antlr}.
-
-\begin{figure}
-\begin{verbatim}
-%name CalcParse;
-
-%tokens
-  : KW_let  ("let")  | KW_in   ("in")
-  | ID of string     | NUM of Int.int
-  | EQ      ("=")    | PLUS    ("+")
-  | TIMES   ("*")    | MINUS   ("-")
-  | LP      ("(")    | RP      (")")
-  ;
-  
-exp(env)
-  : "let" ID "=" exp@(env) 
-    "in" exp@(AtomMap.insert(env, Atom.atom ID, exp1))
-      => ( exp2 )
-  | addExp@(env)
-  ;
-  
-addExp(env)
-  : multExp@(env) ("+" multExp@(env))*
-      => ( List.foldr op+ 0 multExp::SR )
-  ;
-  
-multExp(env)
-  : prefixExp@(env) ("*" prefixExp@(env))*
-      => ( List.foldr op* 1 prefixExp::SR )
-  ;
-  
-prefixExp(env)
-  : atomicExp@(env)
-  | "-" prefixExp@(env)
-      => ( ~prefixExp )
-  ;
-  
-atomicExp(env)
-  : ID  
-      => ( valOf(AtomMap.find (env, Atom.atom ID)) )
-  | NUM
-  | "(" exp@(env) ")"
-  ;
-\end{verbatim}
-\caption{An example ml-antlr specification}
-\end{figure}
+A complete example specification appears in Chapter~\ref{ch:example}.
 
 \section{Directives}
 
@@ -427,6 +382,8 @@ In addition, the span of the entire current production is available as {\tt FULL
 %\section{Handling precedence}
 
 \section{Using the generated code}\label{sec:antlr-gencode}
+
+When \antlr{} is run, it generates a tokens module and a parser functor.  If the parser is given the name {\tt Xyz} via the \kw{name} directive, these structures will be called {\tt Xyz} and {\tt XyzToks} respectively.  The tokens module will contain a single datatype, called {\tt token}.  The data constructors for the {\tt token} type have the same name and type as those given in the \kw{tokens} directive; in addition, a nullary constructor called {\tt EOF} will be available.
 
 The generated parser functor includes the following:
 \begin{verbatim}
