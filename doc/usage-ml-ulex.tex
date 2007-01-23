@@ -69,6 +69,41 @@ A \ulex{} specification is a list of semicolon-terminated \emph{declarations}.  
 
 There are a few lexical details of the specification format worth mentioning.  First, SML-style comments (\texttt{(* ... *)}) are treated as ignored whitespace anywhere they occur in the specification, \emph{except} in segments of code.  The \textit{ID} symbol used in the grammar stands for alpha-numeric-underscore identifiers, starting with an alpha character.  The \textit{code} symbol represents a segment of SML code, enclosed in parentheses.  Extra parentheses occuring within strings or comments in code need not be balanced.
 
+A complete example specification appears in Figure~\ref{fig:ex-ulex}.
+
+\begin{figure}
+\begin{verbatim}
+%name CalcLex;
+
+%let digit = [0-9];
+%let int = {digit}+;
+%let alpha = [a-zA-Z];
+%let id = {alpha}({alpha} | {digit})*;
+
+%defs (
+  open CalcParse.Tok
+  type lex_result = token
+  fun eof() = EOF
+);
+
+let     => ( KW_let );
+in      => ( KW_in );
+{id}    => ( ID (yytext()) );
+{int}   => ( NUM (valOf (Int.fromString (yytext()))) );
+"="     => ( EQ );
+"+"     => ( PLUS );
+"-"     => ( MINUS );
+"*"     => ( TIMES );
+"("     => ( LP );
+")"     => ( RP );
+" " | \n | \t
+        => ( continue() );
+.       => ( (* handle error *) );
+\end{verbatim}
+\caption{An example ml-ulex specification}
+\label{fig:ex-ulex}
+\end{figure}
+
 \section{Directives}
 
 \subsection{The \kw{defs} directive}
@@ -131,13 +166,13 @@ If the current start state is not {\tt FOO}, none of the rules will be considere
 \begin{figure}
 \Grammar{	
 \GFirstB{re}
-	{{\rm any nonreserved, nonwhitespace character or escape code}}
+	{CHAR}
 \GNextB
-	{{\rm a double-quoted string, as in SML}}
+	{\T{"} SCHAR$^*$ \T{"}}
 \GNextC
 	{\T{\{} ID \T{\}}}	{\kw{let}-bound abbreviation}
 \GNextC
-	{\T{[} \T{\^{ }}$^?$ $($ char \T{-} char $|$ char $)^+$ \T{]} \quad\phantom{.}}
+	{\T{[} \T{\^{ }}$^?$ $($ CCHAR \T{-} CCHAR $|$ CCHAR $)^+$ \T{]} \quad\phantom{.}}
 				{a character class}
 \GNextC
 	{\T{.}}			{wildcard (all single charcters except texttt{{$\backslash$}n})}
@@ -191,7 +226,9 @@ Some examples:
 {\tt 0* \& (..)*}	& \textit{denotes} &
     \{ \epsilon, \texttt{00}, \texttt{0000}, \dots \}	\\
 \texttt{\^{ }(abc)}	& \textit{denotes} &
-    \Sigma^* \setminus \{ \texttt{abc} \}
+    \Sigma^* \setminus \{ \texttt{abc} \}	\\
+\texttt{[\^{ }abc]}	& \textit{denotes} &
+    \Sigma \setminus \{ \texttt{a}, \texttt{b}, \texttt{c} \}
 \end{array}
 \]
 
@@ -224,36 +261,6 @@ where \texttt{token} is the result type of the lexer actions, and \texttt{start\
 In this interface, lexer start states are conceptually part of the input stream; thus, from an external viewpoint start states can be ignored.  However, it is sometimes helpful to control the lexer start state externally, allowing contextual information to influence the lexer.  This is why the \texttt{strm} type includes a concrete \texttt{start\_state} component.
 
 Note that the {\tt StreamPos} module is part of the {\tt ml-lpt-lib} library described in Chapter~\ref{ch:ml-lpt-lib}.  A {\tt StreamPos.sourcemap} value, combined with a {\tt StreamPos.pos} value, compactly represents position information (line number, column number, and so on).
-
-\section{An example}
-\begin{verbatim}
-%name CalcLex;
-
-%let digit = [0-9];
-%let int = {digit}+;
-%let alpha = [a-zA-Z];
-%let id = {alpha}({alpha} | {digit})*;
-
-%defs (
-  open CalcParse.Tok
-  type lex_result = token
-  fun eof() = EOF
-);
-
-let     => ( KW_let );
-in      => ( KW_in );
-{id}    => ( ID (yytext()) );
-{int}   => ( NUM (valOf (Int.fromString (yytext()))) );
-"="     => ( EQ );
-"+"     => ( PLUS );
-"-"     => ( MINUS );
-"*"     => ( TIMES );
-"("     => ( LP );
-")"     => ( RP );
-" " | \n | \t
-        => ( continue() );
-.       => ( (* handle error *) );
-\end{verbatim}
 
 \section{{\tt ml-lex} compatibility}\label{sec:lex-compat}
 

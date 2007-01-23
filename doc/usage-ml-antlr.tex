@@ -94,6 +94,53 @@ A \antlr{} specification is a list of semicolon-terminated \emph{declarations}. 
 
 There are a few lexical details of the specification format worth mentioning.  First, SML-style comments (\texttt{(* ... *)}) are treated as ignored whitespace anywhere they occur in the specification, \emph{except} in segments of code.  The \textit{ID} symbol used in the grammar stands for alpha-numeric-underscore identifiers, starting with an alpha character.  The \textit{code} symbol represents a segment of SML code, enclosed in parentheses.  Extra parentheses occuring within strings or comments in code need not be balanced.  The \textit{STRING} symbol represents a double-quoted string.  Escape codes may be used, so $\backslash$ is written as $\backslash\backslash$.
 
+A complete example specification appears in Figure~\ref{fig:ex-antlr}.
+
+\begin{figure}
+\begin{verbatim}
+%name CalcParse;
+
+%tokens
+  : KW_let  ("let")  | KW_in   ("in")
+  | ID of string     | NUM of Int.int
+  | EQ      ("=")    | PLUS    ("+")
+  | TIMES   ("*")    | MINUS   ("-")
+  | LP      ("(")    | RP      (")")
+  ;
+  
+exp(env)
+  : "let" ID "=" exp@(env) 
+    "in" exp@(AtomMap.insert(env, Atom.atom ID, exp1))
+      => ( exp2 )
+  | addExp@(env)
+  ;
+  
+addExp(env)
+  : multExp@(env) ("+" multExp@(env))*
+      => ( List.foldr op+ 0 multExp::SR )
+  ;
+  
+multExp(env)
+  : prefixExp@(env) ("*" prefixExp@(env))*
+      => ( List.foldr op* 1 prefixExp::SR )
+  ;
+  
+prefixExp(env)
+  : atomicExp@(env)
+  | "-" prefixExp@(env)
+      => ( ~prefixExp )
+  ;
+  
+atomicExp(env)
+  : ID  
+      => ( valOf(AtomMap.find (env, Atom.atom ID)) )
+  | NUM
+  | "(" exp@(env) ")"
+  ;
+\end{verbatim}
+\caption{An example ml-antlr specification}
+\end{figure}
+
 \section{Directives}
 
 \subsection{The \kw{defs} directive}
@@ -256,7 +303,7 @@ Actions for productions are just SML code enclosed in parentheses.  In scope for
 \end{verbatim}
 Notice also that the actual parameter to {\tt exp} in the first production is {\tt env}, which is in scope at the point the parameter is given; {\tt exp} itself would not be in scope at that point.
 
-An important aspect of actions is naming: in the above example, {\tt exp} and {\tt NUM} were the default names given to the symbols in the production.  In general, the default name of a symbol is just the symbol's name; if the same name appears multiple times in a production, a number is appended to the name of each yield, start from 1, going from left to right; a subrule (anything enclosed in parentheses) is by default called SR; any default name may be overriden using the syntax {tt name=symbol} -- overriding a default name does not change the automatic number for other default names.  Consider:
+An important aspect of actions is naming: in the above example, {\tt exp} and {\tt NUM} were the default names given to the symbols in the production.  In general, the default name of a symbol is just the symbol's name.  If the same name appears multiple times in a production, a number is appended to the name of each yield, start from 1, going from left to right.  A subrule (any items enclosed in parentheses) is by default called {\tt SR}.  Any default name may be overriden using the syntax {\tt name=symbol}.  Overriding a default name does \emph{not} change the automatic number for other default names.  Consider:
 \begin{verbatim}
     foo : A bar=A A ("," A)* A*
         ;
@@ -267,13 +314,13 @@ The EBNF operators {\tt *}, {\tt +} and {\tt ?} have a special effect on the sem
 
 Subrules can have embedded actions that determine their yield:
 \begin{verbatim}
-  plusList : ((exp "+" exp => ( exp1 + exp2 )) ";" => ( SR ))* => ( SR )
+    plusList : ((exp "+" exp => ( exp1 + exp2 )) ";" => ( SR ))* => ( SR )
 \end{verbatim}
 The {\tt plusList} nonterminal matches a list of semicolon-terminated additions.  The innermost subrule, containing the addition, yields the value of the addition; that subrule is contained in a larger subrule terminated by a semicolon, which yield the value of the inner subrule.  Finally, the semicolon-terminated subrule is itself within a subrule, which is repeated zero or more times.  Note that the numbering scheme for names is restarted within each subrule.
 
 Actions are \emph{optional}: if an action is not specified, the default behavior is to return all nonterminals and non-nullary tokens in scope.  Thus, the last example can be written as 
 \begin{verbatim}
-  plusList : ((exp "+" exp => ( exp1 + exp2 )) ";")*
+    plusList : ((exp "+" exp => ( exp1 + exp2 )) ";")*
 \end{verbatim}
 since {\tt "+"} and {\tt ";"} represent nullary token values.
 
@@ -283,7 +330,7 @@ When working with any parser, one must be aware of the restrictions is algorithm
 When \antlr{} analyzes a grammar, it attempts to create a prediction-
 decision tree for each nonterminal.  In the usual case, this decision
 is made using lookahead token sets.  The tool will start with $k = 1$
-lookahead and increment to a set value (normally $k = 3$) until it can
+lookahead and increment up to a set maximum until it can
 uniquely predict each production.  Subtrees of the decision tree
 remember the tokens chosen by their parents, and take this into account
 when computing lookahead.  For example, suppose we have two productions
@@ -303,7 +350,7 @@ At $k = 1$, the productions can generate the following sets:
 and $k = 2$,
 \begin{verbatim}
     prod1 {A, B, C}
-    prod2 {C, $}
+    prod2 {C, <EOF>}
 \end{verbatim}
 Examining the lookahead sets alone, this grammar fragment looks ambiguous
 even for $k = 2$.  However, \antlr{} will generate the following decision
@@ -320,7 +367,7 @@ tree:
       predict prod2
 \end{verbatim}
 
-In \antlr{}, only a small amount of lookahead is used by default (normally $k = 3$).  Thus, the following grammar is ambiguous for \antlr{}:
+In \antlr{}, only a small amount of lookahead is used by default ($k = 3$).  Thus, the following grammar is ambiguous for \antlr{}:
 \begin{verbatim}
     foo : A A A B
         | A A A A
@@ -371,7 +418,7 @@ which is both more readable and more amenable to $LL(k)$ parsing.
 \antlr{} includes built-in support for propagating position information.  Because the lexer module is required to provide a {\tt getPos} function, the tokens themselves do not need to carry explicit position information.
 A position \emph{span} is a pair to two lexer positions (the type {\tt StreamPos.span} is an abbreviation for {\tt StreamPos.pos * StreamPos.pos}).
 Within action code, the position span of any symbol (token, nonterminal, subrule) is available as a value; if the yield of the symbol is named {\tt Sym}, its span is called {\tt Sym\_SPAN}.
-Note that the span of a symbol after applying the {\tt *} or {tt +} operators is the span of the entire matched list:
+Note that the span of a symbol after applying the {\tt *} or {\tt +} operators is the span of the entire matched list:
 \begin{verbatim}
     foo : A* => (* A_SPAN starts at the first A and ends at the last *)
 \end{verbatim}
@@ -410,42 +457,4 @@ Thus, although error reporting is customizable, a reasonable default is provided
     in
       print (concatWith "\n" errStrings)
     end
-\end{verbatim}
-
-\section{An example}
-
-\begin{verbatim}
-%name CalcParse;
-%tokens
-  : KW_let  ("let")  | KW_in   ("in")
-  | ID of string     | NUM of Int.int
-  | EQ      ("=")    | PLUS    ("+")
-  | TIMES   ("*")    | MINUS   ("-")
-  | LP      ("(")    | RP      (")")
-  ;
-exp(env)
-  : "let" ID "=" exp@(env) 
-    "in" exp@(AtomMap.insert(env, Atom.atom ID, exp1))
-      => ( exp2 )
-  | addExp@(env)
-  ;
-addExp(env)
-  : multExp@(env) ("+" multExp@(env))*
-      => ( List.foldr op+ 0 multExp::SR )
-  ;
-multExp(env)
-  : prefixExp@(env) ("*" prefixExp@(env))*
-      => ( List.foldr op* 1 prefixExp::SR )
-  ;
-prefixExp(env)
-  : atomicExp@(env)
-  | "-" prefixExp@(env)
-      => ( ~prefixExp )
-  ;
-atomicExp(env)
-  : ID  
-      => ( valOf(AtomMap.find (env, Atom.atom ID)) )
-  | NUM
-  | "(" exp@(env) ")"
-  ;
 \end{verbatim}
