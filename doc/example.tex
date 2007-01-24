@@ -1,4 +1,35 @@
-\chapter{A complete example}\label{ch:example}
+%!TEX root = manual.tex
+%
+\chapter{A complete example}
+\label{ch:example}
+
+This chapter gives a complete example of a simple calculator
+language implemented using both \texttt{ml-ulex} and \texttt{ml-antlr}.
+Figure~\ref{fig:calc-sources} gives the CM file for the project.
+Note that we are assuming that the \texttt{ml-ulex} and \texttt{ml-antlr}
+tools have been run by hand.
+\begin{figure}[h]
+\begin{verbatim}
+
+Library
+
+  structure CalcLex
+  functor CalcParse
+  structure CalcTest
+
+is
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/ml-lpt-lib.cm
+
+  calc.grm.sml
+  calc.lex.sml
+  calc-test.sml
+
+\end{verbatim}
+\caption{The CM file: {\tt sources.cm}}
+\label{fig:calc-sources}
+\end{figure}
 
 \begin{figure}
 \begin{verbatim}
@@ -10,29 +41,30 @@
 %let id = {alpha}({alpha} | {digit})*;
 
 %defs (
-  open CalcParse.Tok
-  type lex_result = token
-  fun eof() = EOF
+  structure T = CalcParse.Tok
+  type lex_result = T.token
+  fun eof() = T.EOF
 );
 
-let     => ( KW_let );
-in      => ( KW_in );
-{id}    => ( ID (yytext()) );
-{int}   => ( NUM (valOf (Int.fromString (yytext()))) );
-"="     => ( EQ );
-"+"     => ( PLUS );
-"-"     => ( MINUS );
-"*"     => ( TIMES );
-"("     => ( LP );
-")"     => ( RP );
+let     => ( T.KW_let );
+in      => ( T.KW_in );
+{id}    => ( T.ID (yytext()) );
+{int}   => ( T.NUM (valOf (Int.fromString (yytext()))) );
+"="     => ( T.EQ );
+"+"     => ( T.PLUS );
+"-"     => ( T.MINUS );
+"*"     => ( T.TIMES );
+"("     => ( T.LP );
+")"     => ( T.RP );
 " " | \n | \t
         => ( continue() );
 .       => ( (* handle error *) );
 \end{verbatim}
 \caption{The ml-ulex specification: {\tt calc.lex}}
+\label{fig:calc-lex}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[p]
 \begin{verbatim}
 %name CalcParse;
 
@@ -75,6 +107,7 @@ atomicExp(env)
   ;
 \end{verbatim}
 \caption{The ml-antlr specification: {\tt calc.grm}}
+\label{fig:calc-grm}
 \end{figure}
 
 \begin{figure}
@@ -100,26 +133,5 @@ structure CalcTest =
   end
 \end{verbatim}
 \caption{The driver: {\tt calc-test.sml}}
-\end{figure}
-
-\begin{figure}
-\begin{verbatim}
-
-Library
-
-  structure CalcLex
-  functor CalcParse
-  structure CalcTest
-
-is
-  $/basis.cm
-  $/smlnj-lib.cm
-  $/ml-lpt-lib.cm
-
-  calc.grm.sml
-  calc.lex.sml
-  calc-test.sml
-
-\end{verbatim}
-\caption{The CM file: {\tt sources.cm}}
+\label{fig:calc-test}
 \end{figure}
