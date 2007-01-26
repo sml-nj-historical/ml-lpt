@@ -175,7 +175,7 @@ structure SMLOutput =
 			    (ListPair.zip (map Item.sym rhs, itemBindings)))
 			 in 
 			   if List.length bindings > 0 
-			   then String.concatWith ", " bindings
+			   then "(" ^ (String.concatWith ", " bindings) ^ ")"
 			   else "()"
 		         end
   	           (* end case *))
