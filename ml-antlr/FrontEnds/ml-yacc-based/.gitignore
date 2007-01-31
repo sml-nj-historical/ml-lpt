@@ -10,4 +10,7 @@
 /*.dvi
 /*~
 /*.ppc-darwin
-/cc.lex.sml
+/*.lex.sml
+/*.grm.sml
+/*.grm.sig
+/*.grm.desc
