@@ -1,0 +1,12 @@
+(*
+ * A pointer to the plugin library for ML-Antlr.
+ *
+ * (C) 2007 The Fellowship of SML/NJ.
+ *
+ * This should currently not be installed as it conflicts with
+ * the equally-named plugin library for legacy ml-yacc.
+ *)
+Library
+	structure AntlrTool
+is
+	$/ml-antlr-tool.cm

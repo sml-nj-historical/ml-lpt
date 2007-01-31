@@ -12,7 +12,9 @@ ROOT="ml-ulex"
 HEAP_IMAGE=""
 SMLNJROOT=`pwd`/../..
 BIN=${INSTALLDIR:-$SMLNJROOT}/bin
+LIB=${INSTALLDIR:-$SMLNJROOT}/lib
 BUILD=$BIN/ml-build
+SML=$BIN/sml
 
 #
 # process command-line options
@@ -39,4 +41,14 @@ if [ "$HEAP_IMAGE" = "" ]; then
     HEAP_IMAGE="$ROOT"
 fi
 
+#
+# Build the ml-ulex standalone program:
 "$BUILD" sources.cm Main.main $HEAP_IMAGE
+
+#
+# Install CM support for ml-ulex (lex-ext.cm is currently turned off
+# to avoid conflict with ml-lex):
+"$SML" -m \$smlnj/library-install.cm tool/ml-ulex-tool.cm ${LIB}
+# "$SML" -m \$smlnj/library-install.cm tool/lex-ext.cm ${LIB}
+
+exit 0

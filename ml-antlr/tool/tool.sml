@@ -1,0 +1,17 @@
+(*
+ * Running ML-Antlr from CM.
+ *
+ * (C) 2007 The Fellowship of SML/NJ.
+ *)
+structure AntlrTool = struct
+    val _ = Tools.registerStdShellCmdTool {
+	      tool = "MLAntlr",
+	      class = "ml-antlr",
+	      suffixes = ["grm"],
+	      cmdStdPath = fn () => ("ml-antlr", []),
+	      template = NONE,
+	      extensionStyle =
+	        Tools.EXTEND [("sml", SOME "sml", fn too => too)],
+	      dflopts = []
+	    }
+end
