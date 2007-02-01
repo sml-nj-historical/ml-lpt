@@ -72,7 +72,7 @@ structure Nonterm =
           fun prodItems (S.PROD {rhs, ...}) = !rhs
 	  fun sym (S.ITEM {sym, ...}) = sym
           fun followItem (S.NONTERM (nt, _)) = 
-	        if isSubrule nt then []
+	        if isSubrule nt then follow nt
 		else [nt]
 	    | followItem (S.CLOS nt) = follow nt
 	    | followItem (S.POSCLOS nt) = follow nt
