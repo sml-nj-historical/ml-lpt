@@ -69,10 +69,7 @@
 
 ================================================
 
-better handling of unrecoverable parse error (e.g. report position, use special exception)
-
 add built-in Unicode character classes
-%keywords directive
 look into OCaml-style rules (starting with | rather than :)
 nonterminal type annotations
 decrease lexer size and compile time
@@ -81,3 +78,18 @@ union/insct/containment for stream pos spans
 
 speculative:
 higher-order nonterminal definitions
+
+================================================================
+
+yylinepos := 1 for the first line of the file (and document this)
+
+dump.dot and latex output.  add switches to ml-antlr and document them
+
+support for {1,3} (ranges) in ml-ulex
+
+support for %arg
+
+new interfaces for ulex (stream textio, imperative textio, string, etc)
+better handling of EOF/EOP
+check for same token specified multiple times with %keyword
+nonunicode charsets

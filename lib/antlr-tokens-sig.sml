@@ -1,4 +1,4 @@
-(* tokens-sig.sml
+(* antlr-tokens-sig.sml
  *
  * COPYRIGHT (c) 2006
  * John Reppy (http://www.cs.uchicago.edu/~jhr)
@@ -8,7 +8,7 @@
  * Signature for generated tokens module, for ml-antlr
  *)
 
-signature TOKENS = sig
+signature ANTLR_TOKENS = sig
 
   type token
   

@@ -36,7 +36,7 @@ end = struct
   fun forward (p, i) = p + (Position.fromInt i)
 
   fun mkSourcemap() = ref []
-  fun same (sm1, sm2) = (sm1 = sm2)
+  fun same (sm1 : sourcemap, sm2) = (sm1 = sm2)
 
   fun markNewLine sm newPos = let
         val (curLine, pos) = case !sm

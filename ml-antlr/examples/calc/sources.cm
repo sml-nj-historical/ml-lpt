@@ -8,6 +8,7 @@ is
   $/basis.cm
   $/smlnj-lib.cm
   ../../../lib/ml-lpt-lib.cm
+(*  $/ml-lpt-lib.cm *)
 
   calc.g.sml
   calc.lex.sml

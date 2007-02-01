@@ -201,7 +201,7 @@ fun exp_NT (env_RES) (strm) = let
             val (addExp_RES, addExp_SPAN, strm') = (wrap (addExp_NT (UserCode.ARGS_5 (env_RES, vars_REFC, nums_REFC))))(strm)
             val FULL_SPAN = (#1(addExp_SPAN), #2(addExp_SPAN))
             in
-              (addExp_RES, FULL_SPAN, strm')
+              ((addExp_RES), FULL_SPAN, strm')
             end
       in
         (case (lex(strm))
@@ -221,7 +221,7 @@ and addExp_NT (env_RES) (strm) = let
             val (multExp_RES, multExp_SPAN, strm') = (wrap (multExp_NT (UserCode.ARGS_8 (env_RES, PLUS_RES, multExp_RES, vars_REFC, nums_REFC))))(strm')
             val FULL_SPAN = (#1(PLUS_SPAN), #2(multExp_SPAN))
             in
-              (multExp_RES, FULL_SPAN, strm')
+              ((multExp_RES), FULL_SPAN, strm')
             end
       fun subrule1_PRED (strm) = (case (lex(strm))
              of (Tok.PLUS, _, strm') => true
@@ -240,7 +240,7 @@ and multExp_NT (env_RES) (strm) = let
             val (prefixExp_RES, prefixExp_SPAN, strm') = (wrap (prefixExp_NT (UserCode.ARGS_11 (env_RES, TIMES_RES, prefixExp_RES, vars_REFC, nums_REFC))))(strm')
             val FULL_SPAN = (#1(TIMES_SPAN), #2(prefixExp_SPAN))
             in
-              (prefixExp_RES, FULL_SPAN, strm')
+              ((prefixExp_RES), FULL_SPAN, strm')
             end
       fun subrule1_PRED (strm) = (case (lex(strm))
              of (Tok.TIMES, _, strm') => true
@@ -257,7 +257,7 @@ and prefixExp_NT (env_RES) (strm) = let
             val (atomicExp_RES, atomicExp_SPAN, strm') = (wrap (atomicExp_NT (UserCode.ARGS_12 (env_RES, vars_REFC, nums_REFC))))(strm)
             val FULL_SPAN = (#1(atomicExp_SPAN), #2(atomicExp_SPAN))
             in
-              (atomicExp_RES, FULL_SPAN, strm')
+              ((atomicExp_RES), FULL_SPAN, strm')
             end
       fun prefixExp_PROD_2 (strm) = let
             val (MINUS_RES, MINUS_SPAN, strm') = matchMINUS(strm)
@@ -303,13 +303,13 @@ and atomicExp_NT (env_RES) (strm) = let
             val (RP_RES, RP_SPAN, strm') = matchRP(strm')
             val FULL_SPAN = (#1(LP_SPAN), #2(RP_SPAN))
             in
-              (exp_RES, FULL_SPAN, strm')
+              ((exp_RES), FULL_SPAN, strm')
             end
       fun atomicExp_PROD_4 (strm) = let
             val (DummyExp_RES, DummyExp_SPAN, strm') = matchDummyExp(strm)
             val FULL_SPAN = (#1(DummyExp_SPAN), #2(DummyExp_SPAN))
             in
-              (DummyExp_RES, FULL_SPAN, strm')
+              ((DummyExp_RES), FULL_SPAN, strm')
             end
       in
         (case (lex(strm))
@@ -326,7 +326,7 @@ fun prog_NT (strm) = let
             val (SEMI_RES, SEMI_SPAN, strm') = matchSEMI(strm')
             val FULL_SPAN = (#1(exp_SPAN), #2(SEMI_SPAN))
             in
-              (exp_RES, FULL_SPAN, strm')
+              ((exp_RES), FULL_SPAN, strm')
             end
       fun subrule1_PRED (strm) = (case (lex(strm))
              of (Tok.DummyExp(_), _, strm') => true
@@ -338,10 +338,9 @@ fun prog_NT (strm) = let
               | _ => false
             (* end case *))
       val (SR_RES, SR_SPAN, strm') = EBNF.closure(subrule1_PRED, (wrap subrule1_NT), strm)
-      val (EOF_RES, EOF_SPAN, strm') = matchEOF(strm')
-      val FULL_SPAN = (#1(SR_SPAN), #2(EOF_SPAN))
+      val FULL_SPAN = (#1(SR_SPAN), #2(SR_SPAN))
       in
-        (SR_RES, FULL_SPAN, strm')
+        ((SR_RES), FULL_SPAN, strm')
       end
 in
   (prog_NT, exp_NT)

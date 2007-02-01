@@ -1,6 +1,6 @@
-program example(input, output);
+kprogram example(input, output);
 var x, y : integer;
-kfunction blah(a, b : integer) : integer;
+function blah(a, b : integer) : integer;
 begin
 end; { blah }
 

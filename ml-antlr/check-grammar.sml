@@ -170,6 +170,7 @@ structure CheckGrammar : sig
 		  | NONE => (case rules
 			      of (Syn.RULE {lhs, ...})::_ => lhs
 			       | _ => Atom.atom "EOF")
+(*
 	  fun addEOFToAlt (Syn.ALT {items, action, try, pred}) = 
 	        Syn.ALT {items = items @ [(NONE, Syn.SYMBOL (Atom.atom "EOF", NONE))], 
 			 action = action, try = try, pred = pred}
@@ -179,6 +180,7 @@ structure CheckGrammar : sig
 			   alts = map addEOFToAlt alts}
 		else r
 	  val rules = map addEOFToRule rules
+*)
 	(* keep track of nonterminals *)
 	  val numNTerms = ref 0
 	  val ntTbl = ATbl.mkTable (64, Fail "nonterm table")

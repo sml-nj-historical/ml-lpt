@@ -11,8 +11,9 @@
 structure MLULexInput =
   struct
 
+    structure SP = StreamPos
     structure L = MLULexLex
-    structure P = Parser(L)
+    structure P = MLULexParseFn(L)
 
     fun parseFile fname = let
           fun parseErr (msg, line, _) = 
@@ -21,23 +22,27 @@ structure MLULexInput =
 		 print msg;
 		 print "\n")
 	  val fstrm = TextIO.openIn fname
-	  val strm = L.streamify (fn n => TextIO.inputN (fstrm, n))
-	  val sm = L.mkSourcemap()
+	  val strm = L.streamifyInstream fstrm
+	  val sm = SP.mkSourcemap()
 	  val lex = L.lex sm
-	  val (spec, strm', errors, anns) = 
+	  val (spec, strm', errors, {errs}) = 
 	        P.parse lex strm
 		before TextIO.closeIn fstrm
 	  fun errMsg ty (pos, err) = print (String.concat [
 		" ", fname, ":",
-		     Int.toString (L.getLineNo sm pos), ".",
-		     Int.toString (L.getColNo sm pos), 
+		     Int.toString (SP.lineNo sm pos), ".",
+		     Int.toString (SP.colNo sm pos), 
 		ty, err, "\n"])
 	  in
             app (errMsg " Syntax error: ") 
-	        (map (fn (p, e) => (p, P.repairToString e)) errors);
+	        (map (fn (p, e) => 
+			 (p, Repair.actionToString MLULexTokens.toString e)) 
+		     errors);
 	    app (errMsg " ") 
-		(map (fn ((p, _), e) => (p, e)) anns);
-	    spec
+		(map (fn ((p, _), e) => (p, e)) errs);
+	    case spec
+	     of SOME s => s
+	      | NONE => OS.Process.exit OS.Process.failure
 	  end
 
   end

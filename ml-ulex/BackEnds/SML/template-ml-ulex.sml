@@ -4,6 +4,7 @@
     datatype yystart_state = 
 @startstates@
 
+    local
     structure UserDeclarations = 
       struct
 
@@ -32,10 +33,20 @@
 		     (StreamPos.markNewLine yysm (ULexBuffer.getpos strm);
 		      SOME (0w10, s'))
 		 | x => x)
+          fun yygetList getc strm = let
+            val get1 = UTF8.getu getc
+            fun iter (strm, accum) = 
+	        (case get1 strm
+	          of NONE => rev accum
+	           | SOME (w, strm') => iter (strm', w::accum)
+	         (* end case *))
+          in
+            iter (strm, [])
+          end
 	(* create yytext *)
 	  fun yymksubstr(strm) = ULexBuffer.subtract (strm, !yystrm)
 	  fun yymktext(strm) = Substring.string (yymksubstr strm)
-	  fun yymkunicode(strm) = UTF8.getList Substring.getc (yymksubstr strm)
+	  fun yymkunicode(strm) = yygetList Substring.getc (yymksubstr strm)
           open UserDeclarations
           fun lex () = let
             fun yystuck (yyNO_MATCH) = raise Fail "lexer reached a stuck state"
@@ -43,6 +54,7 @@
 		  action (strm, old)
 	    val yypos = yygetPos()
 	    fun yygetlineNo strm = StreamPos.lineNo yysm (ULexBuffer.getpos strm)
+	    fun yygetcolNo  strm = StreamPos.colNo  yysm (ULexBuffer.getpos strm)
 	    fun continue() = 
 @lexer@
 
@@ -51,7 +63,7 @@
           in 
             lex()
           end
-
+  in
     type pos = StreamPos.pos
     type span = StreamPos.span
     type tok = UserDeclarations.lex_result
@@ -76,9 +88,29 @@
 		 lex sm (STRM (yystrm, memo), ss))
          (* end case *))
 
-    fun streamify inputN = (STRM (ULexBuffer.mkStream inputN, ref NONE), 
-			    INITIAL)
+    fun streamify input = (STRM (ULexBuffer.mkStream input, ref NONE), 
+			   INITIAL)
+
+    fun streamifyReader readFn strm = let
+          val s = ref strm
+	  fun iter(strm, n, accum) = 
+	        if n > 1024 then (String.implode (rev accum), strm)
+		else (case readFn strm
+		       of NONE => (String.implode (rev accum), strm)
+			| SOME(c, strm') => iter (strm', n+1, c::accum))
+          fun input() = let
+	        val (data, strm) = iter(!s, 0, [])
+	        in
+	          s := strm;
+		  data
+	        end
+          in
+            streamify input
+          end
+
+    fun streamifyInstream strm = streamify (fn ()=>TextIO.input strm)
 
     fun getPos (STRM (strm, _), _) = ULexBuffer.getpos strm
 
   end
+end

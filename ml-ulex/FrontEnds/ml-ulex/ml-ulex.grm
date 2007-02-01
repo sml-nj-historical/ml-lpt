@@ -12,9 +12,9 @@
 
   fun flip (x, y) = (y, x)
 
-  type antlr_annotation = (Lex.pos * Lex.pos) * string
-
 );
+
+%name MLULex;
 
 %tokens
   : BAR		("|")
@@ -43,7 +43,7 @@
   | UTF8	("utf8")
   | ASCII7	("ascii7")
   | ASCII8	("ascii8")
-  | REPEAT of int
+  | INT of int
   | CHAR of char
   | UCHAR of Word32.word
   | ID of string
@@ -53,6 +53,8 @@
 
 %keywords
   "%defs", "%name", "%states", "%let", "%charset" ;
+
+%refcell errs : (StreamPos.span * string) list :== ([]);
 
 file
   : decls@(LS.mkSpec(), AMap.empty)
@@ -127,18 +129,19 @@ post_re(env)
       ( "?" => (RE.mkOpt)
       | "*" => (RE.mkClosure)
       | "+" => (fn re => RE.mkAtLeast (re, 1))
-      | REPEAT => (fn re => RE.mkRep (re, REPEAT, REPEAT))
+      | "{" INT "}" => (fn re => RE.mkRep (re, INT, INT))
+      | "{" INT "," INT "}" => (fn re => RE.mkRep (re, INT1, INT2))
       | => (fn x => x)
       )
       => (SR prim_re)
   ;
 
 prim_re(env)
-  : ID
+  : "{" ID "}"
       => (case (AMap.find (env, Atom.atom ID))
 	   of SOME re => re
-	    | NONE => (addAnnotation (ID_SPAN, String.concat [
-		"Error: {", ID, "} is undefined."]);
+	    | NONE => (errs :== (ID_SPAN, String.concat [
+		"Error: {", ID, "} is undefined."])::(!!errs);
 		RE.any))
   | "(" re@(env) ")"
   | char
@@ -153,10 +156,10 @@ prim_re(env)
         ( char "-" char => 
 	    (if char1 <= char2 then
 	       SIS.interval (char1, char2)
-	     else (addAnnotation (FULL_SPAN, String.concat [
+	     else (errs :== (FULL_SPAN, String.concat [
 	       "Error: malformed character class: ",
 	       Word32.toString char1, " - ",
-	       Word32.toString char2, "."]);
+	       Word32.toString char2, "."])::(!!errs);
 	       SIS.universe))
         | char => (SIS.singleton char)
         )+

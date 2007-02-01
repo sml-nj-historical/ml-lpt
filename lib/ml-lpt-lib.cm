@@ -10,8 +10,8 @@
 
 Library
 
-  signature LEXER
-  signature TOKENS  
+  signature ANTLR_LEXER
+  signature ANTLR_TOKENS
 
   structure Repair
   structure StreamPos
@@ -26,9 +26,10 @@ Library
 is
 
   $/basis.cm
+  $/smlnj-lib.cm
   ebnf.sml
   err-handler.sml
-  lexer-sig.sml
+  antlr-lexer-sig.sml
   repair.sml
 
   repairable-strm-sig.sml
@@ -36,7 +37,6 @@ is
   wrapped-strm.sml
 
   stream-pos.sml
-  tokens-sig.sml
+  antlr-tokens-sig.sml
 
-  utf8.sml
   ulex-buffer.sml

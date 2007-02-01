@@ -9,7 +9,7 @@
  * and allow "prepending" a sequence of tokens.
  *)
 
-functor WrappedStrm (Tok : TOKENS) (Lex : LEXER) = struct
+functor WrappedStrm (Tok : ANTLR_TOKENS) (Lex : ANTLR_LEXER) = struct
 
   datatype wstream = WSTREAM of {
     prefix : (Tok.token * StreamPos.span) list,

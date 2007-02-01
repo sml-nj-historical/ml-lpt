@@ -11,7 +11,7 @@
 structure ULexBuffer : sig
 
   type stream
-  val mkStream : (int -> string) -> stream
+  val mkStream : (unit -> string) -> stream
   val getc : stream -> (Char.char * stream) option
   val getpos : stream -> StreamPos.pos
   val subtract : stream * stream -> Substring.substring
@@ -19,24 +19,22 @@ structure ULexBuffer : sig
 
 end = struct
 
-  val chunkSize = 4096
-
   datatype stream = S of (buf * int) 
   and buf = B of { 
     data : string,
     basePos : StreamPos.pos,
     more : more ref,
-    inputN : int -> string
+    input : unit -> string
   }
   and more = UNKNOWN | YES of buf | NO
         
-  fun mkStream inputN = 
+  fun mkStream input = 
         (S (B {data = "", basePos = 0, 
 	       more = ref UNKNOWN,
-	       inputN = inputN},
+	       input = input},
 	    0))
 
-  fun getc (S (buf as B {data, basePos, more, inputN}, pos)) = 
+  fun getc (S (buf as B {data, basePos, more, input}, pos)) = 
         if pos < String.size data then let
 	    val c = String.sub (data, pos)
 	  in
@@ -46,14 +44,14 @@ end = struct
 	       of NO => NONE
 		| YES buf' => getc (S (buf', 0))
 		| UNKNOWN => 
-		    (case inputN chunkSize
+		    (case input()
 		      of "" => (more := NO; NONE)
 		       | data' => let 
 			   val buf' = B {
                                data = data',
 			       basePos = StreamPos.forward (basePos, String.size data),
 			       more = ref UNKNOWN,
-			       inputN = inputN
+			       input = input
 			     }
 			   in
 			     more := YES buf';
@@ -67,13 +65,13 @@ end = struct
   fun subtract (new, old) = let
         val (S (B {data = ndata, basePos = nbasePos, ...}, npos)) = new
 	val (S (B {data = odata, basePos = obasePos, 
-		   more, inputN}, opos)) = old
+		   more, input}, opos)) = old
         in
           if nbasePos = obasePos then
 	    Substring.substring (ndata, opos, npos-opos)
 	  else case !more
-		of NO =>      raise Fail "BUG: yyInput.subtract, but buffers are unrelated"
-		 | UNKNOWN => raise Fail "BUG: yyInput.subtract, but buffers are unrelated"
+		of NO =>      raise Fail "BUG: ULexBuffer.subtract, but buffers are unrelated"
+		 | UNKNOWN => raise Fail "BUG: ULexBuffer.subtract, but buffers are unrelated"
 		 | YES buf => 
 		     Substring.extract (
 		       Substring.concat [

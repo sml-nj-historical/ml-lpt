@@ -9,10 +9,13 @@
  *)
 
 %defs (
+  structure Tok = MLULexTokens
+
   val comLvl : int ref = ref 0		(* nesting depth of comments *)
   val comStart : int ref = ref 0	(* start line of current comment *)
 
   type lex_result = Tok.token
+  fun eof() = Tok.EOF
 
   val text : string list ref = ref []
   fun addText s = (text := s::(!text))
@@ -22,8 +25,6 @@
   val pcount = ref 0
   fun inc (ri as ref i) = (ri := i+1)
   fun dec (ri as ref i) = (ri := i-1)
-
-  fun chomp s = String.substring (s, 1, String.size s - 2)
 
   fun hexDigit x = 
         if #"a" <= x andalso x <= #"f" then
@@ -55,7 +56,7 @@
 %let qualid ={id}".";
 %let tyvar="'"{idchars}*;
 
-%states STRING COM CODE CHARCLASS DIRECTIVE CHARSET RESTRING;
+%states STRING COM CODE CHARCLASS DIRECTIVE CHARSET RESTRING CURLY;
 
 %name MLULexLex;
 (* %charset utf8; *)
@@ -94,12 +95,13 @@
 <INITIAL>")"	=> (Tok.RP);
 <INITIAL>"["	=> (YYBEGIN CHARCLASS; Tok.LSB);
 <INITIAL>"]"	=> (Tok.RSB);
-<INITIAL>"{" {id} "}"
-		=> (Tok.ID (chomp yytext));
-<INITIAL>"{" {int} "}"
-		=> ((Tok.REPEAT o valOf o Int.fromString o 
-		     Substring.string o (Substring.triml 1) o
-		     (Substring.trimr 1)) yysubstr);
+
+<INITIAL>"{"	=> (YYBEGIN CURLY; Tok.LCB);
+<CURLY>"}"	=> (YYBEGIN INITIAL; Tok.RCB);
+<CURLY>{id}	=> (Tok.ID yytext);
+<CURLY>{int}    => (Tok.INT (valOf (Int.fromString yytext)));
+<CURLY>","	=> (Tok.COMMA);
+
 <INITIAL>"<"	=> (YYBEGIN DIRECTIVE; Tok.LT);
 <INITIAL>">"	=> (Tok.GT);
 <INITIAL>","	=> (Tok.COMMA);
@@ -115,7 +117,8 @@
             in case c
                 of SOME c' => Tok.CHAR c'
 		 | NONE => (print (concat [
-		     Int.toString (!yylineno), ": unknown escape sequence '", 
+		     Int.toString (!yylineno), ".",
+		     Int.toString (!yycolno), ": unknown escape sequence '", 
 		     yytext, "'\n"]);
 		     continue())
             end);
@@ -173,7 +176,9 @@
 
 <INITIAL>[^\n{};]
 		=> (Tok.UCHAR (hd yyunicode));
-.		=> (print (concat[Int.toString (!yylineno), ": illegal character '", 
+.		=> (print (concat[Int.toString (!yylineno), ".",
+				  Int.toString (!yycolno),
+				  ": illegal character '", 
 				  String.toCString yytext, "'\n"]);
 		    continue());
 

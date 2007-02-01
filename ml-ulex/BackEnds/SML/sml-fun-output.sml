@@ -38,6 +38,7 @@ structure SMLFunOutput : OUTPUT =
     val hasyyunicode= has "yyunicode"
     val hasREJECT   = has "REJECT"
     val hasyylineno = has "yylineno"
+    val hasyycolno  = has "yycolno"
     end
 
   (* map over the intervals of a symbol set *)
@@ -230,6 +231,14 @@ structure SMLFunOutput : OUTPUT =
 					  [ML_RefGet (ML_Var "yystrm")])]), 
 			     letu)
 		     else letu
+	  val letc = if hasyycolno action
+		     then ML_Let 
+			    ("yycolno", 
+			     ML_App("ref", 
+				 [ML_App ("yygetcolNo", 
+					  [ML_RefGet (ML_Var "yystrm")])]), 
+			     letl)
+		     else letl
 	  val letr = if hasREJECT action
 		     then ML_Let
 			    ("oldStrm", ML_RefGet (ML_Var "yystrm"),
@@ -239,8 +248,8 @@ structure SMLFunOutput : OUTPUT =
 				  [ML_RefPut (ML_Var "yystrm", 
 					      ML_Var "oldStrm"),
 				   ML_App("yystuck", [ML_Var "lastMatch"])],
-				letl))
-		     else letl
+				letc))
+		     else letc
 	  in  
 	    ML_NewGroup (ML_Fun (actName i, ["strm", "lastMatch"], letr, k))
 	  end

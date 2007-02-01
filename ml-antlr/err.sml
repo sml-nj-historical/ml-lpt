@@ -17,6 +17,7 @@ structure Err =
 
   (* global flag to record the existance of errors *)
     val anyErrors = ref false
+    val leftRecurs : string list ref = ref []
 
     fun abortIfErr() = if !anyErrors then raise Abort else ()
 
@@ -39,6 +40,14 @@ structure Err =
 	      "Error [", filename, ":", Int.toString p1, "-", Int.toString p2, "]: ",
 	      msg
 	    ]
+  (* left recursion detected *)
+    fun leftRecur name = 
+	if List.exists (fn n => (n = name)) (!leftRecurs)
+	then ()
+	else (
+	  leftRecurs := name::(!leftRecurs);
+	  print (String.concat 
+	    ["Left recursion detected: ", name, " -> ", name, " ...\n"]))
 
     val printDebug = ref true
 

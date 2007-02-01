@@ -21,16 +21,18 @@ structure Repair = struct
 
   type 'a repair = StreamPos.pos * 'a repair_action
 
-  fun actionToString toksToString repair = (case repair
+  fun actionToString tokToString repair = let
+    val toksToString = (String.concatWith " ") o (map tokToString)
+    in case repair
 	of Insert toks => "inserting " ^ toksToString toks
 	 | Delete toks => "deleting " ^ toksToString toks
 	 | Subst {old, new} => 
 	     "substituting " ^ toksToString new ^ " for "
 	     ^ toksToString old
 	 | FailureAt tok => "syntax error at " ^ toksToString [tok]
-       (* end case *))
+    end
 
-  fun repairToString sm toksToString (pos, repair) = 
-      (StreamPos.toString sm pos ^ ": " ^ actionToString toksToString repair)
+  fun repairToString tokToString sm (pos, repair) = 
+      (StreamPos.toString sm pos ^ ": " ^ actionToString tokToString repair)
 
 end

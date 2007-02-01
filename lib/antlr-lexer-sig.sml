@@ -1,4 +1,4 @@
-(* lexer-sig.sml
+(* antlr-lexer-sig.sml
  *
  * COPYRIGHT (c) 2006
  * John Reppy (http://www.cs.uchicago.edu/~jhr)
@@ -9,7 +9,7 @@
  * by ml-antlr.
  *)
 
-signature LEXER = sig
+signature ANTLR_LEXER = sig
 
   type strm
   type pos = StreamPos.pos

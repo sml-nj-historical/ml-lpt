@@ -1,4 +1,5 @@
-structure Tok = struct
+structure 
+MLULexTokens = struct
 
     datatype token = EOF
       | BOGUS
@@ -6,7 +7,7 @@ structure Tok = struct
       | ID of string
       | UCHAR of Word32.word
       | CHAR of char
-      | REPEAT of int
+      | INT of int
       | ASCII8
       | ASCII7
       | UTF8
@@ -38,6 +39,8 @@ structure Tok = struct
       | AMP
       | BAR
 
+    val allToks = [EOF, BOGUS, ASCII8, ASCII7, UTF8, KW_charset, KW_let, KW_states, KW_name, KW_defs, EQ, DARROW, DASH, CARAT, COMMA, SLASH, GT, LT, RCB, LCB, RSB, LSB, RP, LP, SEMI, QUERY, STAR, PLUS, DOLLAR, DOT, AMP, BAR]
+
     fun toString tok =
 (case (tok)
  of (EOF) => "EOF"
@@ -46,7 +49,7 @@ structure Tok = struct
   | (ID(_)) => "ID"
   | (UCHAR(_)) => "UCHAR"
   | (CHAR(_)) => "CHAR"
-  | (REPEAT(_)) => "REPEAT"
+  | (INT(_)) => "INT"
   | (ASCII8) => "ascii8"
   | (ASCII7) => "ascii7"
   | (UTF8) => "utf8"
@@ -86,7 +89,7 @@ structure Tok = struct
   | (ID(_)) => false
   | (UCHAR(_)) => false
   | (CHAR(_)) => false
-  | (REPEAT(_)) => false
+  | (INT(_)) => false
   | (ASCII8) => false
   | (ASCII7) => false
   | (UTF8) => false
@@ -120,68 +123,25 @@ structure Tok = struct
 (* end case *))
 
 
-end (* structure Tok *)
+  fun toksToString toks = String.concatWith " " (map toString toks)
 
-signature LEXER = sig
-
-  type strm
-  type pos
-
-  val getPos : strm -> pos
-
-end (* signature LEXER *)
-
-signature REPAIRABLE = sig
-
-  type T
-  datatype repair
-    = Deletion
-    | Insertion of Tok.token
-    | Substitution of Tok.token
-  exception RepairableError
-
-  val farEnoughWindow : {
-	startAt : T,
-	endAt : T
-      } -> bool
-
-  val farEnoughRepair : {
-	startAt : T,
-	endAt : T
-      } -> bool
-
-  val skip : T * int -> T 
-  val isEmpty : T -> bool
-
-  val chooseRepair : {
-	startAt : T,
-	endAt : T,
-	try : T -> T
-      } -> {
-        errorAt : T, 
-	repair : repair,
-	repaired : T
-      } option
+  fun isEOF EOF = true
+    | isEOF _ = false
 
 end
 
-functor Parser(Lex : LEXER)(* : sig
+functor MLULexParseFn(Lex : ANTLR_LEXER) = struct
 
-    datatype repair_action
-      = Insert of Tok.token list
-      | Delete of Tok.token list
-      | Subst of {
-	    old : Tok.token list, 
-	    new : Tok.token list
-	}
+  local
+    structure Tok = 
+MLULexTokens
+    infix :==
 
-    val parse : 
-
-  end *) = struct
+    type 'a refcell = (unit -> 'a) * ('a -> unit)
+    fun (r, w) :== n = w n
+    fun !! (r, w) = r()
 
     structure UserCode = struct
-
-      type antlr_annotation = unit
 
  
   structure LS = LexSpec
@@ -193,578 +153,151 @@ functor Parser(Lex : LEXER)(* : sig
   structure SIS = RE.SymSet
 
   fun listToASet ls = AtomSet.addList (AtomSet.empty, ls)
-
   fun charToSym c = Word32.fromInt (Char.ord c)
 
   fun flip (x, y) = (y, x)
 
-  type antlr_annotation = (Lex.pos * Lex.pos) * string
 
 
-
-fun decls_PROD_1_ACT (env, SEMI, decl, spec, decls, SEMI_SPAN : (Lex.pos * Lex.pos), decl_SPAN : (Lex.pos * Lex.pos), decls_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun decls_PROD_1_ACT (env, SEMI, decl, spec, decls, SEMI_SPAN : (Lex.pos * Lex.pos), decl_SPAN : (Lex.pos * Lex.pos), decls_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( decls)
-fun decls_PROD_2_ACT (env, spec, addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun decls_PROD_2_ACT (env, spec, FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( spec)
-fun decl_PROD_1_ACT (env, spec, directive, directive_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun decl_PROD_1_ACT (env, spec, directive, directive_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( let val (conf', env') = directive
 	  in 
 	    (LS.updConf (spec, conf'),
 	     env')
 	  end)
-fun decl_PROD_2_ACT (env, CODE, spec, KW_defs, CODE_SPAN : (Lex.pos * Lex.pos), KW_defs_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun decl_PROD_2_ACT (env, CODE, spec, KW_defs, CODE_SPAN : (Lex.pos * Lex.pos), KW_defs_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( LS.updDecls (spec, CODE), env)
-fun decl_PROD_3_ACT (env, rule, spec, rule_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun decl_PROD_3_ACT (env, rule, spec, rule_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( LS.addRule (spec, rule), env)
-fun directive_PROD_1_ACT (EQ, ID, re, env, conf, KW_let, EQ_SPAN : (Lex.pos * Lex.pos), ID_SPAN : (Lex.pos * Lex.pos), re_SPAN : (Lex.pos * Lex.pos), KW_let_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun directive_PROD_1_ACT (EQ, ID, re, env, conf, KW_let, EQ_SPAN : (Lex.pos * Lex.pos), ID_SPAN : (Lex.pos * Lex.pos), re_SPAN : (Lex.pos * Lex.pos), KW_let_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( conf, AMap.insert (env, Atom.atom ID, re))
-fun directive_PROD_2_directive_subrule1_PROD_1_ACT (ID, env, conf, COMMA, KW_states, ID_SPAN : (Lex.pos * Lex.pos), COMMA_SPAN : (Lex.pos * Lex.pos), KW_states_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun directive_PROD_2_directive_subrule1_PROD_1_ACT (ID, env, conf, COMMA, KW_states, ID_SPAN : (Lex.pos * Lex.pos), COMMA_SPAN : (Lex.pos * Lex.pos), KW_states_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( ID)
-fun directive_PROD_2_ACT (SR, env, conf, KW_states, SR_SPAN : (Lex.pos * Lex.pos), KW_states_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun directive_PROD_2_ACT (SR, env, conf, KW_states, SR_SPAN : (Lex.pos * Lex.pos), KW_states_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( LS.updStartStates (conf, listToASet (map Atom.atom SR)), 
 	  env)
-fun directive_PROD_3_directive_subrule1_PROD_1_ACT (env, UTF8, conf, KW_charset, UTF8_SPAN : (Lex.pos * Lex.pos), KW_charset_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun directive_PROD_3_directive_subrule1_PROD_1_ACT (env, UTF8, conf, KW_charset, UTF8_SPAN : (Lex.pos * Lex.pos), KW_charset_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( LS.updClamp (conf, LS.NO_CLAMP), env)
-fun directive_PROD_3_directive_subrule1_PROD_2_ACT (env, conf, ASCII7, KW_charset, ASCII7_SPAN : (Lex.pos * Lex.pos), KW_charset_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun directive_PROD_3_directive_subrule1_PROD_2_ACT (env, conf, ASCII7, KW_charset, ASCII7_SPAN : (Lex.pos * Lex.pos), KW_charset_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   (  LS.updClamp (conf, LS.CLAMP127), env)
-fun directive_PROD_3_directive_subrule1_PROD_3_ACT (env, conf, ASCII8, KW_charset, ASCII8_SPAN : (Lex.pos * Lex.pos), KW_charset_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun directive_PROD_3_directive_subrule1_PROD_3_ACT (env, conf, ASCII8, KW_charset, ASCII8_SPAN : (Lex.pos * Lex.pos), KW_charset_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   (  LS.updClamp (conf, LS.CLAMP255), env)
-fun directive_PROD_4_ACT (ID, env, conf, KW_name, ID_SPAN : (Lex.pos * Lex.pos), KW_name_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun directive_PROD_4_ACT (ID, env, conf, KW_name, ID_SPAN : (Lex.pos * Lex.pos), KW_name_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( LS.updStructName (conf, ID), env)
-fun rule_PROD_1_rule_subrule1_PROD_1_subrule1_subrule1_PROD_1_ACT (ID, LT, env, COMMA, ID_SPAN : (Lex.pos * Lex.pos), LT_SPAN : (Lex.pos * Lex.pos), COMMA_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun rule_PROD_1_rule_subrule1_PROD_1_subrule1_subrule1_PROD_1_ACT (ID, LT, env, COMMA, ID_SPAN : (Lex.pos * Lex.pos), LT_SPAN : (Lex.pos * Lex.pos), COMMA_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( ID)
-fun rule_PROD_1_ACT (SR, re, env, CODE, DARROW, SR_SPAN : (Lex.pos * Lex.pos), re_SPAN : (Lex.pos * Lex.pos), CODE_SPAN : (Lex.pos * Lex.pos), DARROW_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun rule_PROD_1_ACT (SR, re, env, CODE, DARROW, SR_SPAN : (Lex.pos * Lex.pos), re_SPAN : (Lex.pos * Lex.pos), CODE_SPAN : (Lex.pos * Lex.pos), DARROW_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( (Option.map (listToASet o (map Atom.atom)) SR, re), CODE)
-fun or_re_PROD_1_ACT (SR, env, and_re, SR_SPAN : (Lex.pos * Lex.pos), and_re_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun or_re_PROD_1_ACT (SR, env, and_re, SR_SPAN : (Lex.pos * Lex.pos), and_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( foldl (RE.mkOr o flip) and_re SR)
-fun and_re_PROD_1_ACT (SR, env, not_re, SR_SPAN : (Lex.pos * Lex.pos), not_re_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun and_re_PROD_1_ACT (SR, env, not_re, SR_SPAN : (Lex.pos * Lex.pos), not_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( foldl (RE.mkAnd o flip) not_re SR)
-fun not_re_PROD_1_ACT (env, cat_re, CARAT, cat_re_SPAN : (Lex.pos * Lex.pos), CARAT_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun not_re_PROD_1_ACT (env, cat_re, CARAT, cat_re_SPAN : (Lex.pos * Lex.pos), CARAT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( RE.mkNot cat_re)
-fun cat_re_PROD_1_ACT (SR, env, post_re, SR_SPAN : (Lex.pos * Lex.pos), post_re_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun cat_re_PROD_1_ACT (SR, env, post_re, SR_SPAN : (Lex.pos * Lex.pos), post_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( foldl (RE.mkConcat o flip) post_re SR)
-fun post_re_PROD_1_post_re_subrule1_PROD_1_ACT (env, prim_re, QUERY, prim_re_SPAN : (Lex.pos * Lex.pos), QUERY_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun post_re_PROD_1_post_re_subrule1_PROD_1_ACT (env, prim_re, QUERY, prim_re_SPAN : (Lex.pos * Lex.pos), QUERY_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( RE.mkOpt)
-fun post_re_PROD_1_post_re_subrule1_PROD_2_ACT (env, STAR, prim_re, STAR_SPAN : (Lex.pos * Lex.pos), prim_re_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun post_re_PROD_1_post_re_subrule1_PROD_2_ACT (env, STAR, prim_re, STAR_SPAN : (Lex.pos * Lex.pos), prim_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( RE.mkClosure)
-fun post_re_PROD_1_post_re_subrule1_PROD_3_ACT (env, PLUS, prim_re, PLUS_SPAN : (Lex.pos * Lex.pos), prim_re_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun post_re_PROD_1_post_re_subrule1_PROD_3_ACT (env, PLUS, prim_re, PLUS_SPAN : (Lex.pos * Lex.pos), prim_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( fn re => RE.mkAtLeast (re, 1))
-fun post_re_PROD_1_post_re_subrule1_PROD_4_ACT (env, prim_re, REPEAT, prim_re_SPAN : (Lex.pos * Lex.pos), REPEAT_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  ( fn re => RE.mkRep (re, REPEAT, REPEAT))
-fun post_re_PROD_1_post_re_subrule1_PROD_5_ACT (env, prim_re, prim_re_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun post_re_PROD_1_post_re_subrule1_PROD_4_ACT (INT, LCB, RCB, env, prim_re, INT_SPAN : (Lex.pos * Lex.pos), LCB_SPAN : (Lex.pos * Lex.pos), RCB_SPAN : (Lex.pos * Lex.pos), prim_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
+  ( fn re => RE.mkRep (re, INT, INT))
+fun post_re_PROD_1_post_re_subrule1_PROD_5_ACT (LCB, RCB, env, INT1, INT2, prim_re, COMMA, LCB_SPAN : (Lex.pos * Lex.pos), RCB_SPAN : (Lex.pos * Lex.pos), INT1_SPAN : (Lex.pos * Lex.pos), INT2_SPAN : (Lex.pos * Lex.pos), prim_re_SPAN : (Lex.pos * Lex.pos), COMMA_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
+  ( fn re => RE.mkRep (re, INT1, INT2))
+fun post_re_PROD_1_post_re_subrule1_PROD_6_ACT (env, prim_re, prim_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( fn x => x)
-fun post_re_PROD_1_ACT (SR, env, prim_re, SR_SPAN : (Lex.pos * Lex.pos), prim_re_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun post_re_PROD_1_ACT (SR, env, prim_re, SR_SPAN : (Lex.pos * Lex.pos), prim_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( SR prim_re)
-fun prim_re_PROD_1_ACT (ID, env, ID_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun prim_re_PROD_1_ACT (ID, LCB, RCB, env, ID_SPAN : (Lex.pos * Lex.pos), LCB_SPAN : (Lex.pos * Lex.pos), RCB_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( case (AMap.find (env, Atom.atom ID))
 	   of SOME re => re
-	    | NONE => (addAnnotation (ID_SPAN, String.concat [
-		"Error: {", ID, "} is undefined."]);
+	    | NONE => (errs :== (ID_SPAN, String.concat [
+		"Error: {", ID, "} is undefined."])::(!!errs);
 		RE.any))
-fun prim_re_PROD_3_ACT (env, char, char_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun prim_re_PROD_3_ACT (env, char, char_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( RE.mkSym char)
-fun prim_re_PROD_4_ACT (DOT, env, DOT_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun prim_re_PROD_4_ACT (DOT, env, DOT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( RE.any)
-fun prim_re_PROD_5_prim_re_subrule1_PROD_1_ACT (LSB, env, CARAT, LSB_SPAN : (Lex.pos * Lex.pos), CARAT_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun prim_re_PROD_5_prim_re_subrule1_PROD_1_ACT (LSB, env, CARAT, LSB_SPAN : (Lex.pos * Lex.pos), CARAT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( SIS.complement)
-fun prim_re_PROD_5_prim_re_subrule1_PROD_2_ACT (LSB, env, LSB_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun prim_re_PROD_5_prim_re_subrule1_PROD_2_ACT (LSB, env, LSB_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( fn x => x)
-fun prim_re_PROD_5_prim_re_subrule2_PROD_1_ACT (LSB, SR1, env, DASH, char1, char2, LSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), DASH_SPAN : (Lex.pos * Lex.pos), char1_SPAN : (Lex.pos * Lex.pos), char2_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun prim_re_PROD_5_prim_re_subrule2_PROD_1_ACT (LSB, SR1, env, DASH, char1, char2, LSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), DASH_SPAN : (Lex.pos * Lex.pos), char1_SPAN : (Lex.pos * Lex.pos), char2_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( 
 	    if char1 <= char2 then
 	       SIS.interval (char1, char2)
-	     else (addAnnotation (FULL_SPAN, String.concat [
+	     else (errs :== (FULL_SPAN, String.concat [
 	       "Error: malformed character class: ",
 	       Word32.toString char1, " - ",
-	       Word32.toString char2, "."]);
+	       Word32.toString char2, "."])::(!!errs);
 	       SIS.universe))
-fun prim_re_PROD_5_prim_re_subrule2_PROD_2_ACT (LSB, SR1, env, char, LSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), char_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun prim_re_PROD_5_prim_re_subrule2_PROD_2_ACT (LSB, SR1, env, char, LSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), char_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( SIS.singleton char)
-fun prim_re_PROD_5_ACT (LSB, RSB, SR1, SR2, env, LSB_SPAN : (Lex.pos * Lex.pos), RSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), SR2_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun prim_re_PROD_5_ACT (LSB, RSB, SR1, SR2, env, LSB_SPAN : (Lex.pos * Lex.pos), RSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), SR2_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( RE.mkSymSet (SR1 (foldl SIS.union (hd SR2) (tl SR2))))
-fun char_PROD_1_ACT (CHAR, CHAR_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun char_PROD_1_ACT (CHAR, CHAR_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( charToSym CHAR)
-fun ARGS_1 () = 
+fun ARGS_1 (errs) = 
   (LS.mkSpec(), AMap.empty)
-fun ARGS_3 (env, spec) = 
+fun ARGS_3 (env, spec, errs) = 
   (spec, env)
-fun ARGS_4 (env, SEMI, decl, spec) = 
+fun ARGS_4 (env, SEMI, decl, spec, errs) = 
   (decl)
-fun ARGS_7 (env, spec) = 
+fun ARGS_7 (env, spec, errs) = 
   (LS.getConf spec, env)
-fun ARGS_10 (env, spec) = 
+fun ARGS_10 (env, spec, errs) = 
   (env)
-fun ARGS_12 (EQ, ID, env, conf, KW_let) = 
+fun ARGS_12 (EQ, ID, env, conf, KW_let, errs) = 
   (env)
-fun ARGS_21 (SR, env) = 
+fun ARGS_21 (SR, env, errs) = 
   (env)
-fun ARGS_22 (env) = 
+fun ARGS_22 (env, errs) = 
   (env)
-fun ARGS_25 (BAR, env, and_re) = 
+fun ARGS_25 (BAR, env, and_re, errs) = 
   (env)
-fun ARGS_24 (env) = 
+fun ARGS_24 (env, errs) = 
   (env)
-fun ARGS_28 (AMP, env, not_re) = 
+fun ARGS_28 (AMP, env, not_re, errs) = 
   (env)
-fun ARGS_27 (env) = 
+fun ARGS_27 (env, errs) = 
   (env)
-fun ARGS_30 (env, CARAT) = 
+fun ARGS_30 (env, CARAT, errs) = 
   (env)
-fun ARGS_31 (env) = 
+fun ARGS_31 (env, errs) = 
   (env)
-fun ARGS_34 (env, post_re) = 
+fun ARGS_34 (env, post_re, errs) = 
   (env)
-fun ARGS_33 (env) = 
+fun ARGS_33 (env, errs) = 
   (env)
-fun ARGS_36 (env) = 
+fun ARGS_36 (env, errs) = 
   (env)
-fun ARGS_43 (LP, env) = 
+fun ARGS_44 (LP, env, errs) = 
   (env)
 
+      val ehargs = 
+{errs =  []} : {errs : (StreamPos.span*string) list}
     end
 
-    type span = Lex.pos * Lex.pos
+    structure R = RepairableStrm(Tok)(Lex)
+    structure Err = ErrHandler(R)
+    structure EBNF = EBNF(R)
 
-    (* "wrapped" streams, which track the number of tokens read
-     * and allow "prepending" a sequence of tokens
-     *)
-    structure WStream = struct
-
-      datatype 'a wstream = WSTREAM of {
-	prefix : (Tok.token * span) list,
-	curTok : int,
-	strm : 'a,
-	lex : 'a -> (Tok.token * span * 'a) option
-      }
-
-      fun wrap (strm, lex) =  WSTREAM {prefix = [], strm = strm, curTok = 0, lex = lex}
-      fun unwrap (WSTREAM {strm, ...}) = strm
-
-      fun get1 (WSTREAM {prefix = (tok, span)::toks, strm, curTok, lex}) = 
-	    (tok, span, WSTREAM {prefix = toks, strm = strm, lex = lex, 
-				 curTok = curTok + 1})
-	| get1 (WSTREAM {prefix = [], strm, curTok, lex}) = let
-	    val (tok, span, strm') = case lex strm
-		of SOME x => x
-		 | NONE => (Tok.EOF, (Lex.getPos strm, Lex.getPos strm), strm)
-	    in (tok, span, WSTREAM {prefix = [], lex = lex, 
-				    strm = strm', curTok = curTok + 1})
-	    end
-
-      fun prepend (toks, WSTREAM {prefix, strm, curTok, lex}) = 
-	    WSTREAM {prefix = toks @ prefix, strm = strm, lex = lex,
-		     curTok = curTok - (List.length toks)}
-
-      fun subtract (WSTREAM {curTok = p1, ...}, WSTREAM {curTok = p2, ...}) = 
-	    p1 - p2
-
-      fun getDiff (ws1, ws2) =
-	    if subtract (ws1, ws2) <= 0 then []
-	    else let 
-		val (t, s, ws2') = get1 ws2
-	        in (t, s) :: (getDiff (ws1, ws2'))
-                end
-
-      fun getPos ws = let val (_, (left, _), _) = get1 ws in left end
-      fun getSpan ws = (getPos ws, getPos ws)
-
-    end (* structure WStream *)
-    
-    structure EBNF = struct
-
-      fun optional (pred, parse, strm) = 
-	    if pred strm
-    	    then let
-	      val (y, span, strm') = parse strm
-	      in 
-		(SOME y, span, strm')
-	      end
-	    else (NONE, WStream.getSpan strm, strm)
-
-      fun closure (pred, parse, strm) = let
-            fun iter (strm, (left, right), ys) = 
-	          if pred strm
-		  then let
-		    val (y, (_, right'), strm') = parse strm
-		    in iter (strm', (left, right'), y::ys)
-		    end
-		  else (List.rev ys, (left, right), strm)
-            in
-              iter (strm, WStream.getSpan strm, [])
-            end
-
-      fun posclos (pred, parse, strm) = let
-            val (y, (left, _), strm') = parse strm
-	    val (ys, (_, right), strm'') = closure (pred, parse, strm')
-            in
-              (y::ys, (left, right), strm'')
-            end
-
-    end (* structure EBNF *)
-
-    structure RepairableStrm : REPAIRABLE = struct
-
-      structure WS = WStream
-      type T = Lex.strm WS.wstream
-      exception RepairableError
-
-      val minAdvance = 1
-
-      fun farEnoughWindow {startAt, endAt} =
-	    WS.subtract (endAt, startAt) > 15
-
-      fun farEnoughRepair {startAt, endAt} =
-	    WS.subtract (endAt, startAt) > minAdvance + 1
-
-      datatype repair
-	= Deletion
-	| Insertion of Tok.token
-	| Substitution of Tok.token
-
-    val allRepairs = [Deletion, Insertion Tok.EOF, Insertion Tok.BOGUS, Insertion Tok.ASCII8, Insertion Tok.ASCII7, Insertion Tok.UTF8, Insertion Tok.KW_charset, Insertion Tok.KW_let, Insertion Tok.KW_states, Insertion Tok.KW_name, Insertion Tok.KW_defs, Insertion Tok.EQ, Insertion Tok.DARROW, Insertion Tok.DASH, Insertion Tok.CARAT, Insertion Tok.COMMA, Insertion Tok.SLASH, Insertion Tok.GT, Insertion Tok.LT, Insertion Tok.RCB, Insertion Tok.LCB, Insertion Tok.RSB, Insertion Tok.LSB, Insertion Tok.RP, Insertion Tok.LP, Insertion Tok.SEMI, Insertion Tok.QUERY, Insertion Tok.STAR, Insertion Tok.PLUS, Insertion Tok.DOLLAR, Insertion Tok.DOT, Insertion Tok.AMP, Insertion Tok.BAR, Substitution Tok.EOF, Substitution Tok.BOGUS, Substitution Tok.ASCII8, Substitution Tok.ASCII7, Substitution Tok.UTF8, Substitution Tok.KW_charset, Substitution Tok.KW_let, Substitution Tok.KW_states, Substitution Tok.KW_name, Substitution Tok.KW_defs, Substitution Tok.EQ, Substitution Tok.DARROW, Substitution Tok.DASH, Substitution Tok.CARAT, Substitution Tok.COMMA, Substitution Tok.SLASH, Substitution Tok.GT, Substitution Tok.LT, Substitution Tok.RCB, Substitution Tok.LCB, Substitution Tok.RSB, Substitution Tok.LSB, Substitution Tok.RP, Substitution Tok.LP, Substitution Tok.SEMI, Substitution Tok.QUERY, Substitution Tok.STAR, Substitution Tok.PLUS, Substitution Tok.DOLLAR, Substitution Tok.DOT, Substitution Tok.AMP, Substitution Tok.BAR]
-
-
-      fun applyRepair ([], repair) = 
-	    raise Fail "applyRepair: expected nonempty working list"
-	| applyRepair (working, Deletion) = tl working
-	| applyRepair ((t, span)::working, Insertion tok) = 
-	    (tok, (#2 span, #2 span)) :: (t, span) :: working
-	| applyRepair ((_, span)::working, Substitution tok) = 
-	    (tok, span) :: working
-
-      fun getWorking (strm, n, accum) = 
-	    if n = 0 
-	    then (strm, rev accum)
-	    else let
-	      val (tok, s, strm') = WS.get1 strm
-	      in case tok
-		  of Tok.EOF => (strm', rev ((Tok.EOF, WStream.getSpan strm') :: accum))
-		   | _ => getWorking (strm', n-1, (tok, s)::accum)
-	      end
-
-      fun skip (strm, 0) = strm
-	| skip (strm, n) = skip (#3 (WS.get1 strm), n - 1)
-      fun isEmpty strm = (case (#1 (WS.get1 strm))
-			   of Tok.EOF => true
-			    | _ => false)
-
-      fun involvesKW (r, t) = (case r
-            of Insertion t' => Tok.isKW t'
-	     | Deletion => Tok.isKW t
-	     | Substitution t' => Tok.isKW t orelse Tok.isKW t'
-           (* end case *))
-
-      infix >>
-      fun (Insertion _) >> _ = true
-	| Deletion >> _ = true
-	| _ >> _ = false
-
-      fun chooseCand (c1, c2) = let
-	    val (r1, _, _, score1, kw1) = c1
-	    val (r2, _, _, score2, kw2) = c2
-            in if score1 > score2 then c1
-	       else if score2 > score1 then c2
-	       else if r1 >> r2 then c1
-	       else if r2 >> r1 then c2
-	       else if kw1 = false then c1
-	       else c2 
-            end
-
-      fun chooseRepair {startAt, endAt, try} = let
-	    val scoreOffset = WS.subtract (endAt, startAt)
-	    val (endAt', working) = getWorking (startAt, scoreOffset + 5, [])
-	    fun tryRepairs (prefix, working, repairs, best) = (case (working, repairs)
-	      of ([], _) => (case best
-			      of SOME (r, prefixLen, strm, _, _) => (*
-print (case r
-	of Deletion => "DEL\n"
-	 | Insertion t => "INS " ^ Tok.toString t ^ "\n"
-	 | Substitution t => "SUB " ^ Tok.toString t ^ "\n"); *)
-				   SOME {
-				     errorAt = skip (startAt, prefixLen),
-				     repair = r,
-				     repaired = strm
-			           }
-			       | NONE => NONE
-			     (* end case *))
-	       | (t::ts, []) => 
-		   tryRepairs (prefix @ [t], ts, allRepairs, best)
-	       | (_, r::rs) => let
-		   val strm = WS.prepend (prefix @ (applyRepair (working, r)), endAt')
-		   val strm' = try strm
- 		   val score = WS.subtract (strm', strm)
-			         + (case r
-				     of Deletion => 1
-				      | Insertion _ => ~1
-				      | Substitution _ => 0)
-			         - scoreOffset
-		   val kw = involvesKW (r, #1 (hd working))
-		   val cand = (r, List.length prefix, strm, score, kw)
-		   val valid = if kw
-			       then score > minAdvance + 2
-			       else score > minAdvance 
-		   val best' = if valid then 
-				 case best
-				  of NONE => SOME cand
-				   | SOME c => SOME (chooseCand (c, cand))
-			       else best
-		   in
-		     tryRepairs (prefix, working, rs, best')
-		   end
-             (* end case *))
-            in
-	      tryRepairs ([], working, allRepairs, NONE)
-	    end
-	    
-
-    end (* structure RepairableStrm *)
-
-    functor ErrHandlerFn(R : REPAIRABLE) : sig
-
-      type err_handler
-      val mkErrHandler : unit -> err_handler
-      val getAnns	: err_handler -> UserCode.antlr_annotation list
-      val setAnns	: err_handler * UserCode.antlr_annotation list -> unit
-      val addAnnotation : err_handler -> UserCode.antlr_annotation -> unit
-      val whileDisabled : err_handler -> (unit -> 'a) -> 'a
-
-      datatype repair 
-	= Primary of {
-	    errorAt : R.T,
-	    repair : R.repair
-          }
-	| Secondary of {
-	    deleteFrom : R.T,
-	    deleteTo : R.T
-	  }
-
-(*      val wrap   : err_handler -> (R.T -> ('a * R.T)) -> R.T -> ('a * R.T) *)
-      val wrap   : err_handler -> (R.T -> 'a) -> R.T -> 'a
-      val launch : err_handler -> (R.T -> ('a * 'b * R.T)) -> 
-		   R.T -> ('a * R.T * repair list * UserCode.antlr_annotation list)
-
-    end = struct
-
-      type repair_cont = R.T option SMLofNJ.Cont.cont 
-      type retry_cont  = R.T        SMLofNJ.Cont.cont
-
-      exception JumpOut of (R.T * retry_cont) list
-
-      datatype repair 
-	= Primary of {
-	    errorAt : R.T,
-	    repair : R.repair
-          }
-	| Secondary of {
-	    deleteFrom : R.T,
-	    deleteTo : R.T
-	  }
-
-      datatype err_handler = EH of {
-	cont : repair_cont option ref,
-	enabled : bool ref,
-	repairs : repair list ref,
-	annotations : UserCode.antlr_annotation list ref
-      }
-
-      fun getCont    (EH {cont,    ...}) = !cont
-      fun getEnabled (EH {enabled, ...}) = !enabled
-      fun getRepairs (EH {repairs, ...}) = !repairs
-      fun getAnns    (EH {annotations, ...}) = !annotations
-
-      fun setCont    (EH {cont,    ...}, n) = cont := n
-      fun setEnabled (EH {enabled, ...}, n) = enabled := n
-      fun addRepair  (EH {repairs, ...}, n) = repairs := (!repairs) @ [n]
-      fun setAnns    (EH {annotations, ...}, n) = annotations := n
-
-      fun mkErrHandler () = EH {cont = ref NONE, 
-				enabled = ref true,
-				repairs = ref [],
-			        annotations = ref []}
-
-      fun addAnnotation eh a = setAnns (eh, a :: (getAnns eh))
-
-      fun whileDisabled eh f = let
-	    val oldEnabled = getEnabled eh
-            in
-	      setEnabled (eh, false);
-	      f () before setEnabled (eh, oldEnabled)
-            end
-
-      fun throwIfEH (eh, t) = 
-	    if getEnabled eh then 
-	      Option.app (fn k => SMLofNJ.Cont.throw k (SOME t)) (getCont eh)
-	    else ()
-
-      fun wrap eh f t = if getEnabled eh then let
-	    val cont_ref : retry_cont option ref = ref NONE
-	    val anns = getAnns eh
-	    val t' = SMLofNJ.Cont.callcc (fn k => (cont_ref := SOME k; t))
-	    val retry = (t', valOf (!cont_ref))
-            in
-	      setAnns (eh, anns);
-	      f t'
-	      handle R.RepairableError => (
-		       throwIfEH (eh, t');
-		       raise JumpOut [retry])
-		   | JumpOut stack => (
-		       throwIfEH (eh, t');
-		       raise JumpOut (retry::stack))
-            end
-          else f t
-
-      fun findWindow (stack) = let
-	    val revStack = rev stack
-	    val rightMost = hd revStack
-	    fun TOf (t, _) = t
-	    fun find [] = raise (Fail "BUG: findWindow given an empty stack")
-	      | find [top] = (top, rightMost)
-	      | find (top::stack) = 
-		  if R.farEnoughWindow {startAt = TOf top, endAt = TOf rightMost}
-		  then (top, rightMost)
-		  else find stack
-            in
-	      find revStack
-            end
-
-      fun tryRepair (eh, cont) t = 
-	    (case SMLofNJ.Cont.callcc (fn k => (setCont (eh, SOME k); NONE))
-	      of NONE => 
-		   (* first time through, try the repair *)
-		   SMLofNJ.Cont.throw cont t		
-	       | SOME t' => 
-		   (* second time through, return the new right-most T *)
-		   (setCont (eh, NONE); t')
-	     (* end case *))
-
-      fun primaryRepair (eh, stack) = let
-	    val ((leftT, leftCont), (rightT, rightCont)) = 
-		  findWindow stack
-	    val repair = R.chooseRepair {
-			     startAt = leftT,
-			     endAt = rightT,
-			     try = tryRepair (eh, leftCont)
-			   }
-            in case repair
-		of SOME {errorAt, repair, repaired} => 
-		     SOME (Primary {errorAt = errorAt, repair = repair}, 
-			   leftCont, repaired)
-		 | NONE => NONE
-            end
-
-      fun secondaryRepair (eh, revStack) = let
-	    val stack = rev revStack
-	    val (errStrm, errCont) = hd stack
-	    fun try ((strm, cont), strm', next) = let
-	          val strm'' = tryRepair (eh, cont) strm'
-	          in
-	            if R.farEnoughRepair {startAt = strm', endAt = strm''}
-		    then SOME (Secondary {
-			   deleteFrom = strm,
-			   deleteTo = strm'
-			 }, cont, strm')
-		    else next()
-	          end
-	    fun rightRepair (strm, n) = 
-		  if n = 0 then NONE
-		  else let 
-		    val strm' = R.skip (strm, 1)
-		    in 
-		      try (hd stack, strm', fn () => rightRepair (strm', n-1))
-		    end
-	    fun leftRightRepair (strm, []) = 
-		  if R.isEmpty strm then
-		    raise Fail "Unrecoverable parse error"
-		  else leftRightRepair (R.skip (strm, 1), stack)
-	      | leftRightRepair (strm, top::stack) = 
-		  try (top, strm, fn () => leftRightRepair (strm, stack))
-            in
-	      case rightRepair (errStrm, 5)
-	       of SOME r => r
-		| _      => valOf (leftRightRepair (errStrm, []))
-            end
-
-      fun repair (eh, stack) = (case primaryRepair (eh, stack)
-	    of SOME r => r
-	     | NONE => secondaryRepair (eh, stack)
-           (* end case *))
-
-      fun launch eh f t = let
-	    val (x, _, t') = wrap eh f t 
-		handle JumpOut stack => let
-		  val (r, cont, t') = repair (eh, stack)
-		  in
-		    addRepair (eh, r);
-		    SMLofNJ.Cont.throw cont t'
-		  end
-            in
-	      throwIfEH (eh, t');
-	      (x, t', getRepairs eh, getAnns eh)
-            end
-
-    end (* functor ErrHandlerFn *)
-
-    structure Err = ErrHandlerFn(RepairableStrm)
-
-    fun pretryProds eh prods strm = let
-	fun try [] = raise RepairableStrm.RepairableError
-	  | try (prod :: prods) = let 
-	      val anns = Err.getAnns eh
-	      in
-	        Err.whileDisabled eh (fn () => prod strm)
-		handle _ => 
-		  (Err.setAnns (eh, anns);
-		   try (prods))
-	      end
-        in
-          try prods
-        end
-
-    exception ParseError = RepairableStrm.RepairableError
-
-    datatype repair_action
-      = Insert of Tok.token list
-      | Delete of Tok.token list
-      | Subst of {
-	    old : Tok.token list, 
-	    new : Tok.token list
-	}
-
-    structure R = RepairableStrm
-
-    fun unwrapErr (Err.Primary {errorAt, repair = R.Deletion}) =
-          (WStream.getPos errorAt, Delete [(#1 (WStream.get1 errorAt))])
-      | unwrapErr (Err.Primary {errorAt, repair = R.Insertion t}) =
-          (WStream.getPos errorAt, Insert [t])
-      | unwrapErr (Err.Primary {errorAt, repair = R.Substitution t}) = 
-          (WStream.getPos errorAt, 
-  	   Subst {
-  	     old = [(#1 (WStream.get1 errorAt))],
-  	     new = [t]
-           })
-      | unwrapErr (Err.Secondary {deleteFrom, deleteTo}) = 
-          (WStream.getPos deleteFrom, 
-  	   Delete (map #1 (WStream.getDiff (deleteTo, deleteFrom))))
-
-    fun toksToString toks = String.concatWith " " (map Tok.toString toks)
-
-    fun repairToString repair = (case repair
-          of Insert toks => "inserting " ^ toksToString toks
-	   | Delete toks => "deleting " ^ toksToString toks
-	   | Subst {old, new} => 
-	       "substituting " ^ toksToString new ^ " for "
-	       ^ toksToString old
-         (* end case *))
+    exception ParseError = Err.RepairableError
 
     fun mk lexFn = let
-        val eh = Err.mkErrHandler()
+        val eh = Err.mkErrHandler UserCode.ehargs
 	fun wrap f = Err.wrap eh f
 	val whileDisabled = Err.whileDisabled eh
-	val addAnnotation = Err.addAnnotation eh
-	fun tryProds (strm, prods) = 
-	      (wrap (pretryProds eh prods)) strm
-	fun unwrap (ret, strm, errors, anns) = (ret, WStream.unwrap strm, map unwrapErr errors, anns)
-	val lex = WStream.get1
+	fun tryProds (strm, prods) = (wrap (Err.tryProds eh prods)) strm
+      val errs_REFC = (fn () => #errs (Err.getState eh),fn n => let val {errs} = Err.getState eh in Err.setState (eh, {errs = n}) end)
+      fun unwrap (ret, strm, repairs, state) = (ret, R.unwrap strm, repairs, state)
+	val lex = R.get1
 val matchEOF = wrap (fn strm => (case (lex(strm))
  of (Tok.EOF, span, strm') => ((), span, strm')
   | _ => raise(ParseError)
@@ -789,8 +322,8 @@ val matchCHAR = wrap (fn strm => (case (lex(strm))
  of (Tok.CHAR(x), span, strm') => (x, span, strm')
   | _ => raise(ParseError)
 (* end case *)))
-val matchREPEAT = wrap (fn strm => (case (lex(strm))
- of (Tok.REPEAT(x), span, strm') => (x, span, strm')
+val matchINT = wrap (fn strm => (case (lex(strm))
+ of (Tok.INT(x), span, strm') => (x, span, strm')
   | _ => raise(ParseError)
 (* end case *)))
 val matchASCII8 = wrap (fn strm => (case (lex(strm))
@@ -921,14 +454,14 @@ fun char_NT (strm) = let
             val (CHAR_RES, CHAR_SPAN, strm') = matchCHAR(strm)
             val FULL_SPAN = (#1(CHAR_SPAN), #2(CHAR_SPAN))
             in
-              (UserCode.char_PROD_1_ACT (CHAR_RES, CHAR_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+              (UserCode.char_PROD_1_ACT (CHAR_RES, CHAR_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                 FULL_SPAN, strm')
             end
       fun char_PROD_2 (strm) = let
             val (UCHAR_RES, UCHAR_SPAN, strm') = matchUCHAR(strm)
             val FULL_SPAN = (#1(UCHAR_SPAN), #2(UCHAR_SPAN))
             in
-              (UCHAR_RES, FULL_SPAN, strm')
+              ((UCHAR_RES), FULL_SPAN, strm')
             end
       in
         (case (lex(strm))
@@ -938,19 +471,19 @@ fun char_NT (strm) = let
         (* end case *))
       end
 fun re_NT (env_RES) (strm) = let
-      val (or_re_RES, or_re_SPAN, strm') = (wrap (or_re_NT (UserCode.ARGS_22 (env_RES))))(strm)
+      val (or_re_RES, or_re_SPAN, strm') = (wrap (or_re_NT (UserCode.ARGS_22 (env_RES, errs_REFC))))(strm)
       val FULL_SPAN = (#1(or_re_SPAN), #2(or_re_SPAN))
       in
-        (or_re_RES, FULL_SPAN, strm')
+        ((or_re_RES), FULL_SPAN, strm')
       end
 and or_re_NT (env_RES) (strm) = let
-      val (and_re_RES, and_re_SPAN, strm') = (wrap (and_re_NT (UserCode.ARGS_24 (env_RES))))(strm)
+      val (and_re_RES, and_re_SPAN, strm') = (wrap (and_re_NT (UserCode.ARGS_24 (env_RES, errs_REFC))))(strm)
       fun subrule1_NT (strm) = let
             val (BAR_RES, BAR_SPAN, strm') = matchBAR(strm)
-            val (and_re_RES, and_re_SPAN, strm') = (wrap (and_re_NT (UserCode.ARGS_25 (BAR_RES, env_RES, and_re_RES))))(strm')
+            val (and_re_RES, and_re_SPAN, strm') = (wrap (and_re_NT (UserCode.ARGS_25 (BAR_RES, env_RES, and_re_RES, errs_REFC))))(strm')
             val FULL_SPAN = (#1(BAR_SPAN), #2(and_re_SPAN))
             in
-              (and_re_RES, FULL_SPAN, strm')
+              ((and_re_RES), FULL_SPAN, strm')
             end
       fun subrule1_PRED (strm) = (case (lex(strm))
              of (Tok.BAR, _, strm') => true
@@ -959,17 +492,17 @@ and or_re_NT (env_RES) (strm) = let
       val (SR_RES, SR_SPAN, strm') = EBNF.closure(subrule1_PRED, (wrap subrule1_NT), strm')
       val FULL_SPAN = (#1(and_re_SPAN), #2(SR_SPAN))
       in
-        (UserCode.or_re_PROD_1_ACT (SR_RES, env_RES, and_re_RES, SR_SPAN : (Lex.pos * Lex.pos), and_re_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+        (UserCode.or_re_PROD_1_ACT (SR_RES, env_RES, and_re_RES, SR_SPAN : (Lex.pos * Lex.pos), and_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
           FULL_SPAN, strm')
       end
 and and_re_NT (env_RES) (strm) = let
-      val (not_re_RES, not_re_SPAN, strm') = (wrap (not_re_NT (UserCode.ARGS_27 (env_RES))))(strm)
+      val (not_re_RES, not_re_SPAN, strm') = (wrap (not_re_NT (UserCode.ARGS_27 (env_RES, errs_REFC))))(strm)
       fun subrule1_NT (strm) = let
             val (AMP_RES, AMP_SPAN, strm') = matchAMP(strm)
-            val (not_re_RES, not_re_SPAN, strm') = (wrap (not_re_NT (UserCode.ARGS_28 (AMP_RES, env_RES, not_re_RES))))(strm')
+            val (not_re_RES, not_re_SPAN, strm') = (wrap (not_re_NT (UserCode.ARGS_28 (AMP_RES, env_RES, not_re_RES, errs_REFC))))(strm')
             val FULL_SPAN = (#1(AMP_SPAN), #2(not_re_SPAN))
             in
-              (not_re_RES, FULL_SPAN, strm')
+              ((not_re_RES), FULL_SPAN, strm')
             end
       fun subrule1_PRED (strm) = (case (lex(strm))
              of (Tok.AMP, _, strm') => true
@@ -978,29 +511,29 @@ and and_re_NT (env_RES) (strm) = let
       val (SR_RES, SR_SPAN, strm') = EBNF.closure(subrule1_PRED, (wrap subrule1_NT), strm')
       val FULL_SPAN = (#1(not_re_SPAN), #2(SR_SPAN))
       in
-        (UserCode.and_re_PROD_1_ACT (SR_RES, env_RES, not_re_RES, SR_SPAN : (Lex.pos * Lex.pos), not_re_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+        (UserCode.and_re_PROD_1_ACT (SR_RES, env_RES, not_re_RES, SR_SPAN : (Lex.pos * Lex.pos), not_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
           FULL_SPAN, strm')
       end
 and not_re_NT (env_RES) (strm) = let
       fun not_re_PROD_1 (strm) = let
             val (CARAT_RES, CARAT_SPAN, strm') = matchCARAT(strm)
-            val (cat_re_RES, cat_re_SPAN, strm') = (wrap (cat_re_NT (UserCode.ARGS_30 (env_RES, CARAT_RES))))(strm')
+            val (cat_re_RES, cat_re_SPAN, strm') = (wrap (cat_re_NT (UserCode.ARGS_30 (env_RES, CARAT_RES, errs_REFC))))(strm')
             val FULL_SPAN = (#1(CARAT_SPAN), #2(cat_re_SPAN))
             in
-              (UserCode.not_re_PROD_1_ACT (env_RES, cat_re_RES, CARAT_RES, cat_re_SPAN : (Lex.pos * Lex.pos), CARAT_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+              (UserCode.not_re_PROD_1_ACT (env_RES, cat_re_RES, CARAT_RES, cat_re_SPAN : (Lex.pos * Lex.pos), CARAT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                 FULL_SPAN, strm')
             end
       fun not_re_PROD_2 (strm) = let
-            val (cat_re_RES, cat_re_SPAN, strm') = (wrap (cat_re_NT (UserCode.ARGS_31 (env_RES))))(strm)
+            val (cat_re_RES, cat_re_SPAN, strm') = (wrap (cat_re_NT (UserCode.ARGS_31 (env_RES, errs_REFC))))(strm)
             val FULL_SPAN = (#1(cat_re_SPAN), #2(cat_re_SPAN))
             in
-              (cat_re_RES, FULL_SPAN, strm')
+              ((cat_re_RES), FULL_SPAN, strm')
             end
       in
         (case (lex(strm))
-         of (Tok.ID(_), _, strm') => not_re_PROD_2(strm)
-          | (Tok.UCHAR(_), _, strm') => not_re_PROD_2(strm)
+         of (Tok.UCHAR(_), _, strm') => not_re_PROD_2(strm)
           | (Tok.CHAR(_), _, strm') => not_re_PROD_2(strm)
+          | (Tok.LCB, _, strm') => not_re_PROD_2(strm)
           | (Tok.LSB, _, strm') => not_re_PROD_2(strm)
           | (Tok.LP, _, strm') => not_re_PROD_2(strm)
           | (Tok.DOT, _, strm') => not_re_PROD_2(strm)
@@ -1009,17 +542,17 @@ and not_re_NT (env_RES) (strm) = let
         (* end case *))
       end
 and cat_re_NT (env_RES) (strm) = let
-      val (post_re_RES, post_re_SPAN, strm') = (wrap (post_re_NT (UserCode.ARGS_33 (env_RES))))(strm)
+      val (post_re_RES, post_re_SPAN, strm') = (wrap (post_re_NT (UserCode.ARGS_33 (env_RES, errs_REFC))))(strm)
       fun subrule1_NT (strm) = let
-            val (post_re_RES, post_re_SPAN, strm') = (wrap (post_re_NT (UserCode.ARGS_34 (env_RES, post_re_RES))))(strm)
+            val (post_re_RES, post_re_SPAN, strm') = (wrap (post_re_NT (UserCode.ARGS_34 (env_RES, post_re_RES, errs_REFC))))(strm)
             val FULL_SPAN = (#1(post_re_SPAN), #2(post_re_SPAN))
             in
-              (post_re_RES, FULL_SPAN, strm')
+              ((post_re_RES), FULL_SPAN, strm')
             end
       fun subrule1_PRED (strm) = (case (lex(strm))
-             of (Tok.ID(_), _, strm') => true
-              | (Tok.UCHAR(_), _, strm') => true
+             of (Tok.UCHAR(_), _, strm') => true
               | (Tok.CHAR(_), _, strm') => true
+              | (Tok.LCB, _, strm') => true
               | (Tok.LSB, _, strm') => true
               | (Tok.LP, _, strm') => true
               | (Tok.DOT, _, strm') => true
@@ -1028,64 +561,86 @@ and cat_re_NT (env_RES) (strm) = let
       val (SR_RES, SR_SPAN, strm') = EBNF.closure(subrule1_PRED, (wrap subrule1_NT), strm')
       val FULL_SPAN = (#1(post_re_SPAN), #2(SR_SPAN))
       in
-        (UserCode.cat_re_PROD_1_ACT (SR_RES, env_RES, post_re_RES, SR_SPAN : (Lex.pos * Lex.pos), post_re_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+        (UserCode.cat_re_PROD_1_ACT (SR_RES, env_RES, post_re_RES, SR_SPAN : (Lex.pos * Lex.pos), post_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
           FULL_SPAN, strm')
       end
 and post_re_NT (env_RES) (strm) = let
-      val (prim_re_RES, prim_re_SPAN, strm') = (wrap (prim_re_NT (UserCode.ARGS_36 (env_RES))))(strm)
+      val (prim_re_RES, prim_re_SPAN, strm') = (wrap (prim_re_NT (UserCode.ARGS_36 (env_RES, errs_REFC))))(strm)
       val (SR_RES, SR_SPAN, strm') = let
       fun subrule1_NT (strm) = let
             fun subrule1_PROD_1 (strm) = let
                   val (QUERY_RES, QUERY_SPAN, strm') = matchQUERY(strm)
                   val FULL_SPAN = (#1(QUERY_SPAN), #2(QUERY_SPAN))
                   in
-                    (UserCode.post_re_PROD_1_post_re_subrule1_PROD_1_ACT (env_RES, prim_re_RES, QUERY_RES, prim_re_SPAN : (Lex.pos * Lex.pos), QUERY_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+                    (UserCode.post_re_PROD_1_post_re_subrule1_PROD_1_ACT (env_RES, prim_re_RES, QUERY_RES, prim_re_SPAN : (Lex.pos * Lex.pos), QUERY_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                       FULL_SPAN, strm')
                   end
             fun subrule1_PROD_2 (strm) = let
                   val (STAR_RES, STAR_SPAN, strm') = matchSTAR(strm)
                   val FULL_SPAN = (#1(STAR_SPAN), #2(STAR_SPAN))
                   in
-                    (UserCode.post_re_PROD_1_post_re_subrule1_PROD_2_ACT (env_RES, STAR_RES, prim_re_RES, STAR_SPAN : (Lex.pos * Lex.pos), prim_re_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+                    (UserCode.post_re_PROD_1_post_re_subrule1_PROD_2_ACT (env_RES, STAR_RES, prim_re_RES, STAR_SPAN : (Lex.pos * Lex.pos), prim_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                       FULL_SPAN, strm')
                   end
             fun subrule1_PROD_3 (strm) = let
                   val (PLUS_RES, PLUS_SPAN, strm') = matchPLUS(strm)
                   val FULL_SPAN = (#1(PLUS_SPAN), #2(PLUS_SPAN))
                   in
-                    (UserCode.post_re_PROD_1_post_re_subrule1_PROD_3_ACT (env_RES, PLUS_RES, prim_re_RES, PLUS_SPAN : (Lex.pos * Lex.pos), prim_re_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+                    (UserCode.post_re_PROD_1_post_re_subrule1_PROD_3_ACT (env_RES, PLUS_RES, prim_re_RES, PLUS_SPAN : (Lex.pos * Lex.pos), prim_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                       FULL_SPAN, strm')
                   end
             fun subrule1_PROD_4 (strm) = let
-                  val (REPEAT_RES, REPEAT_SPAN, strm') = matchREPEAT(strm)
-                  val FULL_SPAN = (#1(REPEAT_SPAN), #2(REPEAT_SPAN))
+                  val (LCB_RES, LCB_SPAN, strm') = matchLCB(strm)
+                  val (INT_RES, INT_SPAN, strm') = matchINT(strm')
+                  val (RCB_RES, RCB_SPAN, strm') = matchRCB(strm')
+                  val FULL_SPAN = (#1(LCB_SPAN), #2(RCB_SPAN))
                   in
-                    (UserCode.post_re_PROD_1_post_re_subrule1_PROD_4_ACT (env_RES, prim_re_RES, REPEAT_RES, prim_re_SPAN : (Lex.pos * Lex.pos), REPEAT_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+                    (UserCode.post_re_PROD_1_post_re_subrule1_PROD_4_ACT (INT_RES, LCB_RES, RCB_RES, env_RES, prim_re_RES, INT_SPAN : (Lex.pos * Lex.pos), LCB_SPAN : (Lex.pos * Lex.pos), RCB_SPAN : (Lex.pos * Lex.pos), prim_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                       FULL_SPAN, strm')
                   end
             fun subrule1_PROD_5 (strm) = let
-                  val FULL_SPAN = (WStream.getPos(strm), WStream.getPos(strm))
+                  val (LCB_RES, LCB_SPAN, strm') = matchLCB(strm)
+                  val (INT1_RES, INT1_SPAN, strm') = matchINT(strm')
+                  val (COMMA_RES, COMMA_SPAN, strm') = matchCOMMA(strm')
+                  val (INT2_RES, INT2_SPAN, strm') = matchINT(strm')
+                  val (RCB_RES, RCB_SPAN, strm') = matchRCB(strm')
+                  val FULL_SPAN = (#1(LCB_SPAN), #2(RCB_SPAN))
                   in
-                    (UserCode.post_re_PROD_1_post_re_subrule1_PROD_5_ACT (env_RES, prim_re_RES, prim_re_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+                    (UserCode.post_re_PROD_1_post_re_subrule1_PROD_5_ACT (LCB_RES, RCB_RES, env_RES, INT1_RES, INT2_RES, prim_re_RES, COMMA_RES, LCB_SPAN : (Lex.pos * Lex.pos), RCB_SPAN : (Lex.pos * Lex.pos), INT1_SPAN : (Lex.pos * Lex.pos), INT2_SPAN : (Lex.pos * Lex.pos), prim_re_SPAN : (Lex.pos * Lex.pos), COMMA_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
+                      FULL_SPAN, strm')
+                  end
+            fun subrule1_PROD_6 (strm) = let
+                  val FULL_SPAN = (R.getPos(strm), R.getPos(strm))
+                  in
+                    (UserCode.post_re_PROD_1_post_re_subrule1_PROD_6_ACT (env_RES, prim_re_RES, prim_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                       FULL_SPAN, strm)
                   end
             in
               (case (lex(strm))
-               of (Tok.ID(_), _, strm') => subrule1_PROD_5(strm)
-                | (Tok.UCHAR(_), _, strm') => subrule1_PROD_5(strm)
-                | (Tok.CHAR(_), _, strm') => subrule1_PROD_5(strm)
-                | (Tok.DARROW, _, strm') => subrule1_PROD_5(strm)
-                | (Tok.LSB, _, strm') => subrule1_PROD_5(strm)
-                | (Tok.RP, _, strm') => subrule1_PROD_5(strm)
-                | (Tok.LP, _, strm') => subrule1_PROD_5(strm)
-                | (Tok.SEMI, _, strm') => subrule1_PROD_5(strm)
-                | (Tok.DOT, _, strm') => subrule1_PROD_5(strm)
-                | (Tok.AMP, _, strm') => subrule1_PROD_5(strm)
-                | (Tok.BAR, _, strm') => subrule1_PROD_5(strm)
-                | (Tok.PLUS, _, strm') => subrule1_PROD_3(strm)
-                | (Tok.QUERY, _, strm') => subrule1_PROD_1(strm)
+               of (Tok.UCHAR(_), _, strm') => subrule1_PROD_6(strm)
+                | (Tok.CHAR(_), _, strm') => subrule1_PROD_6(strm)
+                | (Tok.DARROW, _, strm') => subrule1_PROD_6(strm)
+                | (Tok.LSB, _, strm') => subrule1_PROD_6(strm)
+                | (Tok.RP, _, strm') => subrule1_PROD_6(strm)
+                | (Tok.LP, _, strm') => subrule1_PROD_6(strm)
+                | (Tok.SEMI, _, strm') => subrule1_PROD_6(strm)
+                | (Tok.DOT, _, strm') => subrule1_PROD_6(strm)
+                | (Tok.AMP, _, strm') => subrule1_PROD_6(strm)
+                | (Tok.BAR, _, strm') => subrule1_PROD_6(strm)
+                | (Tok.LCB, _, strm') =>
+                    (case (lex(strm'))
+                     of (Tok.ID(_), _, strm') => subrule1_PROD_6(strm)
+                      | (Tok.INT(_), _, strm') =>
+                          (case (lex(strm'))
+                           of (Tok.COMMA, _, strm') => subrule1_PROD_5(strm)
+                            | (Tok.RCB, _, strm') => subrule1_PROD_4(strm)
+                            | _ => raise(ParseError)
+                          (* end case *))
+                      | _ => raise(ParseError)
+                    (* end case *))
                 | (Tok.STAR, _, strm') => subrule1_PROD_2(strm)
-                | (Tok.REPEAT(_), _, strm') => subrule1_PROD_4(strm)
+                | (Tok.QUERY, _, strm') => subrule1_PROD_1(strm)
+                | (Tok.PLUS, _, strm') => subrule1_PROD_3(strm)
                 | _ => raise(ParseError)
               (* end case *))
             end
@@ -1094,37 +649,39 @@ and post_re_NT (env_RES) (strm) = let
       end
       val FULL_SPAN = (#1(prim_re_SPAN), #2(SR_SPAN))
       in
-        (UserCode.post_re_PROD_1_ACT (SR_RES, env_RES, prim_re_RES, SR_SPAN : (Lex.pos * Lex.pos), prim_re_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+        (UserCode.post_re_PROD_1_ACT (SR_RES, env_RES, prim_re_RES, SR_SPAN : (Lex.pos * Lex.pos), prim_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
           FULL_SPAN, strm')
       end
 and prim_re_NT (env_RES) (strm) = let
       fun prim_re_PROD_1 (strm) = let
-            val (ID_RES, ID_SPAN, strm') = matchID(strm)
-            val FULL_SPAN = (#1(ID_SPAN), #2(ID_SPAN))
+            val (LCB_RES, LCB_SPAN, strm') = matchLCB(strm)
+            val (ID_RES, ID_SPAN, strm') = matchID(strm')
+            val (RCB_RES, RCB_SPAN, strm') = matchRCB(strm')
+            val FULL_SPAN = (#1(LCB_SPAN), #2(RCB_SPAN))
             in
-              (UserCode.prim_re_PROD_1_ACT (ID_RES, env_RES, ID_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+              (UserCode.prim_re_PROD_1_ACT (ID_RES, LCB_RES, RCB_RES, env_RES, ID_SPAN : (Lex.pos * Lex.pos), LCB_SPAN : (Lex.pos * Lex.pos), RCB_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                 FULL_SPAN, strm')
             end
       fun prim_re_PROD_2 (strm) = let
             val (LP_RES, LP_SPAN, strm') = matchLP(strm)
-            val (re_RES, re_SPAN, strm') = (wrap (re_NT (UserCode.ARGS_43 (LP_RES, env_RES))))(strm')
+            val (re_RES, re_SPAN, strm') = (wrap (re_NT (UserCode.ARGS_44 (LP_RES, env_RES, errs_REFC))))(strm')
             val (RP_RES, RP_SPAN, strm') = matchRP(strm')
             val FULL_SPAN = (#1(LP_SPAN), #2(RP_SPAN))
             in
-              (re_RES, FULL_SPAN, strm')
+              ((re_RES), FULL_SPAN, strm')
             end
       fun prim_re_PROD_3 (strm) = let
             val (char_RES, char_SPAN, strm') = (wrap char_NT)(strm)
             val FULL_SPAN = (#1(char_SPAN), #2(char_SPAN))
             in
-              (UserCode.prim_re_PROD_3_ACT (env_RES, char_RES, char_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+              (UserCode.prim_re_PROD_3_ACT (env_RES, char_RES, char_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                 FULL_SPAN, strm')
             end
       fun prim_re_PROD_4 (strm) = let
             val (DOT_RES, DOT_SPAN, strm') = matchDOT(strm)
             val FULL_SPAN = (#1(DOT_SPAN), #2(DOT_SPAN))
             in
-              (UserCode.prim_re_PROD_4_ACT (DOT_RES, env_RES, DOT_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+              (UserCode.prim_re_PROD_4_ACT (DOT_RES, env_RES, DOT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                 FULL_SPAN, strm')
             end
       fun prim_re_PROD_5 (strm) = let
@@ -1135,14 +692,13 @@ and prim_re_NT (env_RES) (strm) = let
                         val (CARAT_RES, CARAT_SPAN, strm') = matchCARAT(strm)
                         val FULL_SPAN = (#1(CARAT_SPAN), #2(CARAT_SPAN))
                         in
-                          (UserCode.prim_re_PROD_5_prim_re_subrule1_PROD_1_ACT (LSB_RES, env_RES, CARAT_RES, LSB_SPAN : (Lex.pos * Lex.pos), CARAT_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+                          (UserCode.prim_re_PROD_5_prim_re_subrule1_PROD_1_ACT (LSB_RES, env_RES, CARAT_RES, LSB_SPAN : (Lex.pos * Lex.pos), CARAT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                             FULL_SPAN, strm')
                         end
                   fun subrule1_PROD_2 (strm) = let
-                        val FULL_SPAN = (WStream.getPos(strm),
-                          WStream.getPos(strm))
+                        val FULL_SPAN = (R.getPos(strm), R.getPos(strm))
                         in
-                          (UserCode.prim_re_PROD_5_prim_re_subrule1_PROD_2_ACT (LSB_RES, env_RES, LSB_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+                          (UserCode.prim_re_PROD_5_prim_re_subrule1_PROD_2_ACT (LSB_RES, env_RES, LSB_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                             FULL_SPAN, strm)
                         end
                   in
@@ -1163,14 +719,14 @@ and prim_re_NT (env_RES) (strm) = let
                         val (char2_RES, char2_SPAN, strm') = (wrap char_NT)(strm')
                         val FULL_SPAN = (#1(char1_SPAN), #2(char2_SPAN))
                         in
-                          (UserCode.prim_re_PROD_5_prim_re_subrule2_PROD_1_ACT (LSB_RES, SR1_RES, env_RES, DASH_RES, char1_RES, char2_RES, LSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), DASH_SPAN : (Lex.pos * Lex.pos), char1_SPAN : (Lex.pos * Lex.pos), char2_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+                          (UserCode.prim_re_PROD_5_prim_re_subrule2_PROD_1_ACT (LSB_RES, SR1_RES, env_RES, DASH_RES, char1_RES, char2_RES, LSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), DASH_SPAN : (Lex.pos * Lex.pos), char1_SPAN : (Lex.pos * Lex.pos), char2_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                             FULL_SPAN, strm')
                         end
                   fun subrule2_PROD_2 (strm) = let
                         val (char_RES, char_SPAN, strm') = (wrap char_NT)(strm)
                         val FULL_SPAN = (#1(char_SPAN), #2(char_SPAN))
                         in
-                          (UserCode.prim_re_PROD_5_prim_re_subrule2_PROD_2_ACT (LSB_RES, SR1_RES, env_RES, char_RES, LSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), char_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+                          (UserCode.prim_re_PROD_5_prim_re_subrule2_PROD_2_ACT (LSB_RES, SR1_RES, env_RES, char_RES, LSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), char_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                             FULL_SPAN, strm')
                         end
                   in
@@ -1203,7 +759,7 @@ and prim_re_NT (env_RES) (strm) = let
             val (RSB_RES, RSB_SPAN, strm') = matchRSB(strm')
             val FULL_SPAN = (#1(LSB_SPAN), #2(RSB_SPAN))
             in
-              (UserCode.prim_re_PROD_5_ACT (LSB_RES, RSB_RES, SR1_RES, SR2_RES, env_RES, LSB_SPAN : (Lex.pos * Lex.pos), RSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), SR2_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+              (UserCode.prim_re_PROD_5_ACT (LSB_RES, RSB_RES, SR1_RES, SR2_RES, env_RES, LSB_SPAN : (Lex.pos * Lex.pos), RSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), SR2_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                 FULL_SPAN, strm')
             end
       in
@@ -1211,7 +767,7 @@ and prim_re_NT (env_RES) (strm) = let
          of (Tok.LSB, _, strm') => prim_re_PROD_5(strm)
           | (Tok.UCHAR(_), _, strm') => prim_re_PROD_3(strm)
           | (Tok.CHAR(_), _, strm') => prim_re_PROD_3(strm)
-          | (Tok.ID(_), _, strm') => prim_re_PROD_1(strm)
+          | (Tok.LCB, _, strm') => prim_re_PROD_1(strm)
           | (Tok.LP, _, strm') => prim_re_PROD_2(strm)
           | (Tok.DOT, _, strm') => prim_re_PROD_4(strm)
           | _ => raise(ParseError)
@@ -1235,7 +791,7 @@ fun rule_NT (env_RES) (strm) = let
                   val (COMMA_RES, COMMA_SPAN, strm') = EBNF.optional(subrule1_PRED, (wrap subrule1_NT), strm')
                   val FULL_SPAN = (#1(ID_SPAN), #2(COMMA_SPAN))
                   in
-                    (UserCode.rule_PROD_1_rule_subrule1_PROD_1_subrule1_subrule1_PROD_1_ACT (ID_RES, LT_RES, env_RES, COMMA_RES, ID_SPAN : (Lex.pos * Lex.pos), LT_SPAN : (Lex.pos * Lex.pos), COMMA_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+                    (UserCode.rule_PROD_1_rule_subrule1_PROD_1_subrule1_subrule1_PROD_1_ACT (ID_RES, LT_RES, env_RES, COMMA_RES, ID_SPAN : (Lex.pos * Lex.pos), LT_SPAN : (Lex.pos * Lex.pos), COMMA_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                       FULL_SPAN, strm')
                   end
             fun subrule1_PRED (strm) = (case (lex(strm))
@@ -1246,19 +802,19 @@ fun rule_NT (env_RES) (strm) = let
             val (GT_RES, GT_SPAN, strm') = matchGT(strm')
             val FULL_SPAN = (#1(LT_SPAN), #2(GT_SPAN))
             in
-              (SR_RES, FULL_SPAN, strm')
+              ((SR_RES), FULL_SPAN, strm')
             end
       fun subrule1_PRED (strm) = (case (lex(strm))
              of (Tok.LT, _, strm') => true
               | _ => false
             (* end case *))
       val (SR_RES, SR_SPAN, strm') = EBNF.optional(subrule1_PRED, (wrap subrule1_NT), strm)
-      val (re_RES, re_SPAN, strm') = (wrap (re_NT (UserCode.ARGS_21 (SR_RES, env_RES))))(strm')
+      val (re_RES, re_SPAN, strm') = (wrap (re_NT (UserCode.ARGS_21 (SR_RES, env_RES, errs_REFC))))(strm')
       val (DARROW_RES, DARROW_SPAN, strm') = matchDARROW(strm')
       val (CODE_RES, CODE_SPAN, strm') = matchCODE(strm')
       val FULL_SPAN = (#1(SR_SPAN), #2(CODE_SPAN))
       in
-        (UserCode.rule_PROD_1_ACT (SR_RES, re_RES, env_RES, CODE_RES, DARROW_RES, SR_SPAN : (Lex.pos * Lex.pos), re_SPAN : (Lex.pos * Lex.pos), CODE_SPAN : (Lex.pos * Lex.pos), DARROW_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+        (UserCode.rule_PROD_1_ACT (SR_RES, re_RES, env_RES, CODE_RES, DARROW_RES, SR_SPAN : (Lex.pos * Lex.pos), re_SPAN : (Lex.pos * Lex.pos), CODE_SPAN : (Lex.pos * Lex.pos), DARROW_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
           FULL_SPAN, strm')
       end
 fun directive_NT (conf_RES, env_RES) (strm) = let
@@ -1266,10 +822,10 @@ fun directive_NT (conf_RES, env_RES) (strm) = let
             val (KW_let_RES, KW_let_SPAN, strm') = matchKW_let(strm)
             val (ID_RES, ID_SPAN, strm') = matchID(strm')
             val (EQ_RES, EQ_SPAN, strm') = matchEQ(strm')
-            val (re_RES, re_SPAN, strm') = (wrap (re_NT (UserCode.ARGS_12 (EQ_RES, ID_RES, env_RES, conf_RES, KW_let_RES))))(strm')
+            val (re_RES, re_SPAN, strm') = (wrap (re_NT (UserCode.ARGS_12 (EQ_RES, ID_RES, env_RES, conf_RES, KW_let_RES, errs_REFC))))(strm')
             val FULL_SPAN = (#1(KW_let_SPAN), #2(re_SPAN))
             in
-              (UserCode.directive_PROD_1_ACT (EQ_RES, ID_RES, re_RES, env_RES, conf_RES, KW_let_RES, EQ_SPAN : (Lex.pos * Lex.pos), ID_SPAN : (Lex.pos * Lex.pos), re_SPAN : (Lex.pos * Lex.pos), KW_let_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+              (UserCode.directive_PROD_1_ACT (EQ_RES, ID_RES, re_RES, env_RES, conf_RES, KW_let_RES, EQ_SPAN : (Lex.pos * Lex.pos), ID_SPAN : (Lex.pos * Lex.pos), re_SPAN : (Lex.pos * Lex.pos), KW_let_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                 FULL_SPAN, strm')
             end
       fun directive_PROD_2 (strm) = let
@@ -1289,7 +845,7 @@ fun directive_NT (conf_RES, env_RES) (strm) = let
                   val (COMMA_RES, COMMA_SPAN, strm') = EBNF.optional(subrule1_PRED, (wrap subrule1_NT), strm')
                   val FULL_SPAN = (#1(ID_SPAN), #2(COMMA_SPAN))
                   in
-                    (UserCode.directive_PROD_2_directive_subrule1_PROD_1_ACT (ID_RES, env_RES, conf_RES, COMMA_RES, KW_states_RES, ID_SPAN : (Lex.pos * Lex.pos), COMMA_SPAN : (Lex.pos * Lex.pos), KW_states_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+                    (UserCode.directive_PROD_2_directive_subrule1_PROD_1_ACT (ID_RES, env_RES, conf_RES, COMMA_RES, KW_states_RES, ID_SPAN : (Lex.pos * Lex.pos), COMMA_SPAN : (Lex.pos * Lex.pos), KW_states_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                       FULL_SPAN, strm')
                   end
             fun subrule1_PRED (strm) = (case (lex(strm))
@@ -1299,7 +855,7 @@ fun directive_NT (conf_RES, env_RES) (strm) = let
             val (SR_RES, SR_SPAN, strm') = EBNF.posclos(subrule1_PRED, (wrap subrule1_NT), strm')
             val FULL_SPAN = (#1(KW_states_SPAN), #2(SR_SPAN))
             in
-              (UserCode.directive_PROD_2_ACT (SR_RES, env_RES, conf_RES, KW_states_RES, SR_SPAN : (Lex.pos * Lex.pos), KW_states_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+              (UserCode.directive_PROD_2_ACT (SR_RES, env_RES, conf_RES, KW_states_RES, SR_SPAN : (Lex.pos * Lex.pos), KW_states_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                 FULL_SPAN, strm')
             end
       fun directive_PROD_3 (strm) = let
@@ -1310,21 +866,21 @@ fun directive_NT (conf_RES, env_RES) (strm) = let
                         val (UTF8_RES, UTF8_SPAN, strm') = matchUTF8(strm)
                         val FULL_SPAN = (#1(UTF8_SPAN), #2(UTF8_SPAN))
                         in
-                          (UserCode.directive_PROD_3_directive_subrule1_PROD_1_ACT (env_RES, UTF8_RES, conf_RES, KW_charset_RES, UTF8_SPAN : (Lex.pos * Lex.pos), KW_charset_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+                          (UserCode.directive_PROD_3_directive_subrule1_PROD_1_ACT (env_RES, UTF8_RES, conf_RES, KW_charset_RES, UTF8_SPAN : (Lex.pos * Lex.pos), KW_charset_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                             FULL_SPAN, strm')
                         end
                   fun subrule1_PROD_2 (strm) = let
                         val (ASCII7_RES, ASCII7_SPAN, strm') = matchASCII7(strm)
                         val FULL_SPAN = (#1(ASCII7_SPAN), #2(ASCII7_SPAN))
                         in
-                          (UserCode.directive_PROD_3_directive_subrule1_PROD_2_ACT (env_RES, conf_RES, ASCII7_RES, KW_charset_RES, ASCII7_SPAN : (Lex.pos * Lex.pos), KW_charset_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+                          (UserCode.directive_PROD_3_directive_subrule1_PROD_2_ACT (env_RES, conf_RES, ASCII7_RES, KW_charset_RES, ASCII7_SPAN : (Lex.pos * Lex.pos), KW_charset_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                             FULL_SPAN, strm')
                         end
                   fun subrule1_PROD_3 (strm) = let
                         val (ASCII8_RES, ASCII8_SPAN, strm') = matchASCII8(strm)
                         val FULL_SPAN = (#1(ASCII8_SPAN), #2(ASCII8_SPAN))
                         in
-                          (UserCode.directive_PROD_3_directive_subrule1_PROD_3_ACT (env_RES, conf_RES, ASCII8_RES, KW_charset_RES, ASCII8_SPAN : (Lex.pos * Lex.pos), KW_charset_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+                          (UserCode.directive_PROD_3_directive_subrule1_PROD_3_ACT (env_RES, conf_RES, ASCII8_RES, KW_charset_RES, ASCII8_SPAN : (Lex.pos * Lex.pos), KW_charset_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                             FULL_SPAN, strm')
                         end
                   in
@@ -1340,14 +896,14 @@ fun directive_NT (conf_RES, env_RES) (strm) = let
             end
             val FULL_SPAN = (#1(KW_charset_SPAN), #2(SR_SPAN))
             in
-              (SR_RES, FULL_SPAN, strm')
+              ((SR_RES), FULL_SPAN, strm')
             end
       fun directive_PROD_4 (strm) = let
             val (KW_name_RES, KW_name_SPAN, strm') = matchKW_name(strm)
             val (ID_RES, ID_SPAN, strm') = matchID(strm')
             val FULL_SPAN = (#1(KW_name_SPAN), #2(ID_SPAN))
             in
-              (UserCode.directive_PROD_4_ACT (ID_RES, env_RES, conf_RES, KW_name_RES, ID_SPAN : (Lex.pos * Lex.pos), KW_name_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+              (UserCode.directive_PROD_4_ACT (ID_RES, env_RES, conf_RES, KW_name_RES, ID_SPAN : (Lex.pos * Lex.pos), KW_name_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                 FULL_SPAN, strm')
             end
       in
@@ -1361,10 +917,10 @@ fun directive_NT (conf_RES, env_RES) (strm) = let
       end
 fun decl_NT (spec_RES, env_RES) (strm) = let
       fun decl_PROD_1 (strm) = let
-            val (directive_RES, directive_SPAN, strm') = (wrap (directive_NT (UserCode.ARGS_7 (env_RES, spec_RES))))(strm)
+            val (directive_RES, directive_SPAN, strm') = (wrap (directive_NT (UserCode.ARGS_7 (env_RES, spec_RES, errs_REFC))))(strm)
             val FULL_SPAN = (#1(directive_SPAN), #2(directive_SPAN))
             in
-              (UserCode.decl_PROD_1_ACT (env_RES, spec_RES, directive_RES, directive_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+              (UserCode.decl_PROD_1_ACT (env_RES, spec_RES, directive_RES, directive_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                 FULL_SPAN, strm')
             end
       fun decl_PROD_2 (strm) = let
@@ -1372,23 +928,23 @@ fun decl_NT (spec_RES, env_RES) (strm) = let
             val (CODE_RES, CODE_SPAN, strm') = matchCODE(strm')
             val FULL_SPAN = (#1(KW_defs_SPAN), #2(CODE_SPAN))
             in
-              (UserCode.decl_PROD_2_ACT (env_RES, CODE_RES, spec_RES, KW_defs_RES, CODE_SPAN : (Lex.pos * Lex.pos), KW_defs_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+              (UserCode.decl_PROD_2_ACT (env_RES, CODE_RES, spec_RES, KW_defs_RES, CODE_SPAN : (Lex.pos * Lex.pos), KW_defs_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                 FULL_SPAN, strm')
             end
       fun decl_PROD_3 (strm) = let
-            val (rule_RES, rule_SPAN, strm') = (wrap (rule_NT (UserCode.ARGS_10 (env_RES, spec_RES))))(strm)
+            val (rule_RES, rule_SPAN, strm') = (wrap (rule_NT (UserCode.ARGS_10 (env_RES, spec_RES, errs_REFC))))(strm)
             val FULL_SPAN = (#1(rule_SPAN), #2(rule_SPAN))
             in
-              (UserCode.decl_PROD_3_ACT (env_RES, rule_RES, spec_RES, rule_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+              (UserCode.decl_PROD_3_ACT (env_RES, rule_RES, spec_RES, rule_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                 FULL_SPAN, strm')
             end
       in
         (case (lex(strm))
-         of (Tok.ID(_), _, strm') => decl_PROD_3(strm)
-          | (Tok.UCHAR(_), _, strm') => decl_PROD_3(strm)
+         of (Tok.UCHAR(_), _, strm') => decl_PROD_3(strm)
           | (Tok.CHAR(_), _, strm') => decl_PROD_3(strm)
           | (Tok.CARAT, _, strm') => decl_PROD_3(strm)
           | (Tok.LT, _, strm') => decl_PROD_3(strm)
+          | (Tok.LCB, _, strm') => decl_PROD_3(strm)
           | (Tok.LSB, _, strm') => decl_PROD_3(strm)
           | (Tok.LP, _, strm') => decl_PROD_3(strm)
           | (Tok.DOT, _, strm') => decl_PROD_3(strm)
@@ -1402,24 +958,23 @@ fun decl_NT (spec_RES, env_RES) (strm) = let
       end
 fun decls_NT (spec_RES, env_RES) (strm) = let
       fun decls_PROD_1 (strm) = let
-            val (decl_RES, decl_SPAN, strm') = (wrap (decl_NT (UserCode.ARGS_3 (env_RES, spec_RES))))(strm)
+            val (decl_RES, decl_SPAN, strm') = (wrap (decl_NT (UserCode.ARGS_3 (env_RES, spec_RES, errs_REFC))))(strm)
             val (SEMI_RES, SEMI_SPAN, strm') = matchSEMI(strm')
-            val (decls_RES, decls_SPAN, strm') = (wrap (decls_NT (UserCode.ARGS_4 (env_RES, SEMI_RES, decl_RES, spec_RES))))(strm')
+            val (decls_RES, decls_SPAN, strm') = (wrap (decls_NT (UserCode.ARGS_4 (env_RES, SEMI_RES, decl_RES, spec_RES, errs_REFC))))(strm')
             val FULL_SPAN = (#1(decl_SPAN), #2(decls_SPAN))
             in
-              (UserCode.decls_PROD_1_ACT (env_RES, SEMI_RES, decl_RES, spec_RES, decls_RES, SEMI_SPAN : (Lex.pos * Lex.pos), decl_SPAN : (Lex.pos * Lex.pos), decls_SPAN : (Lex.pos * Lex.pos), addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+              (UserCode.decls_PROD_1_ACT (env_RES, SEMI_RES, decl_RES, spec_RES, decls_RES, SEMI_SPAN : (Lex.pos * Lex.pos), decl_SPAN : (Lex.pos * Lex.pos), decls_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                 FULL_SPAN, strm')
             end
       fun decls_PROD_2 (strm) = let
-            val FULL_SPAN = (WStream.getPos(strm), WStream.getPos(strm))
+            val FULL_SPAN = (R.getPos(strm), R.getPos(strm))
             in
-              (UserCode.decls_PROD_2_ACT (env_RES, spec_RES, addAnnotation, FULL_SPAN : (Lex.pos * Lex.pos)),
+              (UserCode.decls_PROD_2_ACT (env_RES, spec_RES, FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                 FULL_SPAN, strm)
             end
       in
         (case (lex(strm))
          of (Tok.EOF, _, strm') => decls_PROD_2(strm)
-          | (Tok.ID(_), _, strm') => decls_PROD_1(strm)
           | (Tok.UCHAR(_), _, strm') => decls_PROD_1(strm)
           | (Tok.CHAR(_), _, strm') => decls_PROD_1(strm)
           | (Tok.KW_charset, _, strm') => decls_PROD_1(strm)
@@ -1429,6 +984,7 @@ fun decls_NT (spec_RES, env_RES) (strm) = let
           | (Tok.KW_defs, _, strm') => decls_PROD_1(strm)
           | (Tok.CARAT, _, strm') => decls_PROD_1(strm)
           | (Tok.LT, _, strm') => decls_PROD_1(strm)
+          | (Tok.LCB, _, strm') => decls_PROD_1(strm)
           | (Tok.LSB, _, strm') => decls_PROD_1(strm)
           | (Tok.LP, _, strm') => decls_PROD_1(strm)
           | (Tok.DOT, _, strm') => decls_PROD_1(strm)
@@ -1436,20 +992,20 @@ fun decls_NT (spec_RES, env_RES) (strm) = let
         (* end case *))
       end
 fun file_NT (strm) = let
-      val (decls_RES, decls_SPAN, strm') = (wrap (decls_NT (UserCode.ARGS_1 ())))(strm)
-      val (EOF_RES, EOF_SPAN, strm') = matchEOF(strm')
-      val FULL_SPAN = (#1(decls_SPAN), #2(EOF_SPAN))
+      val (decls_RES, decls_SPAN, strm') = (wrap (decls_NT (UserCode.ARGS_1 (errs_REFC))))(strm)
+      val FULL_SPAN = (#1(decls_SPAN), #2(decls_SPAN))
       in
-        (decls_RES, FULL_SPAN, strm')
+        ((decls_RES), FULL_SPAN, strm')
       end
 in
   (file_NT)
 end
-val file_NT =  fn s => unwrap (Err.launch eh (file_NT ) (WStream.wrap (s, lexFn)))
+val file_NT =  fn s => unwrap (Err.launch eh (file_NT ) (R.wrap (s, lexFn)))
 
 in (file_NT) end
-
+  in
 fun parse lexFn  s = let val (file_NT) = mk lexFn in file_NT s end
 
+  end
 
-end (* structure Parser *)
+end

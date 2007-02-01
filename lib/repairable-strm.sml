@@ -9,7 +9,7 @@
  * ml-antlr.
  *)
 
-functor RepairableStrm (Tok : TOKENS) (Lex : LEXER) : sig
+functor RepairableStrm (Tok : ANTLR_TOKENS) (Lex : ANTLR_LEXER) : sig
 
   type strm
   type token = Tok.token
