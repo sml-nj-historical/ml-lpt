@@ -220,8 +220,13 @@ The generated lexer module has a signature including the following:
 \begin{verbatim}
     type prestrm
     type strm = prestrm * start_state
-    val streamify : (int -> string) -> strm
-    val lex : StreamPos.sourcemap -> strm -> token * strm
+    
+    val streamify         : (unit -> string) -> strm
+    val streamifyReader   : (char, 'a) StringCvt.reader -> 'a -> strm
+    val streamifyInstream : TextIO.instream -> strm
+    
+    val lex    : StreamPos.sourcemap -> strm -> token * strm
+    
     val getPos : strm -> StreamPos.pos
 \end{verbatim}
 where \texttt{token} is the result type of the lexer actions, and \texttt{start\_state} is an algebraic datatype with nullary constructors for each defined start state.

@@ -3,6 +3,7 @@
 \chapter{A complete example}
 \label{ch:example}
 
+\begin{figure}[h]
 This chapter gives a complete example of a simple calculator
 language implemented using both \texttt{ml-ulex} and \texttt{ml-antlr}.
 Figure~\ref{fig:calc-sources} gives the CM file for the project.
@@ -32,8 +33,9 @@ is
 \end{figure}
 
 \begin{figure}
+
 \begin{verbatim}
-%name CalcLex;
+%name CalcLexer;
 
 %let digit = [0-9];
 %let int = {digit}+;
@@ -41,9 +43,9 @@ is
 %let id = {alpha}({alpha} | {digit})*;
 
 %defs (
-  structure T = CalcParse.Tok
-  type lex_result = T.token
-  fun eof() = T.EOF
+  open CalcTokens
+  type lex_result = token
+  fun eof() = EOF
 );
 
 let     => ( T.KW_let );
@@ -66,7 +68,7 @@ in      => ( T.KW_in );
 
 \begin{figure}[p]
 \begin{verbatim}
-%name CalcParse;
+%name Calc;
 
 %tokens
   : KW_let  ("let")  | KW_in   ("in")
@@ -115,18 +117,17 @@ atomicExp(env)
 structure CalcTest =
   struct
 
-    structure CP = CalcParse(CalcLex)
+    structure CP = CalcParseFn(CalcLexer)
 
-    fun calc str = let
-      val sref = ref str
-      fun input _ = (!sref before sref := "")
+  (* val calc : TextIO.instream -> Int.int *)
+    fun calc instrm = let
       val sm = StreamPos.mkSourcemap()
-      val lex = CalcLex.lex sm
-      val strm = CalcLex.streamify input
+      val lex = CalcLexer.lex sm
+      val strm = CalcLexer.streamifyInstream instrm
       val (r, strm', errs) = CP.parse lex AtomMap.empty strm
     in
       print (String.concatWith "\n" 
-            (map (Repair.repairToString sm Tok.toksToString) errs));
+            (map (Repair.repairToString CalcTokens.toString sm) errs));
       r
     end
 

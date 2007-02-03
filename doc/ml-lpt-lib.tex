@@ -33,19 +33,19 @@
 \begin{verbatim}
     structure Repair : sig
 
-      datatype 'a repair_action
-        = Insert of 'a list
-        | Delete of 'a list
+      datatype 'token repair_action
+        = Insert of 'token list
+        | Delete of 'token list
         | Subst of {
-            old : 'a list,
-            new : 'a list
+            old : 'token list,
+            new : 'token list
           }
-        | FailureAt of 'a
+        | FailureAt of 'token
       
-      type 'a repair = StreamPos.pos * 'a repair_action
+      type 'a repair = StreamPos.pos * 'token repair_action
       
-      val repairToString : StreamPos.sourcemap -> ('a list -> string) ->
-                           'a repair -> string
+      val repairToString : ('token -> string) -> StreamPos.sourcemap -> 
+                           'token repair -> string
         
     end
 \end{verbatim}
