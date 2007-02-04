@@ -4,7 +4,6 @@
     datatype yystart_state = 
 @startstates@
 
-    local
     structure UserDeclarations = 
       struct
 
@@ -13,6 +12,7 @@
 
       end
 
+    local
     datatype yymatch 
       = yyNO_MATCH
       | yyMATCH of ULexBuffer.stream * action * yymatch

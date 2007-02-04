@@ -2,7 +2,6 @@ structure MLULexLex  = struct
 
     datatype yystart_state = 
 COM | CODE | STRING | CHARSET | CHARCLASS | CURLY | RESTRING | INITIAL | DIRECTIVE
-    local
     structure UserDeclarations = 
       struct
 
@@ -40,6 +39,7 @@ COM | CODE | STRING | CHARSET | CHARCLASS | CURLY | RESTRING | INITIAL | DIRECTI
 
       end
 
+    local
     datatype yymatch 
       = yyNO_MATCH
       | yyMATCH of ULexBuffer.stream * action * yymatch
