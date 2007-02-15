@@ -19,15 +19,21 @@ is
   $/regexp-lib.cm
   $/ml-lpt-lib.cm
 
+  (* we need to declare the ml-antlr tool explicitly,
+   * because the automatic plugin is not yet available
+   * at installation time. *)
+  ../ml-antlr/tool/ml-antlr-tool.cm : tool
+
   FrontEnds/lex-spec.sml
 
-(*  FrontEnds/ml-lex/ml-lex.lex : MLLex *)
+  (* FrontEnds/ml-lex/ml-lex.lex : MLLex *)
   FrontEnds/ml-lex/ml-lex.lex.sml 
   FrontEnds/ml-lex/ml-lex.yacc : MLYacc
   FrontEnds/ml-lex/ml-lex-input.sml
 
   FrontEnds/ml-ulex/ml-ulex-input.sml
   FrontEnds/ml-ulex/ml-ulex.lex.sml
+
 (*
   FrontEnds/ml-ulex/ml-ulex-input-bootstrap.sml
   FrontEnds/ml-ulex/ml-ulex-bootstrap.lex.sml
