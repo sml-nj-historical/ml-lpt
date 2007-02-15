@@ -32,7 +32,7 @@ is
   FrontEnds/ml-ulex/ml-ulex-input-bootstrap.sml
   FrontEnds/ml-ulex/ml-ulex-bootstrap.lex.sml
 *)
-  FrontEnds/ml-ulex/ml-ulex.grm.sml
+  FrontEnds/ml-ulex/ml-ulex.grm : ml-antlr
 
   BackEnds/lex-output-spec.sml
   BackEnds/output-sig.sml

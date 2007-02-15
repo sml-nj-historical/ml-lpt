@@ -2,6 +2,7 @@ structure MLULexLex  = struct
 
     datatype yystart_state = 
 COM | CODE | STRING | CHARSET | CHARCLASS | CURLY | RESTRING | INITIAL | DIRECTIVE
+    local
     structure UserDeclarations = 
       struct
 
@@ -32,14 +33,15 @@ COM | CODE | STRING | CHARSET | CHARCLASS | CURLY | RESTRING | INITIAL | DIRECTI
 
   fun hexVal ss = 
         Substring.foldl 
-	  (fn (dig, acc) => (Word32.fromInt o hexDigit) dig + 0w16 * acc) 
+	  (fn (dig, acc) => (Word.fromInt o hexDigit) dig + 0w16 * acc) 
 	  0w0 ss
+
+  fun mkUChar yyunicode = Tok.UCHAR (hd yyunicode)
 
 
 
       end
 
-    local
     datatype yymatch 
       = yyNO_MATCH
       | yyMATCH of ULexBuffer.stream * action * yymatch
@@ -184,7 +186,7 @@ fun yyAction45 (strm, lastMatch) = (yystrm := strm;  YYBEGIN INITIAL; Tok.RSB)
 fun yyAction46 (strm, lastMatch) = let
       val yyunicode = yymkunicode(strm)
       in
-        yystrm := strm;  Tok.UCHAR (hd yyunicode)
+        yystrm := strm;  mkUChar yyunicode
       end
 fun yyAction47 (strm, lastMatch) = let
       val yylineno = ref(yygetlineNo(!(yystrm)))
@@ -287,12 +289,12 @@ fun yyAction63 (strm, lastMatch) = (yystrm := strm;
 fun yyAction64 (strm, lastMatch) = let
       val yyunicode = yymkunicode(strm)
       in
-        yystrm := strm;  Tok.UCHAR (hd yyunicode)
+        yystrm := strm;  mkUChar yyunicode
       end
 fun yyAction65 (strm, lastMatch) = let
       val yyunicode = yymkunicode(strm)
       in
-        yystrm := strm;  Tok.UCHAR (hd yyunicode)
+        yystrm := strm;  mkUChar yyunicode
       end
 fun yyAction66 (strm, lastMatch) = let
       val yycolno = ref(yygetcolNo(!(yystrm)))

@@ -8,9 +8,10 @@
   structure SIS = RE.SymSet
 
   fun listToASet ls = AtomSet.addList (AtomSet.empty, ls)
-  fun charToSym c = Word32.fromInt (Char.ord c)
+  fun charToSym c = Word.fromInt (Char.ord c)
 
   fun flip (x, y) = (y, x)
+
 
 );
 
@@ -45,7 +46,7 @@
   | ASCII8	("ascii8")
   | INT of int
   | CHAR of char
-  | UCHAR of Word32.word
+  | UCHAR of Word.word
   | ID of string
   | CODE of string
   | BOGUS
@@ -158,8 +159,8 @@ prim_re(env)
 	       SIS.interval (char1, char2)
 	     else (errs :== (FULL_SPAN, String.concat [
 	       "Error: malformed character class: ",
-	       Word32.toString char1, " - ",
-	       Word32.toString char2, "."])::(!!errs);
+	       Word.toString char1, " - ",
+	       Word.toString char2, "."])::(!!errs);
 	       SIS.universe))
         | char => (SIS.singleton char)
         )+

@@ -133,7 +133,7 @@ fun dec r = if !inquote then () else r := !r - 1
 
 structure SIS = RegExp.SymSet
 fun uniChar s = let
-      fun toW32 (c : Char.char) : Word32.word = 
+      fun toW32 (c : Char.char) : Word.word = 
 	(case c of #"0" => 0w0 | #"1" => 0w1 | #"2" => 0w2 | #"3" => 0w3
 	 	 | #"4" => 0w4 | #"5" => 0w5 | #"6" => 0w6 | #"7" => 0w7
 	 	 | #"8" => 0w8 | #"9" => 0w9 | #"a" => 0w10 | #"A" => 0w10
@@ -172,32 +172,33 @@ val highAscii = SIS.interval(0w128, 0w255)
 	      | yystuck (yyMATCH (strm, action, old)) = 
 		  action (strm, old)
 	    val yypos = yyInput.getpos (!yystrm)
+	    val yygetlineNo = yyInput.getlineNo
 	    fun continue() = 
 let
 fun yyAction0 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (YYBEGIN DEFS; LEXMARK(!yylineno, !yylineno))
       end
 fun yyAction1 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       val yytext = yymktext(strm)
       in
         yystrm := strm; (DECLS(yytext, !yylineno, !yylineno))
       end
 fun yyAction2 (strm, lastMatch) = (yystrm := strm; (lex()))
 fun yyAction3 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (YYBEGIN RE; LEXMARK(!yylineno, !yylineno))
       end
 fun yyAction4 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (YYBEGIN LEXSTATES; STATES(!yylineno, !yylineno))
       end
 fun yyAction5 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm;
         (clrAction(); pcount := 1; inquote := false; 
@@ -206,12 +207,12 @@ fun yyAction5 (strm, lastMatch) = let
 		    HEADER(!yylineno, !yylineno))
       end
 fun yyAction6 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (STRUCT(!yylineno, !yylineno))
       end
 fun yyAction7 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm;
         (clrAction(); pcount := 1; inquote := false;
@@ -220,103 +221,103 @@ fun yyAction7 (strm, lastMatch) = let
 		    ARG(!yylineno, !yylineno))
       end
 fun yyAction8 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (COUNT(!yylineno, !yylineno))
       end
 fun yyAction9 (strm, lastMatch) = let
       val oldStrm = !(yystrm)
       fun REJECT () = (yystrm := oldStrm; yystuck(lastMatch))
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (REJECTTOK(!yylineno, !yylineno))
       end
 fun yyAction10 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (UNICODE(!yylineno, !yylineno))
       end
 fun yyAction11 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (FULL(!yylineno, !yylineno))
       end
 fun yyAction12 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       val yytext = yymktext(strm)
       in
         yystrm := strm; (ID(yytext, !yylineno, !yylineno))
       end
 fun yyAction13 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (YYBEGIN RE; EQ(!yylineno, !yylineno))
       end
 fun yyAction14 (strm, lastMatch) = (yystrm := strm; (lex()))
 fun yyAction15 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (QMARK(!yylineno, !yylineno))
       end
 fun yyAction16 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (STAR(!yylineno, !yylineno))
       end
 fun yyAction17 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (PLUS(!yylineno, !yylineno))
       end
 fun yyAction18 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (BAR(!yylineno, !yylineno))
       end
 fun yyAction19 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (LP(!yylineno, !yylineno))
       end
 fun yyAction20 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (RP(!yylineno, !yylineno))
       end
 fun yyAction21 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (DOLLAR(!yylineno, !yylineno))
       end
 fun yyAction22 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (SLASH(!yylineno, !yylineno))
       end
 fun yyAction23 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (DOT(!yylineno, !yylineno))
       end
 fun yyAction24 (strm, lastMatch) = (yystrm := strm; (YYBEGIN RECB; lex()))
 fun yyAction25 (strm, lastMatch) = (yystrm := strm; (YYBEGIN STRING; lex()))
 fun yyAction26 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (YYBEGIN CHARCLASS; LB(!yylineno, !yylineno))
       end
 fun yyAction27 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (YYBEGIN LEXSTATES; LT(!yylineno, !yylineno))
       end
 fun yyAction28 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (GT(!yylineno, !yylineno))
       end
 fun yyAction29 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm;
         (clrAction(); pcount := 1; inquote := false;
@@ -325,105 +326,105 @@ fun yyAction29 (strm, lastMatch) = let
 		    ARROW(!yylineno, !yylineno))
       end
 fun yyAction30 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (YYBEGIN DEFS; SEMI(!yylineno, !yylineno))
       end
 fun yyAction31 (strm, lastMatch) = (yystrm := strm; (lex()))
 fun yyAction32 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       val yytext = yymktext(strm)
       in
         yystrm := strm; (ID(yytext, !yylineno, !yylineno))
       end
 fun yyAction33 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       val yytext = yymktext(strm)
       in
         yystrm := strm;
         (REPS(valOf (Int.fromString yytext), !yylineno, !yylineno))
       end
 fun yyAction34 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (COMMA(!yylineno, !yylineno))
       end
 fun yyAction35 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (YYBEGIN RE; RCB(!yylineno, !yylineno))
       end
 fun yyAction36 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (YYBEGIN RE; RBD(!yylineno, !yylineno))
       end
 fun yyAction37 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (YYBEGIN RE; RB(!yylineno, !yylineno))
       end
 fun yyAction38 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (DASH(!yylineno, !yylineno))
       end
 fun yyAction39 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (CARAT(!yylineno, !yylineno))
       end
 fun yyAction40 (strm, lastMatch) = (yystrm := strm; (YYBEGIN RE; lex()))
 fun yyAction41 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       val yytext = yymktext(strm)
       in
         yystrm := strm;
         (CHAR(valOf (String.fromString yytext), !yylineno, !yylineno))
       end
 fun yyAction42 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       val yytext = yymktext(strm)
       in
         yystrm := strm; (UNICHAR(uniChar yytext, !yylineno, !yylineno))
       end
 fun yyAction43 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       val yytext = yymktext(strm)
       in
         yystrm := strm;
         (CHAR(String.substring (yytext, 1, 1), !yylineno, !yylineno))
       end
 fun yyAction44 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       val yytext = yymktext(strm)
       in
         yystrm := strm; (CHAR(yytext, !yylineno, !yylineno))
       end
 fun yyAction45 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       val yytext = yymktext(strm)
       in
         yystrm := strm; (LEXSTATE(yytext, !yylineno, !yylineno))
       end
 fun yyAction46 (strm, lastMatch) = (yystrm := strm; (lex()))
 fun yyAction47 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (COMMA(!yylineno, !yylineno))
       end
 fun yyAction48 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (YYBEGIN RE; GT(!yylineno, !yylineno))
       end
 fun yyAction49 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm; (YYBEGIN DEFS; SEMI(!yylineno, !yylineno))
       end
 fun yyAction50 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm;
         (if !pcount = 0
@@ -446,7 +447,7 @@ fun yyAction57 (strm, lastMatch) = let
         yystrm := strm; (updAction yytext; lex())
       end
 fun yyAction58 (strm, lastMatch) = let
-      val yylineno = ref(yyInput.getlineNo(!(yystrm)))
+      val yylineno = ref(yygetlineNo(!(yystrm)))
       val yytext = yymktext(strm)
       in
         yystrm := strm;
@@ -460,21 +461,35 @@ fun yyQ124 (strm, lastMatch) = (case (yygetc(strm))
         | SOME(inp, strm') =>
             if inp = #"%"
               then yystuck(lastMatch)
-              else yyQ120(strm', lastMatch)
+              else yyQ123(strm', lastMatch)
+      (* end case *))
+and yyQ123 (strm, lastMatch) = (case (yygetc(strm))
+       of NONE => yyAction1(strm, yyNO_MATCH)
+        | SOME(inp, strm') =>
+            if inp = #"%"
+              then yyQ124(strm', yyMATCH(strm, yyAction1, yyNO_MATCH))
+              else yyQ120(strm', yyMATCH(strm, yyAction1, yyNO_MATCH))
       (* end case *))
 and yyQ120 (strm, lastMatch) = (case (yygetc(strm))
        of NONE => yyAction1(strm, yyNO_MATCH)
         | SOME(inp, strm') =>
             if inp = #"%"
               then yyQ124(strm', yyMATCH(strm, yyAction1, yyNO_MATCH))
-              else yyQ120(strm', yyMATCH(strm, yyAction1, yyNO_MATCH))
+              else yyQ125(strm', yyMATCH(strm, yyAction1, yyNO_MATCH))
+      (* end case *))
+and yyQ125 (strm, lastMatch) = (case (yygetc(strm))
+       of NONE => yyAction1(strm, yyNO_MATCH)
+        | SOME(inp, strm') =>
+            if inp = #"%"
+              then yyQ124(strm', yyMATCH(strm, yyAction1, yyNO_MATCH))
+              else yyQ125(strm', yyMATCH(strm, yyAction1, yyNO_MATCH))
       (* end case *))
 fun yyQ119 (strm, lastMatch) = (case (yygetc(strm))
        of NONE => yyAction1(strm, yyNO_MATCH)
         | SOME(inp, strm') =>
             if inp = #"%"
               then yyQ124(strm', yyMATCH(strm, yyAction1, yyNO_MATCH))
-              else yyQ120(strm', yyMATCH(strm, yyAction1, yyNO_MATCH))
+              else yyQ125(strm', yyMATCH(strm, yyAction1, yyNO_MATCH))
       (* end case *))
 fun yyQ122 (strm, lastMatch) = yyAction0(strm, yyNO_MATCH)
 fun yyQ121 (strm, lastMatch) = (case (yygetc(strm))
@@ -482,7 +497,7 @@ fun yyQ121 (strm, lastMatch) = (case (yygetc(strm))
         | SOME(inp, strm') =>
             if inp = #"%"
               then yyQ122(strm', yyMATCH(strm, yyAction58, yyNO_MATCH))
-              else yyQ120(strm', yyMATCH(strm, yyAction58, yyNO_MATCH))
+              else yyQ123(strm', yyMATCH(strm, yyAction58, yyNO_MATCH))
       (* end case *))
 fun yyQ7 (strm, lastMatch) = (case (yygetc(strm))
        of NONE =>

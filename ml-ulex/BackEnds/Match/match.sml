@@ -39,7 +39,7 @@ structure Match : OUTPUT =
 	   | SOME s => let
 	       val chars = List.rev (List.tl (List.rev (String.explode s)))
 	       val syms = List.map 
-			    (Word32.fromInt o Char.ord) 
+			    (Word.fromInt o Char.ord) 
 			    chars
 	       val q0 as LO.State {label, ...} = List.hd states
 	       val _ = case match (q0, syms)

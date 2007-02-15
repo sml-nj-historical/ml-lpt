@@ -16,7 +16,7 @@ structure SIS = RE.SymSet
 val symTable : RE.re AtomMap.map ref = ref AtomMap.empty 
 
 val wildcard = SIS.complement (SIS.singleton 0w10) (* everything but \n *)
-fun charToSym c = Word32.fromInt (Char.ord c)
+fun charToSym c = Word.fromInt (Char.ord c)
 fun strToSym s = charToSym (String.sub (s, 0))
 
 
@@ -290,9 +290,9 @@ struct
 datatype svalue = VOID | ntVOID of unit ->  unit
  | LEXSTATE of unit ->  (string) | ACT of unit ->  (string)
  | ID of unit ->  (string) | REPS of unit ->  (int)
- | UNICHAR of unit ->  (Word32.word) | CHAR of unit ->  (string)
- | DECLS of unit ->  (string) | NonCarat of unit ->  (Word32.word)
- | AChar of unit ->  (Word32.word) | CharRng of unit ->  (SIS.set)
+ | UNICHAR of unit ->  (Word.word) | CHAR of unit ->  (string)
+ | DECLS of unit ->  (string) | NonCarat of unit ->  (Word.word)
+ | AChar of unit ->  (Word.word) | CharRng of unit ->  (SIS.set)
  | CharClass' of unit ->  (SIS.set) | CharClass of unit ->  (SIS.set)
  | InExp of unit ->  (RE.re) | Exp of unit ->  (RE.re)
  | CatExp of unit ->  (RE.re) | OrExp of unit ->  (RE.re)

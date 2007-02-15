@@ -35,8 +35,10 @@
 
   fun hexVal ss = 
         Substring.foldl 
-	  (fn (dig, acc) => (Word32.fromInt o hexDigit) dig + 0w16 * acc) 
+	  (fn (dig, acc) => (Word.fromInt o hexDigit) dig + 0w16 * acc) 
 	  0w0 ss
+
+  fun mkUChar yyunicode = Tok.UCHAR (hd yyunicode)
 
 );
 
@@ -128,7 +130,7 @@
 	=> (Tok.UCHAR (hexVal (Substring.triml 2 yysubstr)));
 
 <CHARCLASS>"]"	=> (YYBEGIN INITIAL; Tok.RSB);
-<CHARCLASS>[^\n\\]	=> (Tok.UCHAR (hd yyunicode));
+<CHARCLASS>[^\n\\]	=> (mkUChar yyunicode);
 
 <INITIAL>"(*" 
 	=> (comLvl := 1; comStart := !yylineno; YYBEGIN COM; 
@@ -172,10 +174,10 @@
 
 <RESTRING>"\""	=> (YYBEGIN INITIAL; continue());
 <RESTRING>{eol} => (print ("unclosed string\n"); continue());
-<RESTRING>.	=> (Tok.UCHAR (hd yyunicode));
+<RESTRING>.	=> (mkUChar yyunicode);
 
 <INITIAL>[^\n{};]
-		=> (Tok.UCHAR (hd yyunicode));
+		=> (mkUChar yyunicode);
 .		=> (print (concat[Int.toString (!yylineno), ".",
 				  Int.toString (!yycolno),
 				  ": illegal character '", 

@@ -20,21 +20,22 @@
 structure RegExp : REG_EXP =
   struct
 
+    structure W = Word
+
   (* symbols (i.e., words) *)
     structure Sym = 
       struct
 
-        structure W32 = Word32
-        type point = W32.word
+        type point = W.word
 
-	val compare = W32.compare
-	val minPt : W32.word = 0w0 
-	val maxPt = W32.notb 0w0
+	val compare = W.compare
+	val minPt : W.word = 0w0 
+	val maxPt = W.notb 0w0
 
-	fun succ (w : W32.word) = 
-	      if w = W32.notb 0w0 then w
+	fun succ (w : W.word) = 
+	      if w = W.notb 0w0 then w
 	      else w + 0w1
-	fun pred (w : W32.word) = 
+	fun pred (w : W.word) = 
 	      if w = 0w0 then w
 	      else w - 0w1
 
@@ -280,16 +281,16 @@ structure RegExp : REG_EXP =
 
     fun symToString w = 
 	if !Options.lexCompat
-	then "#\"" ^ (Char.toString (Char.chr (Word32.toInt w))) ^ "\"" 
+	then "#\"" ^ (Char.toString (Char.chr (W.toInt w))) ^ "\"" 
 	     handle Overflow => raise Fail "(BUG) RegExp: symToString on a nonascii character"
-	else "0wx" ^ Word32.toString w
+	else "0wx" ^ W.toString w
 
     fun SISToString s = let
           fun c2s c = 
 	        if (c < 0w128) then
-	          Char.toString (Char.chr (Word32.toInt c))
+	          Char.toString (Char.chr (W.toInt c))
 		else
-		  String.concat ["\\u", Word32.toString c]
+		  String.concat ["\\u", W.toString c]
 	  fun f (a, b) = 
 	        if a=b then c2s a
 	        else concat[c2s a, "-", c2s b]
