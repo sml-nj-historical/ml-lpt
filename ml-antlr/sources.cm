@@ -30,7 +30,7 @@ is
   $/pp-lib.cm
   $/regexp-lib.cm
 (*  $/ml-lpt-lib.cm *)
-  /Users/adrassi/tmpwork/ml-lpt/lib/ml-lpt-lib.cm 
+  ../lib/ml-lpt-lib.cm 
 
   BackEnds/back-end-sig.sml
 
