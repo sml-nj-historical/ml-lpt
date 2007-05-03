@@ -74,11 +74,11 @@ end = struct
 
   fun wrap eh f t = if not (getEnabled eh) then f t else let
 	val cont_ref : retry_cont option ref = ref NONE
-	val state = (getGet eh) ()
+	val state = (getGet eh) () 
 	val t' = SMLofNJ.Cont.callcc (fn k => (cont_ref := SOME k; t))
-	val retry = (t', valOf (!cont_ref))
+	val retry = (t', valOf (!cont_ref)) 
         in
-	  getPut eh state;
+	  getPut eh state; 
 	  f t'
 	  handle RepairableError => (
 	    throwIfEH (eh, t');

@@ -174,10 +174,10 @@ structure CheckGrammar : sig
 	  val _ = (ATbl.insert tokTbl (Atom.atom "EOF", eofTok);
 		   tokList := eofTok :: !tokList)
 	(* check for any symbols marked as %keywords but not defined as tokens *)
-	  val tokSet = ASet.addList (ASet.empty, map (Atom.atom o Token.name) (!tokList))
+	  val tokSet = ASet.addList (ASet.empty, #1 (ListPair.unzip (ATbl.listItemsi tokTbl)))
 	  val undefKWs = ASet.difference (kwSet, tokSet)
 	  fun undefErr kw = Err.spanErr (valOf (ATbl.find keywords kw), 
-			      ["'", Atom.toString kw, "' is declared as a keyword, but it is not as a token"])
+			      ["'", Atom.toString kw, "' is declared as a keyword, but not as a token"])
 	  val _ = ASet.app undefErr undefKWs
 	(* PHASE 3: load nonterminals *)
 	  fun insNTerm (nt as S.NT{name, ...}) = let 

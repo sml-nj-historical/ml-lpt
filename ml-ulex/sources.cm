@@ -16,7 +16,8 @@ is
   $/pp-lib.cm
   $/ml-yacc-lib.cm
   $/regexp-lib.cm
-  $/ml-lpt-lib.cm 
+(*  $/ml-lpt-lib.cm *)
+  ../lib/ml-lpt-lib.cm
 
   FrontEnds/lex-spec.sml
 

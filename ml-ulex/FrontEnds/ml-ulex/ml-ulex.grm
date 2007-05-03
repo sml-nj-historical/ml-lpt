@@ -56,7 +56,7 @@
 %keywords
   "%defs", "%name", "%states", "%let", "%charset" ;
 
-%refcell errs : (StreamPos.span * string) list :== ([]);
+%refcell errs : (StreamPos.span * string) list = ([]);
 
 file
   : decls@(LS.mkSpec(), AMap.empty)
@@ -142,8 +142,8 @@ prim_re(env)
   : "{" ID "}"
       => (case (AMap.find (env, Atom.atom ID))
 	   of SOME re => re
-	    | NONE => (errs :== (ID_SPAN, String.concat [
-		"Error: {", ID, "} is undefined."])::(!!errs);
+	    | NONE => (errs := (ID_SPAN, String.concat [
+		"Error: {", ID, "} is undefined."])::(!errs);
 		RE.any))
   | "(" re@(env) ")"
   | char
@@ -159,7 +159,7 @@ prim_re(env)
         ( char "-" char => 
 	    (if char1 <= char2 then
 	       SIS.interval (char1, char2)
-	     else (errs :== (FULL_SPAN, String.concat [
+	     else (errs := (FULL_SPAN, String.concat [
 	       "Error: malformed character class: ",
 	       Word.toString char1, " - ",
 	       Word.toString char2, "."])::(!!errs);
