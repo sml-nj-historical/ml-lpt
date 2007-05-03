@@ -27,11 +27,17 @@ is
 
   FrontEnds/ml-ulex/ml-ulex-input.sml
   FrontEnds/ml-ulex/ml-ulex.lex.sml
+
 (*
   FrontEnds/ml-ulex/ml-ulex-input-bootstrap.sml
   FrontEnds/ml-ulex/ml-ulex-bootstrap.lex.sml
 *)
+
+# if defined(NO_ML_ANTLR_TOOL)
+  FrontEnds/ml-ulex/ml-ulex.grm.sml
+# else
   FrontEnds/ml-ulex/ml-ulex.grm : ml-antlr
+#endif
 
   BackEnds/lex-output-spec.sml
   BackEnds/output-sig.sml
