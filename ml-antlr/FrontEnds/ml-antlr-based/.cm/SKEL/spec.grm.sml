@@ -1,2 +1,0 @@
-Skeleton 5
-d3f1ä¢String"aä¢SpecTokens"h0ae"SpecParseFn"i2aä¢Lex"gp1c"ANTLR_LEXER"f5Cÿ/d"Atom"d"List"ÿd"Substring"Nh1bd5Caä¢Tok"gp1ÿad"UserCode"h1ad"GS"gp1d"GrammarSyntax"aä¢R"jgp1ÿ/jgp1ÿ/gp1e"RepairableStrm"ad"Err"jçğ±ÿ‚"gp1e"ErrHandler"ad¢EBNF"jÿƒgp1eÿƒ'Nf0
