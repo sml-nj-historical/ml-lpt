@@ -35,7 +35,8 @@ COM | CODE | STRING | CHARSET | CHARCLASS | CURLY | RESTRING | INITIAL | DIRECTI
 	  (fn (dig, acc) => (Word32.fromInt o hexDigit) dig + 0w16 * acc) 
 	  0w0 ss
 
-  fun mkUChar yyunicode = Tok.UCHAR (hd yyunicode)
+  fun mkUChar yyunicode = Tok.UCHAR (hd yyunicode) 
+(*  fun mkUChar yyunicode = Tok.UCHAR ((Word.fromInt o Word32.toInt o hd) yyunicode) *)
 
 
 
