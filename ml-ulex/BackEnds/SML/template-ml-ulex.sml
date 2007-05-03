@@ -18,6 +18,11 @@
       | yyMATCH of ULexBuffer.stream * action * yymatch
     withtype action = ULexBuffer.stream * yymatch -> UserDeclarations.lex_result
 
+    val yytable : ((UTF8.wchar * UTF8.wchar * int) list * int list) Vector.vector = 
+#[
+@table@
+]
+
     fun innerLex (yystrm_, yyss_, yysm) = let
         (* current start state *)
           val yyss = ref yyss_
@@ -55,6 +60,30 @@
 	    val yypos = yygetPos()
 	    fun yygetlineNo strm = StreamPos.lineNo yysm (ULexBuffer.getpos strm)
 	    fun yygetcolNo  strm = StreamPos.colNo  yysm (ULexBuffer.getpos strm)
+	    fun yyactsToMatches (strm, [],	  oldMatches) = oldMatches
+	      | yyactsToMatches (strm, act::acts, oldMatches) = 
+		  yyMATCH (strm, act, yyactsToMatches (strm, acts, oldMatches))
+	    fun yygo actTable = 
+		(fn (~1, _, oldMatches) => yystuck oldMatches
+		  | (curState, strm, oldMatches) => let
+		      val (transitions, finals') = Vector.sub (yytable, curState)
+		      val finals = map (fn i => Vector.sub (actTable, i)) finals'
+		      fun tryfinal() = 
+		            yystuck (yyactsToMatches (strm, finals, oldMatches))
+		      fun find (c, []) = NONE
+			| find (c, (c1, c2, s)::ts) = 
+		            if c1 <= c andalso c <= c2 then SOME s
+			    else find (c, ts)
+		      in case yygetc strm
+			  of SOME(c, strm') => 
+			       (case find (c, transitions)
+				 of NONE => tryfinal()
+				  | SOME n => 
+				      yygo actTable
+					(n, strm', 
+					 yyactsToMatches (strm, finals, oldMatches)))
+			   | NONE => tryfinal()
+		      end)
 	    fun continue() = 
 @lexer@
 

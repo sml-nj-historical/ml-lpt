@@ -34,7 +34,14 @@ val _ = app (Err.debug o Prod.toString) prods
           end
 
     fun process file = let
-	  val _ = Err.anyErrors := false;
+	  val _ = Err.anyErrors := false
+
+(*
+	  fun loop 0 = ()
+	    | loop n = (print "-"; ignore (ParseFile.parse file); loop (n-1))
+	  val _ = loop 200
+*)
+
 	  val grm = checkPT (ParseFile.parse file)
 	  val gla = GLA.mkGLA grm
 	  val pm = ComputePredict.mkPM (grm, gla)

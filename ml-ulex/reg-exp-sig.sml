@@ -14,8 +14,8 @@ signature REG_EXP =
     structure Sym : INTERVAL_DOMAIN
     structure SymSet : INTERVAL_SET
 
-    type symbol
-    type sym_set
+    type symbol = UTF8.wchar
+    type sym_set = SymSet.set
     type re
 
     val any	  : re	(* wildcard *)

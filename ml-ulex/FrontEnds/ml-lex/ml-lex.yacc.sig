@@ -21,7 +21,7 @@ val ID: (string) *  'a * 'a -> (svalue,'a) token
 val REPS: (int) *  'a * 'a -> (svalue,'a) token
 val EQ:  'a * 'a -> (svalue,'a) token
 val DOT:  'a * 'a -> (svalue,'a) token
-val UNICHAR: (Word.word) *  'a * 'a -> (svalue,'a) token
+val UNICHAR: (UTF8.wchar) *  'a * 'a -> (svalue,'a) token
 val CHAR: (string) *  'a * 'a -> (svalue,'a) token
 val DASH:  'a * 'a -> (svalue,'a) token
 val SLASH:  'a * 'a -> (svalue,'a) token

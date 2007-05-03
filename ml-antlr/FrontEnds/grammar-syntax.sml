@@ -11,140 +11,62 @@
 structure GrammarSyntax =
   struct
 
-    type action = Int.int * String.string
-    datatype action_style
-      = ActNormal
-      | ActDebug
-      | ActUnit
-
+    type span = Err.span
+    type code = span * String.string
     type symbol = Atom.atom
-
-    datatype rule = RULE of {
-	lhs : symbol,
-	formals : Atom.atom list,
-	alts : alt list
-      }
-
-    and alt = ALT of {
-	items : (string option * item) list,
-	action : action option,
-	try : bool,
-	pred : sem_pred option
-      }
-
-    and item
-      = SYMBOL of symbol * action option
-      | SUBRULE of alt list	(* ( ... ) *)
-      | CLOS of item		(* ( ... )* *)
-      | POSCLOS of item		(* ( ... )+ *)
-      | OPT of item		(* ( ... )? *)
-
-    withtype sem_pred = action
-
+    type name = string
     type ty = string
-    type constr = (Atom.atom * ty option * Atom.atom option)
+    type constr = (symbol * ty option * Atom.atom option)
 
-    datatype import_change
-      = ICDrop of symbol
-      | ICReplace of rule
-      | ICExtend of rule
+    datatype decl
+      = NAME of name
+      | START of symbol
+      | ENTRY of symbol
+      | KEYWORD of symbol
+      | DEFS of code
+      | TOKEN of constr
+      | IMPORT of {
+	  filename : string,
+	  dropping : (span * symbol) list
+	}
+      | REFCELL of name * ty * code
+      | RULE of {
+	  lhs : symbol,
+	  formals : name list,
+	  rhs : rhs
+	}
+      | NONTERM of symbol * ty
 
-    datatype grammar = GRAMMAR of {
-        import : string option,
-	importChanges : import_change list,
-        name : string,
-	defs : action,
-	rules : rule list,
-	toks : constr list,
-	actionStyle : action_style,
-	startSym : Atom.atom option,
-	entryPoints : Atom.atom list,
-	keywords : Atom.atom list,
-	refcells : (string * ty * action) list
-      }
-
-    fun mkGrammar() = GRAMMAR {
-	  import = NONE,
-	  importChanges = [],
-	  name = "",
-	  defs = (0, ""),
-	  rules = [],
-	  toks = [],
-	  actionStyle = ActNormal,
-	  startSym = NONE,
-	  entryPoints = [],
-	  keywords = [],
-	  refcells = []
+    and rhs = RHS of {
+	  items : (string option * (span * item)) list,
+	  try : bool,
+	  predicate : code option,
+	  action : code option,
+	  loc : span
         }
 
-    fun updName (g, new) = let
-          val GRAMMAR {import, importChanges, name, defs, rules, toks, actionStyle, startSym, entryPoints, keywords, refcells} = g
-          in GRAMMAR {import = import, importChanges = importChanges, name = new, defs = defs, rules = rules, 
-		      toks = toks, actionStyle = actionStyle, startSym = startSym, entryPoints = entryPoints, keywords = keywords, refcells = refcells} end
+    and item
+      = SYMBOL of symbol * code option
+      | SUBRULE of rhs list	(* ( ... ) *)
+      | CLOS of span * item	(* ( ... )* *)
+      | POSCLOS of span * item	(* ( ... )+ *)
+      | OPT of span * item	(* ( ... )? *)
 
-    fun updDefs (g, new) = let
-          val GRAMMAR {import, importChanges, name, defs, rules, toks, actionStyle, startSym, entryPoints, keywords, refcells} = g
-          in GRAMMAR {import = import, importChanges = importChanges, name = name, defs = new, rules = rules, 
-		      toks = toks, actionStyle = actionStyle, startSym = startSym, entryPoints = entryPoints, keywords = keywords, refcells = refcells} end
+    type grammar = (span * decl) list
 
-    fun updToks (g, new) = let
-          val GRAMMAR {import, importChanges, name, defs, rules, toks, actionStyle, startSym, entryPoints, keywords, refcells} = g
-          in GRAMMAR {import = import, importChanges = importChanges, name = name, defs = defs, rules = rules, 
-		      toks = new, actionStyle = actionStyle, startSym = startSym, entryPoints = entryPoints, keywords = keywords, refcells = refcells} end
-
-    fun updActionStyle (g, new) = let
-          val GRAMMAR {import, importChanges, name, defs, rules, toks, actionStyle, startSym, entryPoints, keywords, refcells} = g
-          in GRAMMAR {import = import, importChanges = importChanges, name = name, defs = defs, rules = rules, 
-		      toks = toks, actionStyle = new, startSym = startSym, entryPoints = entryPoints, keywords = keywords, refcells = refcells} end
-
-    fun debugAct g = updActionStyle (g, ActDebug)
-    fun unitAct g = updActionStyle (g, ActUnit)
-
-    fun addRule (g, new) = let
-          val GRAMMAR {import, importChanges, name, defs, rules, toks, actionStyle, startSym, entryPoints, keywords, refcells} = g
-          in GRAMMAR {import = import, importChanges = importChanges, name = name, defs = defs, rules = rules@[new], 
-		      toks = toks, actionStyle = actionStyle, startSym = startSym, entryPoints = entryPoints, keywords = keywords, refcells = refcells} end
-
-    fun addImportChange (g, new) = let
-          val GRAMMAR {import, importChanges, name, defs, rules, toks, actionStyle, startSym, entryPoints, keywords, refcells} = g
-          in GRAMMAR {import = import, importChanges = importChanges@[new], name = name, defs = defs, rules = rules, 
-		      toks = toks, actionStyle = actionStyle, startSym = startSym, entryPoints = entryPoints, keywords = keywords, refcells = refcells} end
-
-    fun updImport (GRAMMAR {import = NONE, importChanges, name, defs, rules, toks, actionStyle, startSym, entryPoints, keywords, refcells}, new) =
-          GRAMMAR {import = SOME new, importChanges = importChanges, name = name, defs = defs, rules = rules, 
-		   toks = toks, actionStyle = actionStyle, startSym = startSym, entryPoints = entryPoints, keywords = keywords, refcells = refcells}
-      | updImport (g, _) = (Err.errMsg ["Error: multiple %imports are not allowed"]; g)
-
-    fun updStartSym (GRAMMAR {import = import, importChanges, name, defs, rules, toks, actionStyle, startSym = NONE, entryPoints, keywords, refcells}, new) =
-          GRAMMAR {import = import, importChanges = importChanges, name = name, defs = defs, rules = rules, 
-		   toks = toks, actionStyle = actionStyle, startSym = SOME new, entryPoints = entryPoints, keywords = keywords, refcells = refcells}
-      | updStartSym (g, _) = (Err.errMsg ["Error: multiple %start symbols are not allowed"]; g)
-
-    fun updEntryPoints (GRAMMAR {import = import, importChanges, name, defs, rules, toks, actionStyle, startSym, entryPoints = [], keywords, refcells}, new) =
-          GRAMMAR {import = import, importChanges = importChanges, name = name, defs = defs, rules = rules, 
-		   toks = toks, actionStyle = actionStyle, startSym = startSym, entryPoints = new, keywords = keywords, refcells = refcells}
-      | updEntryPoints (g, _) = (Err.errMsg ["Error: multiple %entry directives not allowed"]; g)
-
-    fun updKeywords (GRAMMAR {import = import, importChanges, name, defs, rules, toks, actionStyle, startSym, entryPoints = entryPoints, keywords = [], refcells}, 
-		     new) =
-          GRAMMAR {import = import, importChanges = importChanges, name = name, defs = defs, rules = rules, 
-		   toks = toks, actionStyle = actionStyle, startSym = startSym, entryPoints = entryPoints, keywords = new, refcells = refcells}
-      | updKeywords (g, _) = (Err.errMsg ["Error: multiple %keywords directives not allowed"]; g)
-
-    fun addRefcell (g, new) = let
-          val GRAMMAR {import, importChanges, name, defs, rules, toks, actionStyle, startSym, entryPoints, keywords, refcells} = g
-          in GRAMMAR {import = import, importChanges = importChanges, name = name, defs = defs, rules = rules, toks = toks, actionStyle = actionStyle, 
-		      startSym = startSym, entryPoints = entryPoints, keywords = keywords, refcells = refcells@[new]} end
-
-    fun setToTry (ALT {items, action, try, pred}) = 
-	  ALT {items = items, action = action, try = true, pred = pred}
-
-    fun addAction (ALT {items, action = NONE, try, pred}, act) = 
-	  ALT {items = items, action = SOME act, try = try, pred = pred}
-      | addAction _ = raise Fail "BUG: only one action allowed"
-
-    fun addPred (ALT {items, action, try, pred = NONE}, pred) = 
-	  ALT {items = items, action = action, try = try, pred = pred}
-      | addPred _ = raise Fail "BUG: only one predicate allowed"
+    local
+      fun ppDecl (_, NAME n) = "%name"
+	| ppDecl (_, START s) = "%start"
+	| ppDecl (_, ENTRY s) = "%entry"
+	| ppDecl (_, KEYWORD s) = "%keywords"
+	| ppDecl (_, DEFS c) = "%defs"
+	| ppDecl (_, TOKEN cstr) = "%tokens"
+	| ppDecl (_, NONTERM cstr) = "%nonterm"
+	| ppDecl (_, IMPORT {filename, dropping}) = "%import"
+	| ppDecl (_, REFCELL (n, ty, c)) = "%refcell"
+	| ppDecl (_, RULE {lhs, formals, rhs}) = "-- rule: " ^ (Atom.toString lhs)
+    in
+    fun ppGrammar decls = String.concatWith "\n" (map ppDecl decls)
+    end
 
   end

@@ -15,17 +15,19 @@ functor WrappedStrm (Tok : ANTLR_TOKENS) (Lex : ANTLR_LEXER) = struct
     prefix : (Tok.token * StreamPos.span) list,
     curTok : int,
     strm : Lex.strm,
-    lex : Lex.strm -> Tok.token * StreamPos.span * Lex.strm
+    lex : (Lex.strm -> Tok.token * StreamPos.span * Lex.strm) ref
   }
 
-  fun wrap (strm, lex) =  WSTREAM {prefix = [], strm = strm, curTok = 0, lex = lex}
+  fun wrap (strm, lex) = let val lex = ref lex in 
+        WSTREAM {prefix = [], strm = strm, curTok = 0, lex = lex}
+      end
   fun unwrap (WSTREAM {strm, ...}) = strm
 
   fun get1 (WSTREAM {prefix = (tok, span)::toks, strm, curTok, lex}) = 
         (tok, span, 
 	 WSTREAM {prefix = toks, strm = strm, lex = lex, curTok = curTok + 1})
     | get1 (WSTREAM {prefix = [], strm, curTok, lex}) = let
-	val (tok, span, strm') = lex strm
+	val (tok, span, strm') = (!lex) strm
         in (tok, span, 
 	    WSTREAM {prefix = [], lex = lex, strm = strm', curTok = curTok + 1})
         end

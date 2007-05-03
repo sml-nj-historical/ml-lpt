@@ -15,37 +15,46 @@ structure LLKSpec =
   struct
 
     type ty = string
+    type span = Err.span
+
+    type 'a info = {
+	data : 'a
+      }
 
     datatype token = T of {
-	id : Int.int,
+        id : Int.int,			(* globally unique ID *)
 	name : Atom.atom,
+	loc : span,
 	ty : ty option,
 	abbrev : Atom.atom option,
 	keyword : bool
-      }
+      } 
 
     and nonterm = NT of {
+        id : Int.int,			(* globally unique ID *)
 	name : Atom.atom,
+	loc : span option ref,
 	binding : nt_binding,
-	id : Int.int,
 	prods : prod list ref,
 	formals : Atom.atom list ref,
-	isEBNF : bool
+	isEBNF : bool,
+	ty : ty option ref
       }
 
-    and nt_binding
-      = TOP
-      | WITHIN of prod
+    and nt_binding = TOP | WITHIN of prod
 
     and prod = PROD of {
-	id : Int.int,
-	name : Atom.atom,
+        id : Int.int,			(* globally unique ID *)
+	name : string,
 	try : bool,
 	lhs : nonterm,
-	rhs : item list ref,
-	rhsBindings : string list,
+	rhs : item list ref,	(* ref for tying recursive knot: 
+				 * subrules refer to their containing prod
+				 *)
+	rhsBindings : (string * bool) list,
 	pred : Action.action option,
-	action : Action.action option
+	action : Action.action option,
+	loc : span
       }
 
     and preitem
@@ -57,26 +66,30 @@ structure LLKSpec =
       | OPT of nonterm		(* ( ... )? *)
 
     and item = ITEM of {
-	id : Int.int,
+        id : Int.int,			(* globally unique ID *)
+        loc : span,
 	sym : preitem
       }
 
     withtype sem_pred = Action.action
 
-    datatype action_style = datatype GrammarSyntax.action_style
-    type refcell = string * string * Action.action
+    datatype refcell 
+      = REFCELL of {
+	  name : string,
+	  ty : ty,
+	  initCode : Action.action, 
+	  loc : span
+        }
 
     datatype grammar = Grammar of {
         name : string,
-	defs : Action.action,	(* user definitions *)
+	defs : Action.action,		(* user definitions (code) *)
         toks : token list,
         nterms : nonterm list,
         prods : prod list,
 	eof : token,
-				(* topologically sorted nonterms *)
-	sortedTops : nonterm list list,
+	sortedTops : nonterm list list,	(* topologically sorted nonterms *)
 	startnt : nonterm,
-	actionStyle : action_style,
 	entryPoints : nonterm list,
 	refcells : refcell list
       }

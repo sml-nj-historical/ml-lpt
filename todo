@@ -71,7 +71,6 @@
 
 add built-in Unicode character classes
 look into OCaml-style rules (starting with | rather than :)
-nonterminal type annotations
 decrease lexer size and compile time
 check that nonterminals with parameters are given parameters
 union/insct/containment for stream pos spans
@@ -81,15 +80,42 @@ higher-order nonterminal definitions
 
 ================================================================
 
-yylinepos := 1 for the first line of the file (and document this)
-
 dump.dot and latex output.  add switches to ml-antlr and document them
-
-support for {1,3} (ranges) in ml-ulex
 
 support for %arg
 
-new interfaces for ulex (stream textio, imperative textio, string, etc)
 better handling of EOF/EOP
-check for same token specified multiple times with %keyword
 nonunicode charsets
+
+allow lexer to pass error messages to the parser data structures
+
+adjustable k
+switches for unit actions & debugging actions
+
+bug: refcell parens in grammar spec do not appear in emitted code, so
+     tuples do not work correctly
+
+error repair: get rid of exception-based, instead use 5-token markers
+ml-antlr pretty-printing of flattened spec
+make for better type error messages dealing with actions (wrt hygienic parameters)
+"functorize" lexer over notion of stream positions
+
+to document:
+  - skip vs continue for lexers
+  - type annotations
+  - ref cells
+  - changes to grammar import
+  - changes to overall decl format
+  - RE syntax, semantics
+  - yylinepos := 1 for the first line of the file (and document this)
+  - larger example
+
+X  allow type annotations!!!
+X  issue with "-" in character classes; escape codes in general
+X  check for same token specified multiple times with %keyword
+X  new interfaces for ulex (stream textio, imperative textio, string, etc)
+X  verbosify parser error messages ("Try deleting ';'")
+X  support for {1,3} (ranges) in ml-ulex
+X  make sure checking that token names and NT names are disjoint
+X  make ref cells work with := directly
+X  when refcells declared, used = anyway

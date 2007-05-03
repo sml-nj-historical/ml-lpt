@@ -6,7 +6,7 @@ structure SIS = RE.SymSet
 val symTable : RE.re AtomMap.map ref = ref AtomMap.empty 
 
 val wildcard = SIS.complement (SIS.singleton 0w10) (* everything but \n *)
-fun charToSym c = Word.fromInt (Char.ord c)
+fun charToSym c = Word32.fromInt (Char.ord c)
 fun strToSym s = charToSym (String.sub (s, 0))
 
 %%
@@ -34,7 +34,7 @@ fun strToSym s = charToSym (String.sub (s, 0))
   | SLASH 
   | DASH
   | CHAR of string
-  | UNICHAR of Word.word
+  | UNICHAR of UTF8.wchar
   | DOT
   | EQ
   | REPS of int
@@ -70,8 +70,8 @@ fun strToSym s = charToSym (String.sub (s, 0))
   | CharClass of SIS.set
   | CharClass' of SIS.set
   | CharRng of SIS.set
-  | AChar of Word.word
-  | NonCarat of Word.word
+  | AChar of UTF8.wchar
+  | NonCarat of UTF8.wchar
 
 %left BAR
 %nonassoc QMARK

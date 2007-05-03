@@ -13,10 +13,8 @@ structure Nonterm =
 
     datatype nonterm = datatype LLKSpec.nonterm
 
-    fun toString (NT{name, id, ...}) = concat[
-	    Atom.toString name (* , "/", Int.toString id *)
-	  ]
     fun name (NT{name, ...}) = Atom.toString name
+    fun toString nt = name nt
 
     fun qualName (nt as NT{binding = LLKSpec.WITHIN (LLKSpec.PROD {lhs, ...}), ...}) = 
 	  (qualName lhs) ^ "_" ^ (name nt)
@@ -29,10 +27,9 @@ structure Nonterm =
       | parent _ = NONE
 
     fun isEBNF (NT{isEBNF = v, ...}) = v
-
     fun prods (NT{prods, ...}) = !prods
-
     fun formals (NT{formals, ...}) = !formals
+    fun ty (NT{ty, ...}) = !ty
 
     fun compare (NT{id=a, ...}, NT{id=b, ...}) = Int.compare(a, b)
     fun lexCompare (NT{name=a, ...}, NT{name=b, ...}) =

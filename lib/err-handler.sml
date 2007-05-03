@@ -12,15 +12,15 @@ functor ErrHandler(R : REPAIRABLE_STRM) : sig
 
   exception RepairableError
   type 'a err_handler
-  val mkErrHandler : 'a -> 'a err_handler
-  val getState	: 'a err_handler -> 'a
-  val setState	: 'a err_handler * 'a -> unit
+  val mkErrHandler : { get : unit -> 'a,
+		       put : 'a -> unit }
+		     -> 'a err_handler
   val whileDisabled : 'b err_handler -> (unit -> 'a) -> 'a
 
 (*      val wrap   : err_handler -> (R.strm -> ('a * R.strm)) -> R.strm -> ('a * R.strm) *)
   val wrap   : 'c err_handler -> (R.strm -> 'a) -> R.strm -> 'a
   val launch : 'c err_handler -> (R.strm -> ('a * 'b * R.strm)) -> 
-	       R.strm -> ('a option * R.strm * R.token Repair.repair list * 'c)
+	       R.strm -> ('a option * R.strm * R.token Repair.repair list)
 
   val tryProds : 'b err_handler -> (R.strm -> 'a) list -> R.strm -> 'a
 
@@ -37,24 +37,25 @@ end = struct
     cont : repair_cont option ref,
     enabled : bool ref,
     repairs : R.token Repair.repair list ref,
-    state : 'a ref
+    get : unit -> 'a,
+    put : 'a -> unit
   }
 
   fun getCont    (EH {cont,    ...}) = !cont
   fun getEnabled (EH {enabled, ...}) = !enabled
   fun getRepairs (EH {repairs, ...}) = !repairs
-  fun getState   (EH {state, ...}) = !state
+  fun getGet	 (EH {get,     ...}) = get
+  fun getPut	 (EH {put,     ...}) = put
 					   
   fun setCont    (EH {cont,    ...}, n) = cont := n
   fun setEnabled (EH {enabled, ...}, n) = enabled := n
   fun addRepair  (EH {repairs, ...}, n) = repairs := (!repairs) @ [n]
-  fun setState   (EH {state,   ...}, n) = state := n
 
-  fun mkErrHandler s = EH {
+  fun mkErrHandler {get,put} = EH {
 	cont = ref NONE, 
 	enabled = ref true,
 	repairs = ref [],
-	state = ref s
+	get = get, put = put
       }
 
   fun whileDisabled eh f = let
@@ -73,11 +74,11 @@ end = struct
 
   fun wrap eh f t = if not (getEnabled eh) then f t else let
 	val cont_ref : retry_cont option ref = ref NONE
-	val state = getState eh
+	val state = (getGet eh) ()
 	val t' = SMLofNJ.Cont.callcc (fn k => (cont_ref := SOME k; t))
 	val retry = (t', valOf (!cont_ref))
         in
-	  setState (eh, state);
+	  getPut eh state;
 	  f t'
 	  handle RepairableError => (
 	    throwIfEH (eh, t');
@@ -171,19 +172,19 @@ end = struct
 		end
         in
 	  throwIfEH (eh, t');
-	  (SOME x, t', getRepairs eh, getState eh)
+	  (SOME x, t', getRepairs eh)
         end
     handle UnrepairableError =>
-      (NONE, t, getRepairs eh, getState eh)
+      (NONE, t, getRepairs eh)
 
   fun tryProds eh prods strm = let
 	fun try [] = raise RepairableError
 	  | try (prod :: prods) = let 
-	      val state = getState eh
+	      val state = (getGet eh) ()
 	      in
 	        whileDisabled eh (fn () => prod strm)
 		handle _ => 
-		  (setState (eh, state);
+		  (getPut eh state;
 		   try (prods))
 	      end
         in

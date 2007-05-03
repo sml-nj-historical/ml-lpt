@@ -72,7 +72,7 @@ type code = Int.int * String.string
     | QualID of string
     | Code of code
 
-%arg (errFn) : (string * int * int) -> unit
+%arg (errFn, startGrm) : ((string * int * int) -> unit) * GS.grammar
 
 %pos int
 %eop EOF
@@ -90,7 +90,7 @@ File	: Decls
 
 Decls
 	: 
-		(GS.mkGrammar())
+		(startGrm)
 	| Decls KW_name ID SEMI
 		(GS.updName (Decls, ID))
 	| Decls KW_start ID SEMI

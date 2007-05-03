@@ -62,7 +62,7 @@ structure SMLOutput =
 			       (AtomSet.listItems (AtomSet.union (bindings, formals)))
 	  val withSpan   = map (fn b => Atom.toString b ^ spanSuffix ^ spanTySuffix) 
 			       (AtomSet.listItems bindings)
-	  val refs = map (fn (r, _, _) => r ^ refSuffix) refcells
+	  val refs = map (fn (S.REFCELL {name, ...}) => name ^ refSuffix) refcells
 	  val args = if isPred then 
 		       withSuffix @ refs
 		     else
@@ -107,12 +107,12 @@ structure SMLOutput =
   (* make a production *)
     fun mkProd (grm, pm) prod = let
           val rhs = Prod.items prod
-	  val S.Grammar {actionStyle, refcells, ...} = grm
+	  val S.Grammar {refcells, ...} = grm
 	  fun mkTok (t, strmExp, letFn) = 
 	        letFn (ML_App (tokMatch t, [strmExp]))
 	  fun mkNT (nt, strmExp, args, letFn, item) = let
-	        val name = case (args, actionStyle)
-		  of (SOME args, S.ActNormal) => 
+	        val name = case (args, !Options.actStyle)
+		  of (SOME args, Options.ActNormal) => 
 		       "(" ^ NTFnName nt ^ " ("
 		       ^ actionHeader 
 			   ("UserCode.ARGS_" ^ Action.name args, 
@@ -157,22 +157,22 @@ structure SMLOutput =
 	        end
 	  val itemBindings = Prod.itemBindings prod
 	  val action = 
-	      case actionStyle
-	       of S.ActDebug =>
+	      case !Options.actStyle
+	       of Options.ActDebug =>
 		  "( print \"" ^ (Nonterm.qualName (Prod.lhs prod)) ^ "\\n\" )"
-		| S.ActUnit => "()"
-		| S.ActNormal => (case Prod.action prod
+		| Options.ActUnit => "()"
+		| Options.ActNormal => (case Prod.action prod
 		    of SOME _ => actionHeader ("UserCode." ^ Prod.fullName prod ^ "_ACT", 
 					       Prod.bindingsAtAction prod, bindingSuffix, false, 
 					       refcells, rcSuffix)
 		     | NONE => let
-			 val bindings = (List.mapPartial 
-			    (fn (S.TOK t, binding) =>
-				  if Token.hasTy t then
-				    SOME (binding ^ bindingSuffix)
-				  else NONE
-			      | (_, binding) => SOME (binding ^ bindingSuffix))
-			    (ListPair.zip (map Item.sym rhs, itemBindings)))
+			 val bindings = 
+			       List.mapPartial 
+				 (fn (binding, hasValue) => 
+				     if hasValue 
+				     then SOME (binding ^ bindingSuffix)
+				     else NONE)
+				 (ListPair.zip (itemBindings, Prod.itemYields prod))
 			 in 
 			   if List.length bindings > 0 
 			   then "(" ^ (String.concatWith ", " bindings) ^ ")"
@@ -189,8 +189,8 @@ structure SMLOutput =
 				       ML_App ("#2", [ML_Var (hd (rev itemBindings) ^ spanSuffix)])]
 	        val act = ML_Tuple [ML_Raw [ML.Tok action], ML_Var fullSpan, strmVar]
 		val spanExp = ML_Let (fullSpan, span, act)
-	        in case (Prod.pred prod, actionStyle)
-		    of (SOME pred, S.ActNormal) =>
+	        in case (Prod.pred prod, !Options.actStyle)
+		    of (SOME pred, Options.ActNormal) =>
 		         ML_If (ML_Raw [ML.Tok ("(" 
 				  ^ actionHeader
 				      ("UserCode." ^ Prod.fullName prod ^ "_PRED",
@@ -227,9 +227,8 @@ structure SMLOutput =
           end
 
     and mkNonterm' (grm, pm) nt = let
-	  val S.Grammar {actionStyle, ...} = grm
-          val formals = case actionStyle
-	      of S.ActNormal =>
+          val formals = case !Options.actStyle
+	      of Options.ActNormal =>
 	        if length (Nonterm.formals nt) > 0
 		then " (" ^ (String.concatWith ", " 
 			       (map 
@@ -254,9 +253,11 @@ structure SMLOutput =
           val (grm as S.Grammar {toks, nterms, startnt, sortedTops, entryPoints, ...}, 
 	       pm) = spec
           val ppStrm = TextIOPP.openOut {dst = strm, wid = 80}
-	  val entries = map (fn x => NTFnName x) (startnt :: entryPoints)
+	  val entries = map NTFnName (startnt :: entryPoints)
 	  val entriesVal = "val (" ^ String.concatWith ", " entries ^ ") = "
-	  val innerExp = ML_Tuple (map ML_Var entries)
+	  val innerExp = 
+	        ML_Tuple (ML_App ("reqEOF", [ML_Var (NTFnName startnt)])
+			  :: map (ML_Var o NTFnName) entryPoints)
 	  val parser = List.foldl (mkNonterms (grm, pm)) innerExp sortedTops
 	  fun optParam nt = if length (Nonterm.formals nt) > 0 then " x " else " "
 	  fun optParamFn nt = if length (Nonterm.formals nt) > 0 then " fn x => " else " "
@@ -366,7 +367,11 @@ structure SMLOutput =
 		 actionHeader (
 		   Prod.fullName prod ^ suffix, 
 		   Prod.bindingsAtAction prod, "", isPred, refcells, ""), 
-		 " = \n  (", Action.toString code, ")\n"]
+		 " = \n  (", Action.toString code, ")",
+		  (case Nonterm.ty (Prod.lhs prod)
+		    of NONE => ""
+		     | SOME ty => " : " ^ ty),
+		 "\n"]
 	     | NONE => ())
 	  fun args prod (itm as S.ITEM {sym = S.NONTERM (nt, SOME code), ...}) = 
 	        output ["fun ",
@@ -384,34 +389,32 @@ structure SMLOutput =
           end
 
     fun ehargsHook spec strm = let
-          val (S.Grammar {refcells, ...}, _) = spec
-	  fun mkc (name, _, c) = name ^ " = " ^ Action.toString c
-	  fun mkt (name, t, _) = name ^ " : " ^ t
-	  val inits = String.concatWith ", " (map mkc refcells)
-	  val tys   = String.concatWith ", " (map mkt refcells)
-          in
-            TextIO.output (strm, "{" ^ inits ^ "} : {" ^ tys ^ "}")
-          end
-
-    fun refcellsHook spec strm = let
-          val (S.Grammar {refcells, ...}, _) = spec
 	  fun out s = TextIO.output (strm, s)
-	  val cellNames = map (fn (n, _, _) => n) refcells
-	  val allCells = String.concatWith ", " cellNames
-	  fun upd n = String.concatWith ", " (
-	        (map
-		   (fn s => s ^ " = " ^ s) 
-		   (List.filter (fn s => not (s = n)) cellNames)) @
-		[n ^ " = n"])
-	  fun wr (name) = (
-		out ("      val " ^ name ^ rcSuffix ^ " = (");
-		out ("fn () => #" ^ name ^ " (Err.getState eh),");
-		out ("fn n => let val {" ^ allCells ^ "} = Err.getState eh in Err.setState (eh, {" ^ upd name ^ "}) end)\n"))
+          val (S.Grammar {refcells, ...}, _) = spec
+	  val names = map (fn (S.REFCELL {name, ...}) => name) refcells
+	  fun prepend pre s = pre ^ s
+	  fun append post s = s ^ post
+	  fun mkc (S.REFCELL {name, initCode, ty, ...}) = String.concat [
+		"val ", name ^ rcSuffix, " : (", ty, ") ref = ref (", 
+		Action.toString initCode, ")\n"]
           in
-            app wr cellNames;
-            out ("      fun unwrap (ret, strm, repairs, state) = (ret, R.unwrap strm, repairs"
-	         ^ (if List.length refcells > 0 then ", state" else "")
-		 ^ ")")
+            app (out o mkc) refcells;
+	    out (String.concat ["fun getS() = {",
+		   String.concatWith ", "
+		     (map (fn nm => nm ^ " = !" ^ nm ^ rcSuffix)
+			  names),
+		   "}\n"]);
+	    out (String.concat ["fun putS{",
+		   String.concatWith ", " names,
+		   "} = (",
+		   String.concatWith
+		     "; " (map (fn nm => nm ^ rcSuffix ^ " := " ^ nm)
+			       names),
+		   ")\n"]);
+	    out (String.concat ["fun unwrap (ret, strm, repairs) = ",
+		   "(ret, R.unwrap strm, repairs",
+		   if List.length names > 0 then ", getS()" else "",
+		   ")"])
           end
 
     val template = ExpandFile.mkTemplate "BackEnds/SML/template.sml"
@@ -426,7 +429,6 @@ structure SMLOutput =
 		       ("header",   headerHook (grm, pm)),
 		       ("defs",     defsHook (grm, pm)),
 		       ("ehargs",   ehargsHook (grm, pm)),
-		       ("refcells", refcellsHook (grm, pm)),
 		       ("matchfns", matchfnsHook (grm, pm))]
 	    }
 

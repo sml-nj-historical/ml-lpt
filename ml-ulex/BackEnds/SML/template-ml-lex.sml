@@ -92,11 +92,6 @@
 
       end
 
-    datatype 'a yymatch 
-      = yyNO_MATCH
-      | yyMATCH of yyInput.stream * 'a action * 'a yymatch
-    withtype 'a action = yyInput.stream * 'a yymatch -> 'a
-
     datatype yystart_state = 
 @startstates@
 
@@ -108,7 +103,18 @@
 
       end
 
+    datatype yymatch 
+      = yyNO_MATCH
+      | yyMATCH of yyInput.stream * action * yymatch
+    withtype action = yyInput.stream * yymatch -> UserDeclarations.lexresult
+
     local
+
+    val yytable = 
+#[
+@table@
+]
+
     fun mk yyins = let
         (* current start state *)
           val yyss = ref INITIAL
@@ -128,6 +134,30 @@
 		  action (strm, old)
 	    val yypos = yyInput.getpos (!yystrm)
 	    val yygetlineNo = yyInput.getlineNo
+	    fun yyactsToMatches (strm, [],	  oldMatches) = oldMatches
+	      | yyactsToMatches (strm, act::acts, oldMatches) = 
+		  yyMATCH (strm, act, yyactsToMatches (strm, acts, oldMatches))
+	    fun yygo actTable = 
+		(fn (~1, _, oldMatches) => yystuck oldMatches
+		  | (curState, strm, oldMatches) => let
+		      val (transitions, finals') = Vector.sub (yytable, curState)
+		      val finals = map (fn i => Vector.sub (actTable, i)) finals'
+		      fun tryfinal() = 
+		            yystuck (yyactsToMatches (strm, finals, oldMatches))
+		      fun find (c, []) = NONE
+			| find (c, (c1, c2, s)::ts) = 
+		            if c1 <= c andalso c <= c2 then SOME s
+			    else find (c, ts)
+		      in case yygetc strm
+			  of SOME(c, strm') => 
+			       (case find (c, transitions)
+				 of NONE => tryfinal()
+				  | SOME n => 
+				      yygo actTable
+					(n, strm', 
+					 yyactsToMatches (strm, finals, oldMatches)))
+			   | NONE => tryfinal()
+		      end)
 	    fun continue() = 
 @lexer@
 

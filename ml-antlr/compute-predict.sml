@@ -21,7 +21,7 @@ structure ComputePredict :
     structure NMap = Nonterm.Map
     structure S = LLKSpec
 
-    val maxK = 3
+    val maxK = 5
 
     val debugPredict = false
 

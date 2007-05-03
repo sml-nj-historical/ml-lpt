@@ -59,15 +59,33 @@ structure LexGen :
                 in initIter (q :: states, stateMap', vecs)
                 end
 	  val (initStates, initStatemap) = initIter ([], Map.empty, startVecs)
+(*	  val approxEdges : int ref = ref 0 
+	  val actEdges : int ref = ref 0 *)
 	  fun f (stateMap, []) = stateMap
 	    | f (stateMap, LO.State{next, label, ...}::workList) = let
+		val firstErr = ref true
 		fun move ((res, edge), (stateMap, workList)) = 
 		      if Vector.all RE.isNone res (* if error transition *)
-		        then (stateMap, workList)
+		        then (
+(*			  if !firstErr then
+			    (firstErr := false;
+			     actEdges := !actEdges + 1)
+			  else ();
+			  approxEdges := !approxEdges + 1; *)
+			  (stateMap, workList))
 		        else let
+(*			  val _ = approxEdges := !approxEdges + 1 *)
 			  val (isNew, q, stateMap) = mkState (stateMap, res, false)
+			  fun findOrReplEdge [] = (
+(*				actEdges := !actEdges + 1; *)
+				[(edge, q)])
+			    | findOrReplEdge ((e, p)::es) = 
+			        if LO.sameState (p, q) then
+				  (SIS.union (e, edge), p) :: es
+				else (e, p) :: findOrReplEdge es
 			  in
-			    next := (edge, q) :: !next;
+(*			    next := (edge, q) :: !next; *)
+			    next := findOrReplEdge (!next);
 			    if isNew
 			      then (stateMap, q::workList)
 			      else (stateMap, workList)
@@ -78,6 +96,9 @@ structure LexGen :
 		end
 	  in
 	    ignore (f (initStatemap, initStates));
+(*	    print (String.concat [
+	      " -- Approximate edges: ", Int.toString (!approxEdges), "\n",
+	      " -- Actual edges: ", Int.toString (!actEdges), "\n"]); *)
 	    (initStates, List.rev(!states), !n)
 	  end
 

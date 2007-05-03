@@ -24,10 +24,10 @@ structure Repair = struct
   fun actionToString tokToString repair = let
     val toksToString = (String.concatWith " ") o (map tokToString)
     in case repair
-	of Insert toks => "inserting " ^ toksToString toks
-	 | Delete toks => "deleting " ^ toksToString toks
+	of Insert toks => "try inserting " ^ toksToString toks
+	 | Delete toks => "try deleting " ^ toksToString toks
 	 | Subst {old, new} => 
-	     "substituting " ^ toksToString new ^ " for "
+	     "try substituting " ^ toksToString new ^ " for "
 	     ^ toksToString old
 	 | FailureAt tok => "syntax error at " ^ toksToString [tok]
     end

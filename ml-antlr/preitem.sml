@@ -3,18 +3,25 @@ structure Preitem =
 
     structure S = LLKSpec
 
-    fun toString (S.TOK t) = Token.toString t
+    fun ntToString nt = 
+	  if not (Nonterm.isSubrule nt) then Nonterm.name nt
+	  else "(" ^ 
+	       (String.concatWith " | " (map prodToString (Nonterm.prods nt))) ^
+	       ")"
+
+    and prodToString (S.PROD{rhs, ...}) = listToString (map symOf (!rhs))
+    and symOf (S.ITEM {sym, ...}) = sym
+    and toString (S.TOK t) = Token.toString t
       | toString (S.NONTERM (nt, args)) = 
-	  String.concat ([Nonterm.toString nt] @ (
+	  String.concat ([ntToString nt] @ (
 	    case args
 	     of SOME args =>
 		["@(", Action.toString args, ")"]
 	      | _ =>  []))
-      | toString (S.CLOS nt) = Nonterm.toString nt ^ "*"
-      | toString (S.POSCLOS nt) = Nonterm.toString nt ^ "+"
-      | toString (S.OPT nt) = Nonterm.toString nt ^ "?"
-
-    fun listToString l = String.concatWith " " (map toString l)
+      | toString (S.CLOS nt) = ntToString nt ^ "*"
+      | toString (S.POSCLOS nt) = ntToString nt ^ "+"
+      | toString (S.OPT nt) = ntToString nt ^ "?"
+    and listToString l = String.concatWith " " (map toString l)
 
     fun name (S.TOK t) = Token.name t
       | name (S.NONTERM (nt, _)) = Nonterm.name nt

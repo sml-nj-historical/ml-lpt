@@ -128,9 +128,16 @@ end = struct
   	   new = [t]
          })
 
+(* val rc = ref (0 : Int.int) *)
+
   fun chooseRepair {startAt, endAt, try} = let
         val scoreOffset = WS.subtract (endAt, startAt)
-	val (endAt', working) = getWorking (startAt, scoreOffset + 5, [])
+(* val _ = print ("try" ^ Int.toString scoreOffset ^ "\n") *)
+	val (endAt', working') = getWorking (startAt, scoreOffset + 5, [])
+	val (prefix, working) = 
+	      if length working' <= 15 then ([], working')
+	      else let val rw = rev working'
+		   in (rev (List.drop (rw, 15)), rev (List.take (rw, 15))) end
 	fun tryRepairs (prefix, working, repairs, best) = (case (working, repairs)
 	      of ([], _) => 
 		   (case best
@@ -145,6 +152,7 @@ end = struct
 		   tryRepairs (prefix @ [t], ts, allRepairs, best)
 	       | (_, r::rs) => let
 		   val strm = WS.prepend (prefix @ (applyRepair (working, r)), endAt')
+(* val _ = (rc := (!rc) + 1; if (!rc) mod 100 = 0 then print (Int.toString (!rc) ^ "\n") else ()) *)
 		   val strm' = try strm
  		   val score = WS.subtract (strm', strm)
 			         + (case r
@@ -163,11 +171,14 @@ end = struct
 				   | SOME c => SOME (chooseCand (c, cand))
 			       else best
 		   in
-		     tryRepairs (prefix, working, rs, best')
+		     if score > 25 then
+		       tryRepairs ([], [], [], best')
+		     else
+		       tryRepairs (prefix, working, rs, best')
 		   end
              (* end case *))
         in
-          tryRepairs ([], working, allRepairs, NONE)
+          tryRepairs (prefix, working, allRepairs, NONE)
         end    
 
   val wrap = WS.wrap

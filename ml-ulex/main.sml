@@ -48,7 +48,9 @@ structure Main =
 		     DotOutput.output (outSpec, !Options.fname))
 		  else ()
 	  val _ = status "SML gen"
-	  val _ = SMLFunOutput.output (outSpec, !Options.fname)
+	  val _ = if numStates outSpec > 150 
+		  then SMLTblOutput.output (outSpec, !Options.fname) 
+		  else SMLFunOutput.output (outSpec, !Options.fname)
 	  val _ = if !Options.match then 
 		    (debug "-- Interactive matching (blank line to quit) --";
 		     Match.output (outSpec, !Options.fname))

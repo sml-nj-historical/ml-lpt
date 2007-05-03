@@ -15,6 +15,12 @@ structure Err =
   (* signal that the program should be aborted with no further messages printed *)
     exception Abort
 
+(*    type pos = string * int * int *)
+    type pos = StreamPos.pos
+    type span = pos * pos
+
+    val emptySpan = let val npos = 0 in (npos, npos) end
+
   (* global flag to record the existance of errors *)
     val anyErrors = ref false
     val leftRecurs : string list ref = ref []
@@ -28,18 +34,28 @@ structure Err =
     fun warning l = 
 	  TextIO.output(TextIO.stdErr, String.concat l ^ "\n")
 
-  (* error function for lexers *)
-    fun lexErr filename (lnum, msg) = errMsg [
-	    "Error [", filename, ":", Int.toString lnum, "]: ", msg
-	  ]
+    local
+      fun lc2str (l, c) = Int.toString l ^ "." ^ Int.toString c
+    in
 
-  (* error function for parsers *)
-    fun parseErr filename (msg, p1, p2) = if (p1 = p2)
-	  then lexErr filename (p1, msg)
-	  else errMsg [
-	      "Error [", filename, ":", Int.toString p1, "-", Int.toString p2, "]: ",
-	      msg
-	    ]
+(*
+    fun pos2str  (fname, l, c) = "[" ^ fname ^ ":" ^ lc2str (l, c) ^ "]"
+    fun span2str ((fname, l1, c1), (_, l2, c2)) = 
+	  if l1 = l2 andalso c1 = c2 
+	  then pos2str (fname, l1, c1)
+	  else
+	    "[" ^ fname ^ ":" ^ lc2str (l1, c1) ^ "-" ^ lc2str (l2, c2) ^ "]"
+*)
+    fun pos2str _ = ""
+    fun span2str _ = ""
+
+  (* error function at a single position *)
+    fun posErr (pos, msg) = errMsg (["Error ", pos2str pos, ": "]@msg)
+  (* error function over a position span *)
+    fun spanErr (span, msg) = errMsg (["Error ", span2str span, ": "]@msg)
+
+    end
+
   (* left recursion detected *)
     fun leftRecur name = 
 	if List.exists (fn n => (n = name)) (!leftRecurs)

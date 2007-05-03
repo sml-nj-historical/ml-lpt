@@ -13,10 +13,12 @@ structure Action :>
 
     type action
 
-    val action : int * string -> action
+    val action : Err.span * string -> action
+    val empty : action
+    val concat : action * action -> action
+
     val toString : action -> string
     val name : action -> string
-
     val same : (action * action) -> bool
 
   end = struct
@@ -25,7 +27,7 @@ structure Action :>
       = ACT of {
 	  id : int,
 	  code : string,
-	  lineNo : int
+	  span : Err.span
         }
 
     local
@@ -34,15 +36,24 @@ structure Action :>
     fun nextId() = (cnt := !cnt + 1; !cnt)
     end
 
-    fun action (i, s) = ACT {id = nextId(), code = s, lineNo = i}
-    fun toString (ACT {code, lineNo, ...}) = code
-(*	  if lineNo = 1 then
-	    "(*#line " ^ Int.toString lineNo ^ ".0*)" ^ code
+    fun action (i, s) = ACT {id = nextId(), code = s, span = i}
+    fun toString (ACT {code, span, ...}) = code
+(*	  if span = 1 then
+	    "(*#line " ^ Int.toString span ^ ".0*)" ^ code
 	  else
-	    "(*#line " ^ Int.toString (lineNo - 1) ^ ".0*) \n" ^ code
+	    "(*#line " ^ Int.toString (span - 1) ^ ".0*) \n" ^ code
 *)
 
     fun name (ACT {id, ...}) = Int.toString id
     fun same (ACT {id = id1, ...}, ACT {id = id2, ...}) = (id1 = id2)
+
+    fun span (ACT {span, ...}) = span
+    fun code (ACT {code, ...}) = code
+
+    val empty = action (Err.emptySpan, "")
+    fun concat (a, b) = 
+	  if same (a, empty) then b 
+	  else if same (b, empty) then a
+	  else action (span a, code a ^ code b)
 
   end

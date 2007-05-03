@@ -16,10 +16,14 @@ structure Prod =
     fun id (PROD{id, ...}) = id
     fun lhs (PROD{lhs, ...}) = lhs
     fun items (PROD{rhs, ...}) = !rhs
-    fun itemBindings (PROD{rhsBindings, ...}) = rhsBindings
+    fun itemBindings (PROD{rhsBindings, ...}) = 
+	  (fn (x, _) => x) (ListPair.unzip rhsBindings)
+    fun itemYields (PROD{rhsBindings, ...}) = 
+	  (fn (_, y) => y) (ListPair.unzip rhsBindings)
     fun action (PROD{action, ...}) = action
     fun pred (PROD{pred, ...}) = pred
-    fun name (PROD{name, ...}) = Atom.toString name
+
+    fun name (PROD{name, ...}) = name
     fun fullName p = (case Nonterm.parent (lhs p)
           of SOME p' => String.concat [
 	       fullName p', "_",
@@ -28,7 +32,6 @@ structure Prod =
 	   | NONE => name p)
 
     fun toString p = concat[
-	    (* "[", Int.toString id, "] ", *)
 	    Nonterm.qualName (lhs p), " ::= ",
 	    String.concatWith " " (List.map Item.toString (items p))
 	  ]

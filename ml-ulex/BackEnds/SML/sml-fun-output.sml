@@ -11,39 +11,7 @@
 structure SMLFunOutput : OUTPUT = 
   struct
 
-    structure RE = RegExp
-    structure Sym = RE.Sym
-    structure SIS = RegExp.SymSet
-    structure LO = LexOutputSpec
-
-    datatype ml_exp = datatype ML.ml_exp
-    datatype ml_pat = datatype ML.ml_pat
-
-    fun ML_Sym s = ML_Raw [ML.Tok (RE.symToString s)]
-
-    val inp = "inp"
-    val inpVar = ML_Var inp
-
-    fun idOf (LO.State {id, ...}) = id
-    fun nameOf' i = "yyQ" ^ (Int.toString i)
-    fun nameOf s = nameOf' (idOf s)
-    fun actName i = "yyAction" ^ (Int.toString i)
-
-  (* simple heuristic to avoid computing unused values *)
-    local 
-      val has = String.isSubstring
-    in
-    val hasyytext   = has "yytext"
-    val hasyysubstr = has "yysubstr"
-    val hasyyunicode= has "yyunicode"
-    val hasREJECT   = has "REJECT"
-    val hasyylineno = has "yylineno"
-    val hasyycolno  = has "yycolno"
-    end
-
-  (* map over the intervals of a symbol set *)
-    fun mapInt f syms = 
-	  SIS.foldlInt (fn (i, ls) => (f i)::ls) [] syms
+    open SMLOutputSupport
 
   (* transition interval representation *)
     datatype transition_interval = TI of SIS.interval * int * ml_exp
@@ -198,61 +166,8 @@ structure SMLFunOutput : OUTPUT =
 				  trans)])
 		 (* end case *))
 	  in
-            ML_Fun (nameOf s, ["strm", "lastMatch"], getInp, k)
+            ML_Fun (nameOf s, ["strm", "lastMatch : yymatch"], getInp, k)
           end
-
-    fun mkAction (i, action, k) = let
-          val updStrm = ML_RefPut (ML_Var "yystrm", ML_Var "strm")
-	  val act = ML_Raw [ML.Tok action]
-	  val seq = ML_Seq [updStrm, act]
-	  val lets = if hasyysubstr action andalso not (!Options.lexCompat)
-		     then ML_Let 
-			    ("yysubstr", 
-			     ML_App("yymksubstr", [ML_Var "strm"]), 
-			     seq)
-		     else seq
-	  val lett = if hasyytext action 
-		     then ML_Let 
-			    ("yytext", 
-			     ML_App("yymktext", [ML_Var "strm"]), 
-			     lets)
- 		     else lets
-	  val letu = if hasyyunicode action 
-		     then ML_Let 
-			    ("yyunicode", 
-			     ML_App("yymkunicode", [ML_Var "strm"]), 
-			     lett)
-		     else lett
-	  val letl = if hasyylineno action
-		     then ML_Let 
-			    ("yylineno", 
-			     ML_App("ref", 
-				 [ML_App ("yygetlineNo", 
-					  [ML_RefGet (ML_Var "yystrm")])]), 
-			     letu)
-		     else letu
-	  val letc = if hasyycolno action
-		     then ML_Let 
-			    ("yycolno", 
-			     ML_App("ref", 
-				 [ML_App ("yygetcolNo", 
-					  [ML_RefGet (ML_Var "yystrm")])]), 
-			     letl)
-		     else letl
-	  val letr = if hasREJECT action
-		     then ML_Let
-			    ("oldStrm", ML_RefGet (ML_Var "yystrm"),
-			     ML_Fun
-			       ("REJECT", [],
-				ML_Seq 
-				  [ML_RefPut (ML_Var "yystrm", 
-					      ML_Var "oldStrm"),
-				   ML_App("yystuck", [ML_Var "lastMatch"])],
-				letc))
-		     else letc
-	  in  
-	    ML_NewGroup (ML_Fun (actName i, ["strm", "lastMatch"], letr, k))
-	  end
 
     structure SCC = GraphSCCFn (
       struct
@@ -291,37 +206,6 @@ structure SMLFunOutput : OUTPUT =
             ML.ppML (ppStrm, lexerExp)
           end
 
-    fun startStatesHook spec strm = let
-          val LO.Spec {startStates, ...} = spec
-	  val machNames = #1 (ListPair.unzip startStates)
-          in 
-            TextIO.output (strm, String.concatWith " | " machNames)
-          end
-
-    fun userDeclsHook spec strm = let
-          val LO.Spec {decls, ...} = spec
-          in 
-            TextIO.output (strm, decls)
-	  end
-
-    fun headerHook spec strm = let
-          val LO.Spec {header, ...} = spec
-          in 
-            TextIO.output (strm, header)
-	  end
-
-    fun argsHook spec strm = let
-          val LO.Spec {arg, ...} = spec
-	  val arg' = if String.size arg = 0 
-		     then "(yyarg as ())"
-		     else "(yyarg as " ^ arg ^ ") ()"
-          in 
-            TextIO.output (strm, arg')
-	  end
-
-    val lexTemplate  = ExpandFile.mkTemplate "BackEnds/SML/template-ml-lex.sml" 
-    val ulexTemplate = ExpandFile.mkTemplate "BackEnds/SML/template-ml-ulex.sml" 
-
     fun output (spec, fname) = 
           ExpandFile.expand' {
 	      src = if !Options.lexCompat 
@@ -331,7 +215,8 @@ structure SMLFunOutput : OUTPUT =
 		       ("startstates", startStatesHook spec),
 		       ("userdecls", userDeclsHook spec),
 		       ("header", headerHook spec),
-		       ("args", argsHook spec)]
+		       ("args", argsHook spec),
+		       ("table", fn _ => ())]
 	    }
 
   end

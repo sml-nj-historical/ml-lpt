@@ -10,105 +10,17 @@
 
 structure CheckGrammar : sig
 
-    val check : GrammarSyntax.grammar -> LLKSpec.grammar
+    val check : GrammarSyntax.grammar option -> LLKSpec.grammar
 
   end = struct
 
     structure Syn = GrammarSyntax
     structure S = LLKSpec
     structure ATbl = AtomTable
+    structure AMap = AtomMap
+    structure ASet = AtomSet
 
     fun nextId (r : int ref) () = let val id = !r in r := id+1; id end
-
-  (* count the number of rules; we start the subrule IDs off at this value
-   * to keep the two distinct.
-   *)
-    fun countRules rules = let
-	  fun cnt (Syn.RULE{alts, ...}, n) = n + List.length alts
-	  in
-	    List.foldl cnt 0 rules
-	  end
-
-  (* load the %tokens definition into a tokTbl : atom -> LLKSpec.token *)
-    fun loadToks (nextGlobalID, toks, keywords) = let
-          val kwSet = ref (AtomSet.addList (AtomSet.empty, keywords))
-	  val tokTbl = ATbl.mkTable (64, Fail "token table")
-	  val tokList = ref []
-	  fun tryKW (name) = 
-	        if AtomSet.member (!kwSet, name) 
-		then (true before kwSet := AtomSet.delete (!kwSet, name))
-		else false
-	  fun addTok (name, ty, abbrev) = (case ATbl.find tokTbl name
-		 of NONE => let
-		      val id = nextGlobalID()
-		      val isKW = tryKW name orelse 
-				 (case abbrev
-				   of SOME a => tryKW a
-				    | NONE => false)
-		      val info = S.T{name = name, id = id, ty = ty, 
-				     abbrev = abbrev, keyword = isKW}
-		      in
-			ATbl.insert tokTbl (name, info); 
-			Option.app (fn a => ATbl.insert tokTbl (a, info)) abbrev;
-			tokList := info :: !tokList
-		      end
-		  | SOME info => Err.errMsg ["Error: token '", Atom.toString name, 
-					     "' defined multiple times."]
-		(* end case *))
-	  fun checkNonTokKW () = 
-	        if AtomSet.isEmpty (!kwSet) then ()
-		else Err.errMsg ["Error: ", 
-		  String.concatWith " " (map Atom.toString (AtomSet.listItems (!kwSet))),
-		  " appears in %keywords directive but not in %tokens directive."]
-          in
-            List.app addTok toks;
-	    checkNonTokKW();
-	    (List.rev (!tokList), tokTbl)
-          end
-
-    structure AMap = AtomMap
-
-  (* recursively import grammars, applying changes (%drop, %replace, %extend)
-   * as the grammar is imported.  note that grammars are integrated directly
-   * from the parse tree form (GrammarSyntax.grammar) rather than the processed
-   * form that the check function below produces (LLKSpec.grammar).
-   *)
-    fun appImport (Syn.GRAMMAR {import = SOME file, importChanges, name, defs, 
-				rules, toks, actionStyle, startSym, entryPoints, keywords, refcells}) = let
-	  val Syn.GRAMMAR {rules = prules, ...} = appImport (ParseFile.parse file)
-	  fun ins (rule as Syn.RULE{lhs, ...}, map) =
-	        if AMap.inDomain (map, lhs) then
-		  (Err.errMsg ["Error [", file, "]: ", Atom.toString lhs, " is multiply defined."];
-		   map)
-		else AMap.insert (map, lhs, rule)
-	  fun tryFind (lhs, map, err, f) = (case AMap.find (map, lhs)
-		of NONE =>
-		  (Err.errMsg ["Error: cannot ", err, " ", Atom.toString lhs, 
-			       " because it is not defined in the parent grammar."];
-		   map)
-		 | SOME rule => f rule
-	       (* end case *))
-	  fun appChg (Syn.ICDrop lhs, map) =
-	        tryFind (lhs, map, "drop", fn _ => 
-		  #1 (AMap.remove (map, lhs)))
-	    | appChg (Syn.ICExtend (rule as Syn.RULE{lhs, alts, formals}), map) = 
-	        tryFind (lhs, map, "extend", fn (Syn.RULE{alts = palts, ...}) =>
-		  AMap.insert (map, lhs, 
-		    Syn.RULE{lhs = lhs, alts = palts@alts, formals = formals}))
-	    | appChg (Syn.ICReplace (rule as Syn.RULE{lhs, ...}), map) = 
-	        tryFind (lhs, map, "replace", fn _ => AMap.insert (map, lhs, rule))
-	  val map = foldl ins AMap.empty prules
-	  val map' = foldl appChg map importChanges
-          in
-            Syn.GRAMMAR {import = SOME file, importChanges = importChanges, name = name,
-			 defs = defs, rules = (AMap.listItems map')@rules, toks = toks, 
-			 actionStyle = actionStyle, startSym = startSym, entryPoints = entryPoints,
-			 keywords = keywords, refcells = refcells}
-          end
-      | appImport (g as Syn.GRAMMAR {importChanges = [], ...}) = g
-      | appImport g = (Err.errMsg ["Error: import alterations (%drop, %extend...) ",
-				   "cannot be used unless %import is specified"];
-		       g)
 
   (* auto-number the bindings for repeated variable names *)
     local
@@ -123,215 +35,295 @@ structure CheckGrammar : sig
 	    then (b ^ "1")::numberBindings(addNumbers([], 2, b, bs))
 	    else b::(numberBindings bs)
       (* assign a binding to an item *)
-      fun binding tokTbl (Syn.SYMBOL (name, _)) = (case ATbl.find tokTbl name
-	    of SOME tok => Token.name tok
-	     | NONE => Atom.toString name
+      fun binding tokTbl (_, Syn.SYMBOL (name, _)) = (case ATbl.find tokTbl name
+	    of SOME tok => (Token.name tok, Token.hasTy tok)
+	     | NONE =>     (Atom.toString name, true)
            (* end case *))
-	| binding tokTbl (Syn.SUBRULE _)	= "SR"
-	| binding tokTbl (Syn.CLOS itm)		= binding tokTbl itm
-	| binding tokTbl (Syn.POSCLOS itm)	= binding tokTbl itm
-	| binding tokTbl (Syn.OPT itm)		= binding tokTbl itm
+	| binding tokTbl (_, Syn.SUBRULE _)	= ("SR", true)
+	| binding tokTbl (_, Syn.CLOS itm)	= binding tokTbl itm
+	| binding tokTbl (_, Syn.POSCLOS itm)	= binding tokTbl itm
+	| binding tokTbl (_, Syn.OPT itm)	= binding tokTbl itm
     in
     (* assign bindings to a list of items *)
-    fun bindings (userNames, items, tokTbl) = 
-	  ListPair.map getOpt
-	    (userNames, numberBindings (map (binding tokTbl) items))
+    fun bindings (userNames, items, tokTbl) = let
+        (* all symbols with user-assigned names should yield a result 
+	 * for default actions
+	 *)
+          val userBindings = map (Option.map (fn nm => (nm, true))) userNames
+	  val autoBindings = map (binding tokTbl) items
+	  val (autoNames, autoYields) = ListPair.unzip autoBindings
+	  val autoNames' = numberBindings autoNames
+	  val autoBindings' = ListPair.zip (autoNames', autoYields)
+          in
+	    ListPair.map getOpt (userBindings, autoBindings')
+          end
     end
+
+    fun flatten [] = []
+      | flatten ((_, Syn.IMPORT {filename, dropping}) :: ds) = let
+	  val dropSet = ASet.fromList (map (fn (_, s) => s) dropping)
+	  fun keep s = not (ASet.member (dropSet, s))
+	  fun shouldImport (_, Syn.KEYWORD _)		 = true
+	    | shouldImport (_, Syn.DEFS _)		 = true
+	    | shouldImport (_, Syn.TOKEN (sym, _, SOME abbrev)) = 
+	        keep sym andalso keep abbrev
+	    | shouldImport (_, Syn.TOKEN (sym, _, NONE)) = keep sym
+	    | shouldImport (_, Syn.REFCELL _)		 = true
+	    | shouldImport (_, Syn.RULE {lhs, ...})	 = keep lhs
+	    | shouldImport _				 = false
+	  val imp = case ParseFile.parse filename
+		     of SOME ds' => flatten ds'
+		      | NONE => []
+	  in 
+	    (List.filter shouldImport imp) @ flatten ds
+	  end
+      | flatten (d::ds) = d :: flatten ds
 
   (* check a GrammarSyntax.grammar value for errors, while transforming
    * it into an LLKSpec.grammar suitable for analysis and parser generation.
    *)
-    fun check (g : Syn.grammar) = let
+    fun check (SOME (g : Syn.grammar)) = let
 	  val _ = Err.status "checking grammar"
+	  val ds = flatten g (* flatten import directives *)
+(*	  val _ = print (Syn.ppGrammar ds) *)
+	(* ref cells used to incrementally build grammar representation *)
 	  val nextGlobalID = nextId (ref 0)
-	(* inherit any %import-ed grammars, and apply all modifications to 
-	 * imported nonterminal definitions
-	 *)
-	  val Syn.GRAMMAR {name, defs, rules, toks, actionStyle, 
-			   startSym, entryPoints, keywords, refcells, ...} = 
-	        appImport g  
-	  val _ = if List.length toks = 0 then
-		    Err.errMsg ["Error: no tokens defined."]
+	  val tokTbl	: S.token ATbl.hash_table = ATbl.mkTable (64, Fail "tokens table")
+	  val tokList	: S.token list ref = ref []
+	  val keywords	: Err.span ATbl.hash_table = ATbl.mkTable (32, Fail "keywords table")
+	  val entryPts	: Err.span ATbl.hash_table = ATbl.mkTable (4, Fail "entryPts table")
+	  val name	: (string * Err.span)    option ref = ref NONE
+	  val startSym	: (Atom.atom * Err.span) option ref = ref NONE
+	  val defs	: Action.action ref = ref Action.empty
+	  val refCells	: S.refcell ATbl.hash_table = ATbl.mkTable (4, Fail "refCells table")
+	  val ntTbl	: (S.nonterm * (unit -> int)) ATbl.hash_table = 
+				ATbl.mkTable (64, Fail "ntTbl table")
+	  val ntList	: S.nonterm list ref = ref []
+	  val prodList	: S.prod list ref = ref []
+	(* error message for duplicate declarations *)
+	  fun dupeErr (origSpan, newSpan, whatDupe) = 
+	        Err.spanErr (newSpan, [
+		  "duplicate ", whatDupe, ", originally declared at ",
+		  Err.span2str origSpan
+		])
+	(* PHASE 1: record basic directives, checking for duplicates *)
+	  fun doDecl1 (span, Syn.NAME n) = 
+	        (case !name
+		  of SOME (_, span') => dupeErr (span', span, "%name declaration")
+		   | NONE => name := SOME (n, span))
+	    | doDecl1 (span, Syn.START sym) = 
+	        (case !startSym
+		  of SOME (_, span') => dupeErr (span', span, "%start declaration")
+		   | NONE => startSym := SOME (sym, span))
+	    | doDecl1 (span, Syn.ENTRY sym) = 
+	        (case ATbl.find entryPts sym
+		  of NONE => ATbl.insert entryPts (sym, span)
+		   | SOME span' => dupeErr (span', span, 
+				    "%entry declaration for '" ^ Atom.toString sym ^ "'"))
+	    | doDecl1 (span, Syn.KEYWORD sym) = 
+	        (case ATbl.find keywords sym
+		  of NONE => ATbl.insert keywords (sym, span)
+		   | SOME span' => dupeErr (span', span,
+				    "%keywords declaration for '" ^ Atom.toString sym ^ "'"))
+	    | doDecl1 (span, Syn.REFCELL (name, ty, code)) = 
+	        (case ATbl.find refCells (Atom.atom name)
+		  of NONE => ATbl.insert refCells 
+			       (Atom.atom name, 
+				S.REFCELL {
+				  name = name, ty = ty, 
+				  initCode = Action.action code, loc = span})
+		   | SOME (S.REFCELL {loc, ...}) => 
+		       dupeErr (loc, span, "%refcell declaration for '" ^ name ^ "'"))
+	    | doDecl1 (span, Syn.DEFS code) = 
+	        defs := Action.concat (!defs, Action.action code)
+	    | doDecl1 _ = ()
+	  val _ = app doDecl1 ds
+	(* PHASE 2: record %tokens delcarations *)
+	  val kwSet = ASet.addList (ASet.empty, 
+			map (fn (x, _) => x) (ATbl.listItemsi keywords))
+	  fun isKW s = ASet.member (kwSet, s)
+	  fun doDecl2 (span, Syn.TOKEN (sym, tyOpt, abbrevOpt)) = 
+	        (case ATbl.find tokTbl sym
+		  of NONE => let
+		       val _ = case abbrevOpt
+				of SOME a => 
+				   (case ATbl.find tokTbl a
+				     of SOME (S.T{loc, ...}) =>
+					dupeErr (loc, span, "%tokens declaration with abbreviation " ^ Atom.toString a)
+				      | NONE => ())
+				 | NONE => ()
+		       val tok = S.T {
+			     name = sym, id = nextGlobalID(), abbrev = abbrevOpt, 
+			     keyword = isKW sym orelse 
+			               getOpt(Option.map isKW abbrevOpt, false),
+			     ty = tyOpt, loc = span}
+		       in 
+		         ATbl.insert tokTbl (sym, tok);
+			 Option.app (fn a => ATbl.insert tokTbl (a, tok)) abbrevOpt;
+			 tokList := tok :: !tokList
+		       end
+		   | SOME (S.T{loc, ...}) => 
+		       dupeErr (loc, span, "%tokens declaration for '" ^ Atom.toString sym ^ "'"))
+	    | doDecl2 _ = ()
+	  val _ = app doDecl2 ds
+	  val _ = if List.length (!tokList) = 0 then
+		    Err.errMsg ["Error: no tokens defined"]
 		  else ()
-	(* load the tokens.  note that EOF is implicitly defined *)
-          val (tokList, tokTbl) = 
-	        loadToks (nextGlobalID, (Atom.atom "EOF", NONE, NONE)::toks, keywords)
-	  fun lookupTok name = (case ATbl.find tokTbl name
-		 of NONE => (
-		      Err.errMsg ["Token ", Atom.toString name, " is undefined"];
-		      lookupTok (Atom.atom "EOF")) (* return EOF as a default token *)
-		  | SOME info => info
-		(* end case *))
-	  val eofTok = lookupTok (Atom.atom "EOF")
-	(* add EOF to the end of start symbol *)
-	  val startSymName = 
-	        case startSym
-		 of SOME sym => sym
-		  | NONE => (case rules
-			      of (Syn.RULE {lhs, ...})::_ => lhs
-			       | _ => Atom.atom "EOF")
-(*
-	  fun addEOFToAlt (Syn.ALT {items, action, try, pred}) = 
-	        Syn.ALT {items = items @ [(NONE, Syn.SYMBOL (Atom.atom "EOF", NONE))], 
-			 action = action, try = try, pred = pred}
-	  fun addEOFToRule (r as Syn.RULE {lhs, formals, alts}) = 
-	        if Atom.same (lhs, startSymName) then
-		  Syn.RULE{lhs = lhs, formals = formals,
-			   alts = map addEOFToAlt alts}
-		else r
-	  val rules = map addEOFToRule rules
-*)
-	(* keep track of nonterminals *)
-	  val numNTerms = ref 0
-	  val ntTbl = ATbl.mkTable (64, Fail "nonterm table")
-	  val ntList = ref []
-	  fun insNTerm (nt as S.NT{name, ...}) =
-	        (ATbl.insert ntTbl (name, nt);
-		 ntList := nt :: !ntList;
-		 nt)
+	  val eofTok = S.T { name = Atom.atom "EOF", id = nextGlobalID(), ty = NONE,
+			     abbrev = NONE, keyword = false, loc = Err.emptySpan }
+	  val _ = (ATbl.insert tokTbl (Atom.atom "EOF", eofTok);
+		   tokList := eofTok :: !tokList)
+	(* check for any symbols marked as %keywords but not defined as tokens *)
+	  val tokSet = ASet.addList (ASet.empty, map (Atom.atom o Token.name) (!tokList))
+	  val undefKWs = ASet.difference (kwSet, tokSet)
+	  fun undefErr kw = Err.spanErr (valOf (ATbl.find keywords kw), 
+			      ["'", Atom.toString kw, "' is declared as a keyword, but it is not as a token"])
+	  val _ = ASet.app undefErr undefKWs
+	(* PHASE 3: load nonterminals *)
+	  fun insNTerm (nt as S.NT{name, ...}) = let 
+	        val nid = nextId (ref 1)
+	        in 
+	          ATbl.insert ntTbl (name, (nt, nid));
+		  ntList := nt :: !ntList;
+		  (nt, nid)
+	        end
 	(* map a non-terminal name to its info record, creating a new nonterminal 
 	 * record if none is found.
 	 *)
 	  fun lookupNTerm name = (case ATbl.find ntTbl name
-		 of NONE => insNTerm (S.NT{name = name, id = nextGlobalID(), formals = ref [],
-						 binding = S.TOP, prods = ref[], isEBNF = false}) 
+		 of NONE => (
+		      if ASet.member (tokSet, name) then
+			Err.errMsg ["Error: symbol ", Atom.toString name,
+				    " defined as both a token and a nonterminal."]
+		      else ();
+		      insNTerm (S.NT{name = name, id = nextGlobalID(), formals = ref [], ty = ref NONE,
+				     binding = S.TOP, prods = ref[], isEBNF = false, loc = ref NONE}))
 		  | SOME info => info
 		(* end case *))
-	(* keep track of productions *)
-	  val prodList = ref []
-	(* check a nonterminal *)
-          fun loadNTerm(nt, newFormals, alts) = let
-(* val _ = print(concat["chkRule: ", Atom.toString lhs, "\n"]); *)
-		val S.NT{prods, formals, ...} = nt
-		val nextProdID = nextId (ref 1)
-             (* check an alternative, creating a production *)
-		fun doAlt (rhs) = let
-		      val Syn.ALT {items, action, try, pred} = rhs
-		      val (userNames, items) = ListPair.unzip items
-		      val prodrhs = ref []
-		      val prod = S.PROD{
-			      lhs = nt,
-			      rhs = prodrhs,
-			      rhsBindings = bindings (userNames, items, tokTbl),
-			      id = nextGlobalID(),
-			      name = Atom.atom (concat
-				[Nonterm.name nt, "_PROD_", 
-				 Int.toString (nextProdID())]),
-			      action = Option.map Action.action action,
-			      try = try,
-			      pred = Option.map Action.action pred
-			    }
-		      val nextSRID = nextId (ref 1)
-		      fun doPreitem (Syn.SYMBOL (name, args)) = 
-			    if ATbl.inDomain tokTbl name
-			    then if not (isSome args)
-			         then S.TOK(lookupTok name)
-			         else (
-				   Err.errMsg ["Attempted to apply arguments to token ",
-					       Atom.toString name, "."];
-				   S.TOK eofTok)
-			    else S.NONTERM(lookupNTerm name, 
-					   Option.map Action.action args)				 
-			| doPreitem (Syn.SUBRULE alts) =
-			    S.NONTERM(doSubrule (false, alts), NONE)
-			| doPreitem (Syn.CLOS itm) =
-			    S.CLOS(doSubrule (true, mkAlts itm))
-			| doPreitem (Syn.POSCLOS itm) =
-			    S.POSCLOS(doSubrule (true, mkAlts itm))
-			| doPreitem (Syn.OPT itm) =
-			    S.OPT(doSubrule (true, mkAlts itm))
-		      and doItem s = S.ITEM {sym = doPreitem s, 
-					     id = nextGlobalID()}
-		      and mkAlts (Syn.SUBRULE alts) = alts
-			| mkAlts (itm) = [Syn.ALT {
-			    items = [(NONE, itm)],
-			    action = NONE,
-			    try = false,
-			    pred = NONE
-			  }]
-		      and doSubrule (isEBNF, alts) = let
-			    val prods = ref []
-			    val sr = S.NT{
-				       name = Atom.atom (concat
-						["subrule", Int.toString (nextSRID())]),
-				       formals = ref [],
-				       binding = S.WITHIN prod,
-				       id = nextGlobalID(),
-				       prods = prods,
-				       isEBNF = isEBNF
-				     }
+	(* check and load a rules and type annotations *)
+          fun doDecl3 (span, Syn.RULE {lhs, formals = newFormals, rhs}) = let
+		val (nt as S.NT{prods, formals, loc = ntLoc, ...}, nextProdID) = 
+		      lookupNTerm lhs
+		val nextSRID = nextId (ref 1)
+		val prodName = concat [Nonterm.name nt, "_PROD_", Int.toString (nextProdID())]
+             (* check the rhs, creating a production *)
+		val Syn.RHS {items, action, try, predicate, loc = rhsLoc} = rhs
+		val (userNames, items) = ListPair.unzip items
+		val finishedRHS : S.item list ref = ref []
+		val prod = S.PROD{
+			     name = prodName,
+			     lhs = nt,
+			     rhs = finishedRHS,
+			     rhsBindings = bindings (userNames, items, tokTbl),
+			     try = try,
+			     id = nextGlobalID(),
+			     action = Option.map Action.action action,
+			     pred = Option.map Action.action predicate,
+			     loc = rhsLoc
+			   }
+		fun doPreitem (Syn.SYMBOL (name, args)) = 
+		      if ATbl.inDomain tokTbl name
+		      then if not (isSome args)
+			   then S.TOK(valOf (ATbl.find tokTbl name))
+			   else (Err.errMsg ["Attempted to apply arguments to token ",
+					     Atom.toString name, "."];
+				 S.TOK eofTok)
+		      else S.NONTERM(#1 (lookupNTerm name), Option.map Action.action args)
+		  | doPreitem (Syn.SUBRULE alts) = S.NONTERM(doSubrule (false, alts), NONE)
+		  | doPreitem (Syn.CLOS itm)     = S.CLOS(doSubrule (true, mkAlts itm))
+		  | doPreitem (Syn.POSCLOS itm)  = S.POSCLOS(doSubrule (true, mkAlts itm))
+		  | doPreitem (Syn.OPT itm)      = S.OPT(doSubrule (true, mkAlts itm))
+		and doItem (span, s) = S.ITEM {sym = doPreitem s, 
+					       id = nextGlobalID(),
+					       loc = span}
+		and mkAlts (_, Syn.SUBRULE alts) = alts
+		  | mkAlts (span, itm) = [Syn.RHS {
+		        items = [(NONE, (span, itm))], loc = span,
+		        action = NONE, try = false, predicate = NONE
+		      }]
+		and doSubrule (isEBNF, alts) = let
+		      val prods = ref []
+		      val srName = Atom.atom (concat [prodName,
+				    "_SUBRULE_", Int.toString (nextSRID())])
+		      val sr = S.NT{
+			name = srName, formals = ref [], binding = S.WITHIN prod,
+			id = nextGlobalID(), prods = prods, isEBNF = isEBNF,
+			loc = ref NONE, ty = ref NONE}
+		      fun altToRule alt = let
+			    val Syn.RHS {loc, ...} = alt
 		            in
-			      loadNTerm(sr, [], alts);
-			      insNTerm sr
+			      (loc, Syn.RULE {lhs = srName, formals = [], rhs = alt})
 		            end
 		      in
-			prodrhs := map doItem items;	(* compute RHS *)
-			prodList := prod :: !prodList;	(* add to global prod list *)
-			prods := prod :: !prods		(* add to lhs's prod list *)
+		        ignore (insNTerm sr);
+		        app (doDecl3 o altToRule) alts;
+			sr
 		      end
-		in
-	          if List.length (!prods) > 0 
-		    then Err.errMsg ["Error: duplicate definition for nonterminal ",
-				     Nonterm.name nt, "."]
-		    else ();
-		  formals := newFormals;
-		  List.app doAlt alts
-		end
-	(* check a rule *)
-	  fun chkRule (Syn.RULE{lhs, formals, alts}) = loadNTerm(lookupNTerm lhs, formals, alts)
+	        in
+	          finishedRHS := map doItem items;	(* actually process the RHS *)
+		  prodList := prod :: !prodList;	(* add to global prod list *)
+		  prods := prod :: !prods;		(* add to lhs's prod list *)
+		  formals := (map Atom.atom newFormals)	(* TODO: check for agreement *)
+                end
+	    | doDecl3 (span, Syn.NONTERM (nt, tyAnn)) = let
+		val (S.NT{ty, ...}, _) = lookupNTerm nt
+	        in case !ty
+		    of NONE => ty := SOME tyAnn
+		     | SOME _ => Err.spanErr (span, [
+			 "duplicate type annotation for nonterminal ",
+			 Atom.toString nt, "."])
+	        end
+	    | doDecl3 _ = ()
+	  val _ = app doDecl3 ds
+	  val nterms = rev(!ntList)
         (* check the grammar *)
-	  val _ = if List.length rules = 0 then (
+	  val _ = if List.length (!prodList) = 0 then (
 		    Err.errMsg ["Error: no rules defined."];
 		    raise Err.Abort)
 		  else ()
-	  val _ = app chkRule rules
 	(* check for undefined nonterminals, while reversing the order of productions *)
-	  val _ = let
-		fun chkNT (S.NT{name, prods, ...}) = (case !prods
-		       of [] => Err.errMsg ["Error: symbol ", Atom.toString name, " is not defined."]
-			| l => prods := List.rev l
-		      (* end case *))
-		in
-		  List.app chkNT (!ntList)
-		end
-	  val nterms = rev(!ntList)
-	(* node: safe to assume length nterms > 0, otherwise aborted above *)
-	  fun findNT errStr sym = (case ATbl.find ntTbl sym
-		of NONE => (Err.errMsg ["Error: ", errStr, " symbol ", 
-					Atom.toString sym,
-					" is not defined."];
+	  fun chkNT (S.NT{name, prods, ...}) = (case !prods
+	        of [] => Err.errMsg ["Error: symbol ", Atom.toString name, " is not defined."]
+		 | l => prods := List.rev l
+               (* end case *))
+	  val _ = app chkNT nterms
+	(* note: safe to assume length nterms > 0, otherwise aborted above *)
+	  fun findNT errStr (sym, span) = (case ATbl.find ntTbl sym
+		of NONE => (Err.spanErr (span, ["Error: ", errStr, " symbol ", 
+						Atom.toString sym,
+						" is not defined."]);
 		            hd nterms)
-		 | SOME nt => nt
+		 | SOME (nt, _) => nt
 	       (* end case *))
-	  val startnt = case startSym
+	  val startnt = case !startSym
 			 of NONE => hd nterms
-			  | SOME sym => findNT "%start" sym
-	  val entryPoints' = map (findNT "%entry") entryPoints
-	  val sortedTops = Nonterm.topsort (startnt::entryPoints')
+			  | SOME s => findNT "%start" s
+	  val entryPoints = map (findNT "%entry") (ATbl.listItemsi entryPts)
+	  val sortedTops = Nonterm.topsort (startnt::entryPoints)
 	  val topsSet = AtomSet.addList 
 			  (AtomSet.empty, 
 			   map (Atom.atom o Nonterm.name) (List.concat sortedTops))
+	(* check that all defined nonterminals are used *)
 	  fun checkNTInTops nt = 
-	        if Nonterm.isSubrule nt = false then
-		  if AtomSet.member (topsSet, Atom.atom (Nonterm.name nt)) = false 
-		  then Err.warning ["Warning: nonterminal ", Nonterm.name nt,
-				    " is not reachable from any entry point."]
-		  else ()
+	        if Nonterm.isSubrule nt = false 
+		  andalso AtomSet.member (topsSet, Atom.atom (Nonterm.name nt)) = false 
+		then Err.warning ["Warning: nonterminal ", Nonterm.name nt,
+				  " is not reachable from any entry point."]
 		else ()
 	  val _ = app checkNTInTops nterms
 	  val _ = Err.abortIfErr()
 	  in S.Grammar {
-	    name = name,
-	    defs = Action.action defs,
-	    toks = tokList,
+	    name = getOpt (Option.map #1 (!name), ""),
+	    defs = !defs,
+	    toks = !tokList,
 	    nterms = nterms,
 	    prods = List.rev(!prodList),
 	    eof = eofTok,
 	    sortedTops = sortedTops,
 	    startnt = startnt,
-	    actionStyle = actionStyle,
-	    entryPoints = entryPoints',
-	    refcells = map (fn (s, t, c) => (s, t, Action.action c)) refcells
+	    entryPoints = entryPoints,
+	    refcells = ATbl.listItems refCells
 	  } end
+      | check NONE = raise Err.Abort
 
   end

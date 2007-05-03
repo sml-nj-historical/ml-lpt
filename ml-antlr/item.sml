@@ -40,7 +40,8 @@ structure Item =
     fun bindingsLeftOf (item, prod) = let
           fun lhs (LLKSpec.PROD {lhs, ...}) = lhs
           fun items (LLKSpec.PROD {rhs, ...}) = !rhs
-          fun itemBindings (LLKSpec.PROD {rhsBindings, ...}) = rhsBindings
+          fun itemBindings (LLKSpec.PROD {rhsBindings, ...}) = 
+	        (fn (x,_) => x) (ListPair.unzip rhsBindings)
           fun leftOf ([], accum) = raise Fail "BUG: leftOf on empty list"
 	    | leftOf ((i, name)::is, accum) = 
 	        if same (i, item) then accum

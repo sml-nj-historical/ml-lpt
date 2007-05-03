@@ -20,7 +20,7 @@
 structure RegExp : REG_EXP =
   struct
 
-    structure W = Word
+    structure W = Word32
 
   (* symbols (i.e., words) *)
     structure Sym = 
@@ -397,6 +397,13 @@ structure RegExp : REG_EXP =
 	val compare = Vector.collate compare
       end)
 
+    structure SISSet = RedBlackSetFn (
+      struct
+	type ord_key = SIS.set
+	val compare = SIS.compare
+      end)
+
+(*
   (* yields the smallest partitioning of the alphabet that
    * "respects" the given sets.  if S is one of the sets
    * returned by compress, then it must be either disjoint
@@ -431,43 +438,66 @@ structure RegExp : REG_EXP =
           in
             List.foldl part1 [] (SIS.universe::sets)
           end
+*)
+
+    fun cross (s1, s2) = 
+	SISSet.foldl (fn (s1elem, accum) => 
+          SISSet.foldl (fn (s2elem, accum) => 
+	      SISSet.add (accum, SIS.intersect (s1elem, s2elem)))
+	    accum s2)
+	  SISSet.empty s1
+
+    val trivial = SISSet.singleton (SIS.universe)
 
     fun derivatives (res : re Vector.vector) = let
-	(* ds is the "factoring function" *)
-          fun ds Any = [SIS.universe]
-	    | ds None = []
-	    | ds Epsilon = []
-	    | ds (SymSet s) = [s]
+        (* compute approximate derivative classes *)
+          fun ds Any = trivial
+	    | ds None = trivial
+	    | ds Epsilon = trivial
+	    | ds (SymSet s) = SISSet.fromList [s, SIS.complement s]
 	    | ds (Closure re) = ds re
-	    | ds (Concat []) = []
+	    | ds (Concat []) = trivial
 	    | ds (Concat [re]) = ds re
 	    | ds (Concat (re::res)) = 
 	        if nullable re then
-		  (ds re) @ (ds (Concat res))
+		  cross (ds re, ds (Concat res))
 		else ds re
-	    | ds (Op(rator, res)) = List.concat (map ds res)
+	    | ds (Op(rator, res)) = foldl cross trivial (map ds res)
 	    | ds (Not re) = ds re
 	  val sets = Vector.foldl 
-		       (fn (re, sets) => (ds re) @ sets) 
-		       [] res
-	  val sets' = compress sets
+		       (fn (re, sets) => cross (ds re, sets))
+		       trivial res
+(*	  val sets' = compress sets *)
 	  fun classes ([], classMap) = Map.listItemsi classMap
 	    | classes (set::sets, classMap) = let
 	      (* use first element as representative of the equiv class *)
 	        val (rep, _) = List.hd (SIS.intervals set) 
 	        val derivs = Vector.map (derivative rep) res
                 in case Map.find (classMap, derivs)
-		    of NONE => 
+		    of NONE =>
 		         classes (sets, Map.insert(classMap, derivs, set))
 		     | SOME set' => let
 			 val map' = Map.insert(classMap, 
 					       derivs,
 					       SIS.union (set, set'))
 		         in classes (sets, map')
-		         end
+		         end  
 		end
+	  fun classes ([], ls) = ls
+	    | classes (set::sets, ls) = 
+	        if SIS.isEmpty set then
+		  classes (sets, ls)
+		else let
+	          val (rep, _) = List.hd (SIS.intervals set) 
+	          val derivs = Vector.map (derivative rep) res
+	          in
+(*		    print (SISToString set ^ "\n"); *)
+		    (derivs, set)::classes (sets, ls)
+	          end
           in 
-            classes (sets', Map.empty)
+(*            classes (sets', Map.empty) *)
+(*            print "\n"; *)
+            classes (SISSet.listItems sets, [])
           end
 
   end

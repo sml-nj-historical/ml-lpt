@@ -5,7 +5,7 @@ MLULexTokens = struct
       | BOGUS
       | CODE of string
       | ID of string
-      | UCHAR of Word.word
+      | UCHAR of UTF8.wchar
       | CHAR of char
       | INT of int
       | ASCII8
@@ -153,7 +153,8 @@ MLULexTokens
   structure SIS = RE.SymSet
 
   fun listToASet ls = AtomSet.addList (AtomSet.empty, ls)
-  fun charToSym c = Word.fromInt (Char.ord c)
+  fun charToSym c = Word32.fromInt (Char.ord c)
+  val dashSet = SIS.singleton (charToSym #"-")
 
   fun flip (x, y) = (y, x)
 
@@ -227,7 +228,9 @@ fun prim_re_PROD_4_ACT (DOT, env, DOT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (L
   ( RE.any)
 fun prim_re_PROD_5_prim_re_subrule1_PROD_1_ACT (LSB, env, CARAT, LSB_SPAN : (Lex.pos * Lex.pos), CARAT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( SIS.complement)
-fun prim_re_PROD_5_prim_re_subrule1_PROD_2_ACT (LSB, env, LSB_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
+fun prim_re_PROD_5_prim_re_subrule1_PROD_2_ACT (LSB, env, DASH, LSB_SPAN : (Lex.pos * Lex.pos), DASH_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
+  ( fn x => SIS.union (x, dashSet))
+fun prim_re_PROD_5_prim_re_subrule1_PROD_3_ACT (LSB, env, LSB_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( fn x => x)
 fun prim_re_PROD_5_prim_re_subrule2_PROD_1_ACT (LSB, SR1, env, DASH, char1, char2, LSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), DASH_SPAN : (Lex.pos * Lex.pos), char1_SPAN : (Lex.pos * Lex.pos), char2_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( 
@@ -235,13 +238,18 @@ fun prim_re_PROD_5_prim_re_subrule2_PROD_1_ACT (LSB, SR1, env, DASH, char1, char
 	       SIS.interval (char1, char2)
 	     else (errs :== (FULL_SPAN, String.concat [
 	       "Error: malformed character class: ",
-	       Word.toString char1, " - ",
-	       Word.toString char2, "."])::(!!errs);
+	       Word32.toString char1, " - ",
+	       Word32.toString char2, "."])::(!!errs);
 	       SIS.universe))
 fun prim_re_PROD_5_prim_re_subrule2_PROD_2_ACT (LSB, SR1, env, char, LSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), char_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( SIS.singleton char)
-fun prim_re_PROD_5_ACT (LSB, RSB, SR1, SR2, env, LSB_SPAN : (Lex.pos * Lex.pos), RSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), SR2_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( RE.mkSymSet (SR1 (foldl SIS.union (hd SR2) (tl SR2))))
+fun prim_re_PROD_5_prim_re_subrule3_PROD_1_ACT (LSB, SR1, SR2, env, DASH, LSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), SR2_SPAN : (Lex.pos * Lex.pos), DASH_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
+  ( dashSet)
+fun prim_re_PROD_5_prim_re_subrule3_PROD_2_ACT (LSB, SR1, SR2, env, LSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), SR2_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
+  ( SIS.empty)
+fun prim_re_PROD_5_ACT (LSB, RSB, SR1, SR2, SR3, env, LSB_SPAN : (Lex.pos * Lex.pos), RSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), SR2_SPAN : (Lex.pos * Lex.pos), SR3_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
+  ( RE.mkSymSet 
+	    (SR1 (foldl SIS.union SR3 SR2)))
 fun char_PROD_1_ACT (CHAR, CHAR_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( charToSym CHAR)
 fun ARGS_1 (errs) = 
@@ -697,16 +705,26 @@ and prim_re_NT (env_RES) (strm) = let
                             FULL_SPAN, strm')
                         end
                   fun subrule1_PROD_2 (strm) = let
+                        val (DASH_RES, DASH_SPAN, strm') = matchDASH(strm)
+                        val FULL_SPAN = (#1(DASH_SPAN), #2(DASH_SPAN))
+                        in
+                          (UserCode.prim_re_PROD_5_prim_re_subrule1_PROD_2_ACT (LSB_RES, env_RES, DASH_RES, LSB_SPAN : (Lex.pos * Lex.pos), DASH_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
+                            FULL_SPAN, strm')
+                        end
+                  fun subrule1_PROD_3 (strm) = let
                         val FULL_SPAN = (R.getPos(strm), R.getPos(strm))
                         in
-                          (UserCode.prim_re_PROD_5_prim_re_subrule1_PROD_2_ACT (LSB_RES, env_RES, LSB_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
+                          (UserCode.prim_re_PROD_5_prim_re_subrule1_PROD_3_ACT (LSB_RES, env_RES, LSB_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                             FULL_SPAN, strm)
                         end
                   in
                     (case (lex(strm))
-                     of (Tok.UCHAR(_), _, strm') => subrule1_PROD_2(strm)
-                      | (Tok.CHAR(_), _, strm') => subrule1_PROD_2(strm)
+                     of (Tok.UCHAR(_), _, strm') => subrule1_PROD_3(strm)
+                      | (Tok.CHAR(_), _, strm') => subrule1_PROD_3(strm)
+                      | (Tok.RSB, _, strm') => subrule1_PROD_3(strm)
                       | (Tok.CARAT, _, strm') => subrule1_PROD_1(strm)
+                      | (Tok.DASH, _, strm') =>
+                          tryProds(strm, [subrule1_PROD_2, subrule1_PROD_3])
                       | _ => raise(ParseError)
                     (* end case *))
                   end
@@ -734,7 +752,16 @@ and prim_re_NT (env_RES) (strm) = let
                     (case (lex(strm))
                      of (Tok.UCHAR(_), _, strm') =>
                           (case (lex(strm'))
-                           of (Tok.DASH, _, strm') => subrule2_PROD_1(strm)
+                           of (Tok.DASH, _, strm') =>
+                                (case (lex(strm'))
+                                 of (Tok.RSB, _, strm') =>
+                                      subrule2_PROD_2(strm)
+                                  | (Tok.UCHAR(_), _, strm') =>
+                                      subrule2_PROD_1(strm)
+                                  | (Tok.CHAR(_), _, strm') =>
+                                      subrule2_PROD_1(strm)
+                                  | _ => raise(ParseError)
+                                (* end case *))
                             | (Tok.UCHAR(_), _, strm') => subrule2_PROD_2(strm)
                             | (Tok.CHAR(_), _, strm') => subrule2_PROD_2(strm)
                             | (Tok.RSB, _, strm') => subrule2_PROD_2(strm)
@@ -742,7 +769,16 @@ and prim_re_NT (env_RES) (strm) = let
                           (* end case *))
                       | (Tok.CHAR(_), _, strm') =>
                           (case (lex(strm'))
-                           of (Tok.DASH, _, strm') => subrule2_PROD_1(strm)
+                           of (Tok.DASH, _, strm') =>
+                                (case (lex(strm'))
+                                 of (Tok.RSB, _, strm') =>
+                                      subrule2_PROD_2(strm)
+                                  | (Tok.UCHAR(_), _, strm') =>
+                                      subrule2_PROD_1(strm)
+                                  | (Tok.CHAR(_), _, strm') =>
+                                      subrule2_PROD_1(strm)
+                                  | _ => raise(ParseError)
+                                (* end case *))
                             | (Tok.UCHAR(_), _, strm') => subrule2_PROD_2(strm)
                             | (Tok.CHAR(_), _, strm') => subrule2_PROD_2(strm)
                             | (Tok.RSB, _, strm') => subrule2_PROD_2(strm)
@@ -756,11 +792,36 @@ and prim_re_NT (env_RES) (strm) = let
                     | (Tok.CHAR(_), _, strm') => true
                     | _ => false
                   (* end case *))
-            val (SR2_RES, SR2_SPAN, strm') = EBNF.posclos(subrule2_PRED, (wrap subrule2_NT), strm')
+            val (SR2_RES, SR2_SPAN, strm') = EBNF.closure(subrule2_PRED, (wrap subrule2_NT), strm')
+            val (SR3_RES, SR3_SPAN, strm') = let
+            fun subrule3_NT (strm) = let
+                  fun subrule3_PROD_1 (strm) = let
+                        val (DASH_RES, DASH_SPAN, strm') = matchDASH(strm)
+                        val FULL_SPAN = (#1(DASH_SPAN), #2(DASH_SPAN))
+                        in
+                          (UserCode.prim_re_PROD_5_prim_re_subrule3_PROD_1_ACT (LSB_RES, SR1_RES, SR2_RES, env_RES, DASH_RES, LSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), SR2_SPAN : (Lex.pos * Lex.pos), DASH_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
+                            FULL_SPAN, strm')
+                        end
+                  fun subrule3_PROD_2 (strm) = let
+                        val FULL_SPAN = (R.getPos(strm), R.getPos(strm))
+                        in
+                          (UserCode.prim_re_PROD_5_prim_re_subrule3_PROD_2_ACT (LSB_RES, SR1_RES, SR2_RES, env_RES, LSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), SR2_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
+                            FULL_SPAN, strm)
+                        end
+                  in
+                    (case (lex(strm))
+                     of (Tok.RSB, _, strm') => subrule3_PROD_2(strm)
+                      | (Tok.DASH, _, strm') => subrule3_PROD_1(strm)
+                      | _ => raise(ParseError)
+                    (* end case *))
+                  end
+            in
+              (wrap subrule3_NT)(strm')
+            end
             val (RSB_RES, RSB_SPAN, strm') = matchRSB(strm')
             val FULL_SPAN = (#1(LSB_SPAN), #2(RSB_SPAN))
             in
-              (UserCode.prim_re_PROD_5_ACT (LSB_RES, RSB_RES, SR1_RES, SR2_RES, env_RES, LSB_SPAN : (Lex.pos * Lex.pos), RSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), SR2_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
+              (UserCode.prim_re_PROD_5_ACT (LSB_RES, RSB_RES, SR1_RES, SR2_RES, SR3_RES, env_RES, LSB_SPAN : (Lex.pos * Lex.pos), RSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), SR2_SPAN : (Lex.pos * Lex.pos), SR3_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                 FULL_SPAN, strm')
             end
       in

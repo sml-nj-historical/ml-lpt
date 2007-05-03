@@ -33,9 +33,9 @@
 	  Char.ord x - Char.ord #"A" + 10
 	else Char.ord x - Char.ord #"0"
 
-  fun hexVal ss = 
+  fun hexVal (ss) : UTF8.wchar = 
         Substring.foldl 
-	  (fn (dig, acc) => (Word.fromInt o hexDigit) dig + 0w16 * acc) 
+	  (fn (dig, acc) => (Word32.fromInt o hexDigit) dig + 0w16 * acc) 
 	  0w0 ss
 
   fun mkUChar yyunicode = Tok.UCHAR (hd yyunicode)
@@ -128,6 +128,8 @@
 	("\\u" ([A-Za-z] | [0-9]){4}) | 
 	("\\U" ([A-Za-z] | [0-9]){8}) 
 	=> (Tok.UCHAR (hexVal (Substring.triml 2 yysubstr)));
+<INITIAL,CHARCLASS,RESTRING>"\\" [^A-Za-z]
+	=> (Tok.CHAR (String.sub (yytext, 1)));
 
 <CHARCLASS>"]"	=> (YYBEGIN INITIAL; Tok.RSB);
 <CHARCLASS>[^\n\\]	=> (mkUChar yyunicode);

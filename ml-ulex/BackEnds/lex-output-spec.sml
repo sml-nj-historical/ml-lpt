@@ -20,6 +20,9 @@ structure LexOutputSpec =
 	  next :  (RegExp.sym_set * dfa_state) list ref
 	}
 
+    fun sameState (State {id = id1, ...}, State {id = id2, ...}) =
+	  id1 = id2
+
     type action = string
 
     datatype spec = Spec of {

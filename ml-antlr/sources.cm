@@ -28,8 +28,9 @@ is
   $/basis.cm
   $/smlnj-lib.cm
   $/pp-lib.cm
-  $/ml-yacc-lib.cm
   $/regexp-lib.cm
+(*  $/ml-lpt-lib.cm *)
+  /Users/adrassi/tmpwork/ml-lpt/lib/ml-lpt-lib.cm 
 
   BackEnds/back-end-sig.sml
 
@@ -42,15 +43,16 @@ is
   llk-spec.sml
   main.sml
   nonterm.sml
+  options.sml
   predict.sml
   preitem.sml
   prod.sml
   token.sml
 
-  FrontEnds/parse-file.sml  
   FrontEnds/grammar-syntax.sml
-  FrontEnds/ml-yacc-based/spec.lex
-  FrontEnds/ml-yacc-based/spec.grm
+  FrontEnds/ml-antlr-based/parse-file.sml  
+  FrontEnds/ml-antlr-based/spec.lex.sml
+  FrontEnds/ml-antlr-based/spec.grm.sml
 
   BackEnds/expand-file.sml
 

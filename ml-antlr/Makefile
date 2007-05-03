@@ -27,7 +27,7 @@ BE = 		BackEnds
 SML_SRC = 	$(wildcard $(BE)/SML/*.sml)
 LATEX_SRC =     $(wildcard $(BE)/LaTeX/*.sml)
 
-FE_SRC = 	$(wildcard $(FE)/*.sml)  $(FE)/ml-yacc-based/spec.grm $(FE)/ml-yacc-based/spec.lex
+FE_SRC = 	$(wildcard $(FE)/*.sml)  $(FE)/ml-antlr-based/spec.grm $(FE)/ml-antlr-based/spec.lex
 BE_SRC = 	$(wildcard $(BE)/*.sml) $(SML_SRC) $(LATEX_SRC)
 
 TEMPLATES =     $(BE)/SML/template.sml $(BE)/LaTeX/template.tex
@@ -48,7 +48,7 @@ $(HEAP_IMAGE):	$(SOURCES)
 sinclude .depend
 
 clean:
-	rm -rf .depend .cm FrontEnds/ml-yacc-based/spec.lex.sml FrontEnds/ml-yacc-based/spec.grm.sig FrontEnds/ml-yacc-based/spec.grm.sml $(HEAP_IMAGE)
+	rm -rf .depend .cm $(HEAP_IMAGE)
 
 devclean:
 	rm -rf $(HEAP_IMAGE)
