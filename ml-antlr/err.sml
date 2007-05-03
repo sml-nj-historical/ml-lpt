@@ -15,11 +15,14 @@ structure Err =
   (* signal that the program should be aborted with no further messages printed *)
     exception Abort
 
-(*    type pos = string * int * int *)
-    type pos = StreamPos.pos
+    type pos = string * int * int
+(*    type pos = StreamPos.pos *)
     type span = pos * pos
 
+(*
     val emptySpan = let val npos = 0 in (npos, npos) end
+*)
+    val emptySpan = let val npos = ("",0,0) in (npos, npos) end
 
   (* global flag to record the existance of errors *)
     val anyErrors = ref false
@@ -38,16 +41,16 @@ structure Err =
       fun lc2str (l, c) = Int.toString l ^ "." ^ Int.toString c
     in
 
-(*
     fun pos2str  (fname, l, c) = "[" ^ fname ^ ":" ^ lc2str (l, c) ^ "]"
     fun span2str ((fname, l1, c1), (_, l2, c2)) = 
 	  if l1 = l2 andalso c1 = c2 
 	  then pos2str (fname, l1, c1)
 	  else
 	    "[" ^ fname ^ ":" ^ lc2str (l1, c1) ^ "-" ^ lc2str (l2, c2) ^ "]"
-*)
+(*
     fun pos2str _ = ""
     fun span2str _ = ""
+*)
 
   (* error function at a single position *)
     fun posErr (pos, msg) = errMsg (["Error ", pos2str pos, ": "]@msg)

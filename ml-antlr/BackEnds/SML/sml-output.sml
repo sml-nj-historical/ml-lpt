@@ -255,15 +255,17 @@ structure SMLOutput =
           val ppStrm = TextIOPP.openOut {dst = strm, wid = 80}
 	  val entries = map NTFnName (startnt :: entryPoints)
 	  val entriesVal = "val (" ^ String.concatWith ", " entries ^ ") = "
-	  val innerExp = 
-	        ML_Tuple (ML_App ("reqEOF", [ML_Var (NTFnName startnt)])
-			  :: map (ML_Var o NTFnName) entryPoints)
+	  val innerExp = ML_Tuple (map ML_Var entries)
 	  val parser = List.foldl (mkNonterms (grm, pm)) innerExp sortedTops
 	  fun optParam nt = if length (Nonterm.formals nt) > 0 then " x " else " "
 	  fun optParamFn nt = if length (Nonterm.formals nt) > 0 then " fn x => " else " "
 	  fun wrWrapParse nt = TextIO.output (strm, String.concat [
 		"val ", NTFnName nt, " = ", optParamFn nt, 
-		"fn s => unwrap (Err.launch eh (", NTFnName nt, optParam nt, ") (R.wrap (s, lexFn)))\n"])
+		"fn s => unwrap (Err.launch eh (",
+		(if Nonterm.same (nt, startnt) then "reqEOF "		  
+		 else ""),
+		"(", NTFnName nt, optParam nt, ")",
+		") (R.wrap (s, lexFn)))\n"])
 	  fun wrEntry (name, nt) = TextIO.output (strm, String.concat [
 		"fun ", name, " lexFn ", optParam nt,
 		"s = let ", entriesVal, "mk lexFn in ", NTFnName nt,

@@ -10,6 +10,7 @@
   structure GS = GrammarSyntax
 
   fun lift f (vspan, v) = (vspan, f v)
+  fun mapFst f (fst, snd) = (f fst, snd)
 
   val trimQuotes = 
         Substring.string o
@@ -62,10 +63,19 @@
   | BOGUS
   ;
 
-%nonterm File of GS.grammar ;
-File : (Decl ";")* => (List.concat SR) ;
+%refcell liftSpan : StreamPos.span -> GrammarSyntax.span
+  = (fn _ => let val z = ("", 0, 0) in (z, z) end); 
 
-%nonterm Decl of (GS.span * GS.decl) list ;
+%nonterm File of GS.grammar ;
+File(fileName, sm) :
+  ( => (liftSpan := (fn (p1, p2) => ((fileName, StreamPos.lineNo sm p1,
+				                StreamPos.colNo  sm p1), 
+				     (fileName, StreamPos.lineNo sm p2,
+				                StreamPos.colNo  sm p2)))
+       ) )
+  (Decl ";")* => (map (mapFst (!liftSpan)) (List.concat SR2)) ;
+
+%nonterm Decl of (StreamPos.span * GS.decl) list ;
 Decl
   : "%name" ID		=> ([ (FULL_SPAN, GS.NAME ID) ])
   | "%start" ID		=> ([ (FULL_SPAN, GS.START (Atom.atom ID)) ])
@@ -77,7 +87,7 @@ Decl
   | "%import" STRING ("%dropping" SymList)?
       => ([ (FULL_SPAN, GS.IMPORT {
 	      filename = trimQuotes STRING,
-	      dropping = getOpt (SR, [])
+	      dropping = map (mapFst (!liftSpan)) (getOpt (SR, []))
 	    }) ])
   | "%refcell" ID ":" Ty "=" Code
       => ([ (FULL_SPAN, GS.REFCELL (ID, Ty, Code)) ])
@@ -104,25 +114,25 @@ Alt	: "%try"? NamedItem* ("%where" Code)? ("=>" Code)?
 	try = isSome KW_try,
 	predicate = SR1,
 	action = SR2,
-	loc = FULL_SPAN
+	loc = (!liftSpan) FULL_SPAN
       }) ;
 
 NamedItem : (ID "=")? Item => (SR, Item) ;
 
 Item
   : PrimItem
-      ( "*" => (PrimItem_SPAN, GS.CLOS PrimItem)
-      | "+" => (PrimItem_SPAN, GS.POSCLOS PrimItem)
-      | "?" => (PrimItem_SPAN, GS.OPT PrimItem)
+      ( "*" => ((!liftSpan) PrimItem_SPAN, GS.CLOS PrimItem)
+      | "+" => ((!liftSpan) PrimItem_SPAN, GS.POSCLOS PrimItem)
+      | "?" => ((!liftSpan) PrimItem_SPAN, GS.OPT PrimItem)
       | => (PrimItem) )
       => (SR)
   ;
 
 PrimItem
   : Symbol ("@" Code)?
-      => (FULL_SPAN, GS.SYMBOL ((fn (_, s) => s) Symbol, SR))
+      => ((!liftSpan) FULL_SPAN, GS.SYMBOL ((fn (_, s) => s) Symbol, SR))
   | "(" AltList ")"
-      => (FULL_SPAN, GS.SUBRULE (map (fn (_, alt) => alt) AltList))
+      => ((!liftSpan) FULL_SPAN, GS.SUBRULE (map (fn (_, alt) => alt) AltList))
   ;
 
 ID' : ID => (ID_SPAN, ID) ;
@@ -170,4 +180,5 @@ QualID
 
 Abbrev : "(" STRING ")" => (Atom.atom STRING) ;
 
-Code : CODE => (FULL_SPAN, CODE) ;
+%nonterm Code of GrammarSyntax.code ;
+Code : CODE => ((!liftSpan) FULL_SPAN, CODE) ;

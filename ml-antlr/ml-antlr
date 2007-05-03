@@ -5,8 +5,8 @@
 
 mlantlrdir=$0
 scripthome=${mlantlrdir%ml-antlr}
-echo "script home:"
-echo $scripthome
+#echo "script home:"
+#echo $scripthome
 
 #
 # determine heap suffix

@@ -80,9 +80,15 @@ higher-order nonterminal definitions
 
 ================================================================
 
+refcells: to avoid accidental capture, put type and initial value in
+   UserDeclarations, then load into refcell when instantiating parser
+
 dump.dot and latex output.  add switches to ml-antlr and document them
 
 support for %arg
+
+weird naming issues (spec.grm)
+    UserCode.File_PROD_1_File_File_PROD_1_SUBRULE_1_PROD_1_ACT
 
 better handling of EOF/EOP
 nonunicode charsets

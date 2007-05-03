@@ -18,10 +18,11 @@ structure ParseFile =
 	  val file = TextIO.openIn filename
           val sm = StreamPos.mkSourcemap()
 	  val strm = SpecLex.streamifyInstream file
-	  val (res, strm', errs) = P.parse (SpecLex.lex sm) strm
-	  fun err2str err = Repair.repairToString SpecTokens.toString sm err ^ "\n"
+	  val (res, strm', errs, _) = P.parse (SpecLex.lex sm) (filename, sm) strm
+	  fun doErr err = Err.errMsg ["Syntax error ",
+			    Repair.repairToString SpecTokens.toString sm err]
           in 
-            app (print o err2str) errs;
+            app doErr errs;
             TextIO.closeIn file;
             res  
           end

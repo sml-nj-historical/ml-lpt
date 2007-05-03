@@ -17,7 +17,9 @@ val comStart : int ref = ref 0		(* start line of current comment *)
 
 type lex_result = Tok.token
 
-fun err _ = ()
+fun err (lineNo, colNo, msg) = Err.errMsg [
+      "Lexical error [", Int.toString lineNo, ".", Int.toString colNo, "]: ", msg
+      ]
 
 fun eof () = (
       if (!comLvl > 0)
@@ -129,7 +131,7 @@ fun dec (ri as ref i) = (ri := i-1)
 <CODE>[^()"]+	=> (addText yytext; continue());
 
 <STRING>"\""	=> (addText yytext; Tok.BOGUS);
-<STRING>{eol}	=> (addText yytext; err (!yylineno, "unclosed string");
+<STRING>{eol}	=> (addText yytext; err (!yylineno, !yycolno, "unclosed string");
  	            Tok.BOGUS);
 <STRING>\\	=> (addText yytext; continue());
 <STRING>\\\\	=> (addText yytext; continue());
@@ -157,7 +159,7 @@ fun dec (ri as ref i) = (ri := i-1)
 		    Tok.STRING (getText()));
 <CONSTR>"="	=> (YYBEGIN CODE; clrText(); Tok.EQ);
 
-.	=> (err (!yylineno, 
+.	=> (err (!yylineno, !yycolno,
 		 concat["illegal character '", 
 			String.toCString yytext, "'"]);
 	    continue());
