@@ -35,7 +35,7 @@
 
   fun hexVal (ss) : UTF8.wchar = 
         Substring.foldl 
-	  (fn (dig, acc) => (Word32.fromInt o hexDigit) dig + 0w16 * acc) 
+	  (fn (dig, acc) => (Word.fromInt o hexDigit) dig + 0w16 * acc) 
 	  0w0 ss
 
   fun mkUChar yyunicode = Tok.UCHAR (hd yyunicode)

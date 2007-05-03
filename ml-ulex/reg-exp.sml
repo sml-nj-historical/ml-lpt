@@ -20,7 +20,7 @@
 structure RegExp : REG_EXP =
   struct
 
-    structure W = Word32
+    structure W = Word
 
   (* symbols (i.e., words) *)
     structure Sym = 

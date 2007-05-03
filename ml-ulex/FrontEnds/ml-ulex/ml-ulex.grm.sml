@@ -153,7 +153,7 @@ MLULexTokens
   structure SIS = RE.SymSet
 
   fun listToASet ls = AtomSet.addList (AtomSet.empty, ls)
-  fun charToSym c = Word32.fromInt (Char.ord c)
+  fun charToSym c = Word.fromInt (Char.ord c)
   val dashSet = SIS.singleton (charToSym #"-")
 
   fun flip (x, y) = (y, x)
@@ -238,8 +238,8 @@ fun prim_re_PROD_5_prim_re_subrule2_PROD_1_ACT (LSB, SR1, env, DASH, char1, char
 	       SIS.interval (char1, char2)
 	     else (errs :== (FULL_SPAN, String.concat [
 	       "Error: malformed character class: ",
-	       Word32.toString char1, " - ",
-	       Word32.toString char2, "."])::(!!errs);
+	       Word.toString char1, " - ",
+	       Word.toString char2, "."])::(!!errs);
 	       SIS.universe))
 fun prim_re_PROD_5_prim_re_subrule2_PROD_2_ACT (LSB, SR1, env, char, LSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), char_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( SIS.singleton char)

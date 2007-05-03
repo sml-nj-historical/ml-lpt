@@ -18,8 +18,8 @@ structure SMLTblOutput : OUTPUT =
           val LO.State {id, startState, label, final, next} = s
 	  fun w2s w = 
 	        if !Options.lexCompat 
-		then "#\"" ^ (Char.toString o Char.chr o Word32.toInt) w ^ "\""
-		else "0w" ^ Word32.fmt StringCvt.DEC w
+		then "#\"" ^ (Char.toString o Char.chr o Word.toInt) w ^ "\""
+		else "0w" ^ Word.fmt StringCvt.DEC w
 	  val ASCII = SIS.interval (0w0, 0w255)
 	  fun mkTrans (set, state) = 
 	        map (fn (c1, c2) => String.concat [
