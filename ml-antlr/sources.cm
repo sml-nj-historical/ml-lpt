@@ -29,8 +29,7 @@ is
   $/smlnj-lib.cm
   $/pp-lib.cm
   $/regexp-lib.cm
-(*  $/ml-lpt-lib.cm *)
-  ../lib/ml-lpt-lib.cm 
+  $/ml-lpt-lib.cm
 
   BackEnds/back-end-sig.sml
 
