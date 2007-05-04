@@ -233,7 +233,7 @@ fun prim_re_PROD_5_prim_re_prim_re_PROD_5_SUBRULE_2_PROD_1_ACT (LSB, SR1, env, D
 	     else (errs := (FULL_SPAN, String.concat [
 	       "Error: malformed character class: ",
 	       Word.toString char1, " - ",
-	       Word.toString char2, "."])::(!!errs);
+	       Word.toString char2, "."])::(!errs);
 	       SIS.universe))
 fun prim_re_PROD_5_prim_re_prim_re_PROD_5_SUBRULE_2_PROD_2_ACT (LSB, SR1, env, char, LSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), char_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( SIS.singleton char)
