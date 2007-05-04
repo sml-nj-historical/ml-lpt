@@ -162,7 +162,7 @@ prim_re(env)
 	     else (errs := (FULL_SPAN, String.concat [
 	       "Error: malformed character class: ",
 	       Word.toString char1, " - ",
-	       Word.toString char2, "."])::(!!errs);
+	       Word.toString char2, "."])::(!errs);
 	       SIS.universe))
         | char => (SIS.singleton char)
         )*
