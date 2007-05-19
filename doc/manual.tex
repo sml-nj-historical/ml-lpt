@@ -1,9 +1,10 @@
-\documentclass[10pt,letterpaper]{book}
+\documentclass[11pt,letterpaper]{book}
 
-\usepackage[top=1.25in, bottom=1.25in, left=1.33in, right=1.33in]{geometry}
+\usepackage[top=1.33in, bottom=1.33in, left=1.33in, right=1.33in]{geometry}
 \usepackage{amsmath}
 \usepackage[all]{xy}
 \usepackage{graphicx}
+\usepackage{stmaryrd}
 
 \newcommand{\ulex}{\texttt{ml-ulex}}
 \newcommand{\mlantlr}{\texttt{ml-antlr}}
@@ -47,6 +48,7 @@ User Guide}
 
 \newcommand{\GFirstC}[3]{\textit{#1} & ::= & \textit{#2} & \textrm{#3} \\ }
 \newcommand{\GNextC}[2]{ & | & \textit{#1} & \textrm{#2} \\ }
+\newcommand{\GNextCC}[2]{ & | & \multicolumn{2}{l}{\textit{#1}} \\ & & & \textrm{#2} \\ }
 
 %\newcommand{\T}[1]{{\tt '#1'}}
 \newcommand{\T}[1]{{\textbf{\tt #1}}}
@@ -67,6 +69,9 @@ User Guide}
 %\newcommand{\cpart}[1]{\renewcommand{\parttext}{#1}\part{#1}}
 
 \usepackage{fancyhdr}
+\usepackage{multicol}
+
+\newcommand{\sem}[1]{\llbracket #1\rrbracket}
 
 \begin{document}
 
@@ -77,7 +82,7 @@ User Guide}
 	\phantom{.}
 	\vspace{\stretch{1}}
 	
-	\noindent Copyright \copyright{}2006.  All rights reserved.
+	\noindent Copyright \copyright{}2007.  Fellowship of SML/NJ.  All rights reserved.
 	
 	\vskip 12pt
 	\noindent This document was written with support from NSF grant CNS-0454136, ``CRI: Standard ML Software Infrastructure.''

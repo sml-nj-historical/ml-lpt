@@ -2,10 +2,10 @@
 
 
 
-\section{The {\tt StreamPos} structure}
+\section{The {\tt AntlrStreamPos} structure}
 
 \begin{verbatim}
-    structure StreamPos : sig
+    structure AntlrStreamPos : sig
 
       type pos = Position.int
       type span = pos * pos
@@ -28,10 +28,10 @@
 \end{verbatim}
 
 
-\section{The {\tt Repair} structure}
+\section{The {\tt AntlrRepair} structure}
 
 \begin{verbatim}
-    structure Repair : sig
+    structure AntlrRepair : sig
 
       datatype 'token repair_action
         = Insert of 'token list
@@ -42,10 +42,12 @@
           }
         | FailureAt of 'token
       
-      type 'a repair = StreamPos.pos * 'token repair_action
+      type 'a repair = AntlrStreamPos.pos * 'token repair_action
       
-      val repairToString : ('token -> string) -> StreamPos.sourcemap -> 
-                           'token repair -> string
+      val repairToString : 
+            ('token list -> string) -> 
+            AntlrStreamPos.sourcemap -> 
+            'token repair -> string
         
     end
 \end{verbatim}
