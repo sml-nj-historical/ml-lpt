@@ -20,13 +20,12 @@
  ml-antlr
 ================
 
- - fix error repair
+ X fix error repair
      x implement heuristic for primary repair
      x implement secondary recovery
      x work on error messages
      x position details -- WSTREAM
-     - limit metric measurement to ~25 tokens, rather than to EOF
-     - deal with keywords
+     X deal with keywords
      - preferred replacements
  x make prePath required in GLA.*
  x think about: EBNF predicates should only include true case?
@@ -45,19 +44,15 @@
  - friendlier errors for prediction tree failure
      - report multiple failures
  - more/better comments!
- - improve check-grammar
+ X improve check-grammar
      x allow for and report multiple errors
-     - do additional checking
-        - multiple tokens w/ same abbrev
+     X do additional checking
+        X multiple tokens w/ same abbrev
 
  - figure out syntax for A (X A)* and A ((X | Y | Z) A)*
  - automatic left-factoring?
  - improve DOT output
  - predicate hoisting (or maybe not...)
-
- - use ml-antlr for parsing
- - use new region infrastructure and carry line numbers further
-     - overhaul CheckGrammar for better error messages
 
  - (*#line directive
      - ran into problems with ordering in generated file not matching 
@@ -80,21 +75,9 @@ higher-order nonterminal definitions
 
 ================================================================
 
-refcells: to avoid accidental capture, put type and initial value in
-   UserDeclarations, then load into refcell when instantiating parser
-
 update HISTORY file
 
-Matthew Fluet's port for ml-ulex
-
-dump.dot and latex output.  add switches to ml-antlr and document them
-
 support for %arg
-
-weird naming issues (spec.grm)
-    UserCode.File_PROD_1_File_File_PROD_1_SUBRULE_1_PROD_1_ACT
-
-error repair should treat reaching EOF as a successful repair
 
 better handling of EOF/EOP
 nonunicode charsets
@@ -102,10 +85,6 @@ nonunicode charsets
 allow lexer to pass error messages to the parser data structures
 
 adjustable k
-switches for unit actions & debugging actions
-
-bug: refcell parens in grammar spec do not appear in emitted code, so
-     tuples do not work correctly
 
 error repair: get rid of exception-based, instead use 5-token markers
 ml-antlr pretty-printing of flattened spec
@@ -113,13 +92,14 @@ make for better type error messages dealing with actions (wrt hygienic parameter
 "functorize" lexer over notion of stream positions
 
 to document:
-  - skip vs continue for lexers
+  X skip vs continue for lexers
   - type annotations
   - ref cells
   - changes to grammar import
   - changes to overall decl format
-  - RE syntax, semantics
-  - yylinepos := 1 for the first line of the file (and document this)
+  X RE syntax, semantics
+  X yylinepos = 1 for the first line of the file
+  X dump.dot and latex output.  add switches to ml-antlr and document them
   - larger example
 
 X  allow type annotations!!!
@@ -131,3 +111,15 @@ X  support for {1,3} (ranges) in ml-ulex
 X  make sure checking that token names and NT names are disjoint
 X  make ref cells work with := directly
 X  when refcells declared, used = anyway
+X  Matthew Fluet's port for ml-ulex
+X  weird naming issues (spec.grm) eg. UserCode.File_PROD_1_File_File_PROD_1_SUBRULE_1_PROD_1_ACT
+X  refcells: to avoid accidental capture, put type and initial value in
+     UserDeclarations, then load into refcell when instantiating parser
+X  bug: refcell parens in grammar spec do not appear in emitted code, so
+     tuples do not work correctly
+X use ml-antlr for parsing
+X use new region infrastructure and carry line numbers further
+     X overhaul CheckGrammar for better error messages
+X switches for unit actions & debugging actions
+X line breaks in table-based lexer table
+X error repair should treat reaching EOF as a successful repair

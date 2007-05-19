@@ -2,18 +2,17 @@ structure Main =
   struct
 
     structure L = Mlex
-    structure P = Parser(L)
+    structure P = ParseFn(L)
 
     fun errMsg l = 
 	  TextIO.output(TextIO.stdErr, String.concat l)
 
     fun parse strm = let
-	  val s =
-		Mlex.streamify (fn n => TextIO.inputN (strm, n))
-	  val (p, s', errors, _) = P.parse s before TextIO.closeIn strm
-	  fun doErr (pos, err) = errMsg [" ", Int.toString (L.getLineNo (s', pos)), ".",
-					 Int.toString (L.getColNo  (s', pos)), " ",
-					 "syntax error: ", P.repairToString err, "\n"]
+	  val s = Mlex.streamifyInstream strm
+	  val sm = AntlrStreamPos.mkSourcemap()
+	  val (SOME p, s', errors) = P.parse (L.lex sm) s before TextIO.closeIn strm
+	  fun doErr err = print ("Syntax error " ^ 
+			    AntlrRepair.repairToString Tokens.toString sm err ^ "\n")
 	  in
             app doErr errors;
 	    p

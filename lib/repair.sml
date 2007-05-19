@@ -8,7 +8,7 @@
  * Representation and pretty-printing of ml-antlr repair actions
  *)
 
-structure Repair = struct
+structure AntlrRepair = struct
 
   datatype 'a repair_action
     = Insert of 'a list
@@ -19,7 +19,7 @@ structure Repair = struct
       }
     | FailureAt of 'a
 
-  type 'a repair = StreamPos.pos * 'a repair_action
+  type 'a repair = AntlrStreamPos.pos * 'a repair_action
 
   fun actionToString tokToString repair = let
     val toksToString = (String.concatWith " ") o (map tokToString)
@@ -33,6 +33,6 @@ structure Repair = struct
     end
 
   fun repairToString tokToString sm (pos, repair) = 
-      (StreamPos.toString sm pos ^ ": " ^ actionToString tokToString repair)
+      (AntlrStreamPos.toString sm pos ^ ": " ^ actionToString tokToString repair)
 
 end

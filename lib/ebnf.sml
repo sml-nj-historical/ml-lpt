@@ -8,10 +8,10 @@
  * EBNF combinators used for ml-antlr.
  *)
 
-functor EBNF (S : sig 
-		    type strm
-		    val getSpan : strm -> StreamPos.span
-    	          end) = 
+functor AntlrEBNF (S : sig 
+		     type strm
+		     val getSpan : strm -> AntlrStreamPos.span
+    	           end) = 
 struct
 
   fun optional (pred, parse, strm) = 

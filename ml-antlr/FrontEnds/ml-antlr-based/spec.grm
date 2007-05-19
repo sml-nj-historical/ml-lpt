@@ -8,6 +8,7 @@
 
 %defs (
   structure GS = GrammarSyntax
+  structure StreamPos = AntlrStreamPos
 
   fun lift f (vspan, v) = (vspan, f v)
   fun mapFst f (fst, snd) = (f fst, snd)
@@ -63,7 +64,7 @@
   | BOGUS
   ;
 
-%refcell liftSpan : StreamPos.span -> GrammarSyntax.span
+%refcell liftSpan : AntlrStreamPos.span -> GrammarSyntax.span
   = (fn _ => let val z = ("", 0, 0) in (z, z) end); 
 
 %nonterm File of GS.grammar ;

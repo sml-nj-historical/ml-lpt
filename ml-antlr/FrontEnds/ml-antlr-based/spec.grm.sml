@@ -151,6 +151,7 @@ SpecTokens
 
  
   structure GS = GrammarSyntax
+  structure StreamPos = AntlrStreamPos
 
   fun lift f (vspan, v) = (vspan, f v)
   fun mapFst f (fst, snd) = (f fst, snd)
@@ -163,7 +164,7 @@ SpecTokens
 
 
 
-fun File_PROD_1_File_File_PROD_1_SUBRULE_1_PROD_1_ACT (sm, fileName, FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
+fun File_PROD_1_SUBRULE_1_PROD_1_ACT (sm, fileName, FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ( liftSpan := (fn (p1, p2) => ((fileName, StreamPos.lineNo sm p1,
 				                StreamPos.colNo  sm p1), 
 				     (fileName, StreamPos.lineNo sm p2,
@@ -207,7 +208,7 @@ fun SymList_PROD_1_ACT (SR, Symbol, SR_SPAN : (Lex.pos * Lex.pos), Symbol_SPAN :
   ( Symbol::SR)
 fun AltList_PROD_1_ACT (SR, Alt, SR_SPAN : (Lex.pos * Lex.pos), Alt_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ( Alt::SR)
-fun TyAnn_PROD_1_TyAnn_TyAnn_PROD_1_SUBRULE_1_PROD_2_ACT (ID, ID_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
+fun TyAnn_PROD_1_SUBRULE_1_PROD_2_ACT (ID, ID_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ( "unit")
 fun TyAnn_PROD_1_ACT (ID, SR, ID_SPAN : (Lex.pos * Lex.pos), SR_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ( FULL_SPAN, (Atom.atom ID, SR))
@@ -221,13 +222,13 @@ fun Alt_PROD_1_ACT (SR1, SR2, NamedItem, KW_try, SR1_SPAN : (Lex.pos * Lex.pos),
       })
 fun NamedItem_PROD_1_ACT (SR, Item, SR_SPAN : (Lex.pos * Lex.pos), Item_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ( SR, Item)
-fun Item_PROD_1_Item_Item_PROD_1_SUBRULE_1_PROD_1_ACT (STAR, PrimItem, STAR_SPAN : (Lex.pos * Lex.pos), PrimItem_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
+fun Item_PROD_1_SUBRULE_1_PROD_1_ACT (STAR, PrimItem, STAR_SPAN : (Lex.pos * Lex.pos), PrimItem_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ( (!liftSpan) PrimItem_SPAN, GS.CLOS PrimItem)
-fun Item_PROD_1_Item_Item_PROD_1_SUBRULE_1_PROD_2_ACT (PLUS, PrimItem, PLUS_SPAN : (Lex.pos * Lex.pos), PrimItem_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
+fun Item_PROD_1_SUBRULE_1_PROD_2_ACT (PLUS, PrimItem, PLUS_SPAN : (Lex.pos * Lex.pos), PrimItem_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ( (!liftSpan) PrimItem_SPAN, GS.POSCLOS PrimItem)
-fun Item_PROD_1_Item_Item_PROD_1_SUBRULE_1_PROD_3_ACT (QUERY, PrimItem, QUERY_SPAN : (Lex.pos * Lex.pos), PrimItem_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
+fun Item_PROD_1_SUBRULE_1_PROD_3_ACT (QUERY, PrimItem, QUERY_SPAN : (Lex.pos * Lex.pos), PrimItem_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ( (!liftSpan) PrimItem_SPAN, GS.OPT PrimItem)
-fun Item_PROD_1_Item_Item_PROD_1_SUBRULE_1_PROD_4_ACT (PrimItem, PrimItem_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
+fun Item_PROD_1_SUBRULE_1_PROD_4_ACT (PrimItem, PrimItem_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ( PrimItem)
 fun Item_PROD_1_ACT (SR, PrimItem, SR_SPAN : (Lex.pos * Lex.pos), PrimItem_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ( SR)
@@ -255,9 +256,9 @@ fun RowList_PROD_1_ACT (SR, Row, SR_SPAN : (Lex.pos * Lex.pos), Row_SPAN : (Lex.
   ( String.concatWith "," (Row::SR))
 fun TyApp_PROD_1_ACT (LP, RP, SR, Ty, QualID, LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), SR_SPAN : (Lex.pos * Lex.pos), Ty_SPAN : (Lex.pos * Lex.pos), QualID_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ( "(" ^ String.concatWith "," (Ty::SR) ^ ") " ^ QualID)
-fun TyApp_PROD_2_TyApp_TyApp_PROD_2_SUBRULE_1_PROD_1_ACT (QualID, TyProd, QualID_SPAN : (Lex.pos * Lex.pos), TyProd_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
+fun TyApp_PROD_2_SUBRULE_1_PROD_1_ACT (QualID, TyProd, QualID_SPAN : (Lex.pos * Lex.pos), TyProd_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ( TyProd ^ " " ^ QualID)
-fun TyApp_PROD_2_TyApp_TyApp_PROD_2_SUBRULE_1_PROD_2_ACT (TyProd, TyProd_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
+fun TyApp_PROD_2_SUBRULE_1_PROD_2_ACT (TyProd, TyProd_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ( TyProd)
 fun TyApp_PROD_2_ACT (SR, TyProd, SR_SPAN : (Lex.pos * Lex.pos), TyProd_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ( SR)
@@ -273,196 +274,193 @@ fun Abbrev_PROD_1_ACT (LP, RP, STRING, LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : 
   ( Atom.atom STRING)
 fun Code_PROD_1_ACT (CODE, CODE_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ( (!liftSpan) FULL_SPAN, CODE) : GrammarSyntax.code
+fun mkliftSpan_REFC() : (AntlrStreamPos.span -> GrammarSyntax.span) ref = ref ( fn _ => let val z = ("", 0, 0) in (z, z) end)
 
     end
 
-    structure R = RepairableStrm(Tok)(Lex)
-    structure Err = ErrHandler(R)
-    structure EBNF = EBNF(R)
-
-    exception ParseError = Err.RepairableError
+    structure Err = AntlrErrHandler(Tok)(Lex)
+    structure EBNF = AntlrEBNF(struct
+			         type strm = Err.wstream
+			         val getSpan = Err.getSpan
+			       end)
 
     fun mk lexFn = let
-val liftSpan_REFC : (StreamPos.span -> GrammarSyntax.span) ref = ref ( fn _ => let val z = ("", 0, 0) in (z, z) end)
+val liftSpan_REFC = UserCode.mkliftSpan_REFC()
 fun getS() = {liftSpan = !liftSpan_REFC}
 fun putS{liftSpan} = (liftSpan_REFC := liftSpan)
-fun unwrap (ret, strm, repairs) = (ret, R.unwrap strm, repairs, getS())
-        val eh = Err.mkErrHandler {get = getS, put = putS}
-	fun wrap f = Err.wrap eh f
-	fun reqEOF' f s = let
-	      val (act, span, s') = f s
-	      in (wrap (fn s' => (case R.get1 s'
-		  of (Tok.EOF, _, _) => (act, span, s')
-		   | _ => raise ParseError))) s'
-	      end
-	fun reqEOF f = wrap (reqEOF' f)
-	val whileDisabled = Err.whileDisabled eh
-	fun tryProds (strm, prods) = (wrap (Err.tryProds eh prods)) strm
-	val lex = R.get1
-val matchEOF = wrap (fn strm => (case (lex(strm))
+fun unwrap (ret, strm, repairs) = (ret, strm, repairs, getS())
+        val (eh, lex) = Err.mkErrHandler {get = getS, put = putS}
+	fun fail() = Err.failure eh
+	fun tryProds (strm, prods) = let
+	  fun try [] = fail()
+	    | try (prod :: prods) = 
+	        (Err.whileDisabled eh (fn() => prod strm)) 
+		handle Err.ParseError => try (prods)
+          in try prods end
+fun matchEOF strm = (case (lex(strm))
  of (Tok.EOF, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchBOGUS = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchBOGUS strm = (case (lex(strm))
  of (Tok.BOGUS, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchINT = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchINT strm = (case (lex(strm))
  of (Tok.INT(x), span, strm') => (x, span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchTYVAR = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchTYVAR strm = (case (lex(strm))
  of (Tok.TYVAR(x), span, strm') => (x, span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchIDDOT = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchIDDOT strm = (case (lex(strm))
  of (Tok.IDDOT(x), span, strm') => (x, span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchSTRING = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchSTRING strm = (case (lex(strm))
  of (Tok.STRING(x), span, strm') => (x, span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchID = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchID strm = (case (lex(strm))
  of (Tok.ID(x), span, strm') => (x, span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchOF = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchOF strm = (case (lex(strm))
  of (Tok.OF, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchREFSET = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchREFSET strm = (case (lex(strm))
  of (Tok.REFSET, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchDARROW = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchDARROW strm = (case (lex(strm))
  of (Tok.DARROW, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchARROW = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchARROW strm = (case (lex(strm))
  of (Tok.ARROW, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchEQ = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchEQ strm = (case (lex(strm))
  of (Tok.EQ, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchCODE = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchCODE strm = (case (lex(strm))
  of (Tok.CODE(x), span, strm') => (x, span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchQUERY = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchQUERY strm = (case (lex(strm))
  of (Tok.QUERY, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchPLUS = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchPLUS strm = (case (lex(strm))
  of (Tok.PLUS, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchSTAR = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchSTAR strm = (case (lex(strm))
  of (Tok.STAR, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchBAR = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchBAR strm = (case (lex(strm))
  of (Tok.BAR, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchDOLLAR = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchDOLLAR strm = (case (lex(strm))
  of (Tok.DOLLAR, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchAT = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchAT strm = (case (lex(strm))
  of (Tok.AT, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchCOMMA = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchCOMMA strm = (case (lex(strm))
  of (Tok.COMMA, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchSEMI = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchSEMI strm = (case (lex(strm))
  of (Tok.SEMI, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchCOLON = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchCOLON strm = (case (lex(strm))
  of (Tok.COLON, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchSLASH = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchSLASH strm = (case (lex(strm))
  of (Tok.SLASH, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchRCB = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchRCB strm = (case (lex(strm))
  of (Tok.RCB, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchLCB = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchLCB strm = (case (lex(strm))
  of (Tok.LCB, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchRSB = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchRSB strm = (case (lex(strm))
  of (Tok.RSB, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchLSB = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchLSB strm = (case (lex(strm))
  of (Tok.LSB, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchRP = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchRP strm = (case (lex(strm))
  of (Tok.RP, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchLP = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchLP strm = (case (lex(strm))
  of (Tok.LP, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchKW_nonterms = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchKW_nonterms strm = (case (lex(strm))
  of (Tok.KW_nonterms, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchKW_dropping = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchKW_dropping strm = (case (lex(strm))
  of (Tok.KW_dropping, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchKW_where = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchKW_where strm = (case (lex(strm))
  of (Tok.KW_where, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchKW_try = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchKW_try strm = (case (lex(strm))
  of (Tok.KW_try, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchKW_refcell = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchKW_refcell strm = (case (lex(strm))
  of (Tok.KW_refcell, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchKW_entry = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchKW_entry strm = (case (lex(strm))
  of (Tok.KW_entry, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchKW_start = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchKW_start strm = (case (lex(strm))
  of (Tok.KW_start, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchKW_name = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchKW_name strm = (case (lex(strm))
  of (Tok.KW_name, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchKW_import = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchKW_import strm = (case (lex(strm))
  of (Tok.KW_import, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchKW_keywords = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchKW_keywords strm = (case (lex(strm))
  of (Tok.KW_keywords, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchKW_defs = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchKW_defs strm = (case (lex(strm))
  of (Tok.KW_defs, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
-val matchKW_tokens = wrap (fn strm => (case (lex(strm))
+  | _ => fail()
+(* end case *))
+fun matchKW_tokens strm = (case (lex(strm))
  of (Tok.KW_tokens, span, strm') => ((), span, strm')
-  | _ => raise(ParseError)
-(* end case *)))
+  | _ => fail()
+(* end case *))
 
 val (File_NT) = 
 let
@@ -492,14 +490,14 @@ fun Symbol_NT (strm) = let
         (case (lex(strm))
          of (Tok.STRING(_), _, strm') => Symbol_PROD_2(strm)
           | (Tok.ID(_), _, strm') => Symbol_PROD_1(strm)
-          | _ => raise(ParseError)
+          | _ => fail()
         (* end case *))
       end
 fun AltList_NT (strm) = let
-      val (Alt_RES, Alt_SPAN, strm') = (wrap Alt_NT)(strm)
+      val (Alt_RES, Alt_SPAN, strm') = Alt_NT(strm)
       fun AltList_PROD_1_SUBRULE_1_NT (strm) = let
             val (BAR_RES, BAR_SPAN, strm') = matchBAR(strm)
-            val (Alt_RES, Alt_SPAN, strm') = (wrap Alt_NT)(strm')
+            val (Alt_RES, Alt_SPAN, strm') = Alt_NT(strm')
             val FULL_SPAN = (#1(BAR_SPAN), #2(Alt_SPAN))
             in
               ((Alt_RES), FULL_SPAN, strm')
@@ -508,7 +506,7 @@ fun AltList_NT (strm) = let
              of (Tok.BAR, _, strm') => true
               | _ => false
             (* end case *))
-      val (SR_RES, SR_SPAN, strm') = EBNF.closure(AltList_PROD_1_SUBRULE_1_PRED, (wrap AltList_PROD_1_SUBRULE_1_NT), strm')
+      val (SR_RES, SR_SPAN, strm') = EBNF.closure(AltList_PROD_1_SUBRULE_1_PRED, AltList_PROD_1_SUBRULE_1_NT, strm')
       val FULL_SPAN = (#1(Alt_SPAN), #2(SR_SPAN))
       in
         (UserCode.AltList_PROD_1_ACT (SR_RES, Alt_RES, SR_SPAN : (Lex.pos * Lex.pos), Alt_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
@@ -525,9 +523,9 @@ and Alt_NT (strm) = let
              of (Tok.KW_try, _, strm') => true
               | _ => false
             (* end case *))
-      val (KW_try_RES, KW_try_SPAN, strm') = EBNF.optional(Alt_PROD_1_SUBRULE_1_PRED, (wrap Alt_PROD_1_SUBRULE_1_NT), strm)
+      val (KW_try_RES, KW_try_SPAN, strm') = EBNF.optional(Alt_PROD_1_SUBRULE_1_PRED, Alt_PROD_1_SUBRULE_1_NT, strm)
       fun Alt_PROD_1_SUBRULE_2_NT (strm) = let
-            val (NamedItem_RES, NamedItem_SPAN, strm') = (wrap NamedItem_NT)(strm)
+            val (NamedItem_RES, NamedItem_SPAN, strm') = NamedItem_NT(strm)
             val FULL_SPAN = (#1(NamedItem_SPAN), #2(NamedItem_SPAN))
             in
               ((NamedItem_RES), FULL_SPAN, strm')
@@ -538,10 +536,10 @@ and Alt_NT (strm) = let
               | (Tok.STRING(_), _, strm') => true
               | _ => false
             (* end case *))
-      val (NamedItem_RES, NamedItem_SPAN, strm') = EBNF.closure(Alt_PROD_1_SUBRULE_2_PRED, (wrap Alt_PROD_1_SUBRULE_2_NT), strm')
+      val (NamedItem_RES, NamedItem_SPAN, strm') = EBNF.closure(Alt_PROD_1_SUBRULE_2_PRED, Alt_PROD_1_SUBRULE_2_NT, strm')
       fun Alt_PROD_1_SUBRULE_3_NT (strm) = let
             val (KW_where_RES, KW_where_SPAN, strm') = matchKW_where(strm)
-            val (Code_RES, Code_SPAN, strm') = (wrap Code_NT)(strm')
+            val (Code_RES, Code_SPAN, strm') = Code_NT(strm')
             val FULL_SPAN = (#1(KW_where_SPAN), #2(Code_SPAN))
             in
               ((Code_RES), FULL_SPAN, strm')
@@ -550,10 +548,10 @@ and Alt_NT (strm) = let
              of (Tok.KW_where, _, strm') => true
               | _ => false
             (* end case *))
-      val (SR1_RES, SR1_SPAN, strm') = EBNF.optional(Alt_PROD_1_SUBRULE_3_PRED, (wrap Alt_PROD_1_SUBRULE_3_NT), strm')
+      val (SR1_RES, SR1_SPAN, strm') = EBNF.optional(Alt_PROD_1_SUBRULE_3_PRED, Alt_PROD_1_SUBRULE_3_NT, strm')
       fun Alt_PROD_1_SUBRULE_4_NT (strm) = let
             val (DARROW_RES, DARROW_SPAN, strm') = matchDARROW(strm)
-            val (Code_RES, Code_SPAN, strm') = (wrap Code_NT)(strm')
+            val (Code_RES, Code_SPAN, strm') = Code_NT(strm')
             val FULL_SPAN = (#1(DARROW_SPAN), #2(Code_SPAN))
             in
               ((Code_RES), FULL_SPAN, strm')
@@ -562,7 +560,7 @@ and Alt_NT (strm) = let
              of (Tok.DARROW, _, strm') => true
               | _ => false
             (* end case *))
-      val (SR2_RES, SR2_SPAN, strm') = EBNF.optional(Alt_PROD_1_SUBRULE_4_PRED, (wrap Alt_PROD_1_SUBRULE_4_NT), strm')
+      val (SR2_RES, SR2_SPAN, strm') = EBNF.optional(Alt_PROD_1_SUBRULE_4_PRED, Alt_PROD_1_SUBRULE_4_NT, strm')
       val FULL_SPAN = (#1(KW_try_SPAN), #2(SR2_SPAN))
       in
         (UserCode.Alt_PROD_1_ACT (SR1_RES, SR2_RES, NamedItem_RES, KW_try_RES, SR1_SPAN : (Lex.pos * Lex.pos), SR2_SPAN : (Lex.pos * Lex.pos), NamedItem_SPAN : (Lex.pos * Lex.pos), KW_try_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
@@ -584,42 +582,42 @@ and NamedItem_NT (strm) = let
                   (* end case *))
               | _ => false
             (* end case *))
-      val (SR_RES, SR_SPAN, strm') = EBNF.optional(NamedItem_PROD_1_SUBRULE_1_PRED, (wrap NamedItem_PROD_1_SUBRULE_1_NT), strm)
-      val (Item_RES, Item_SPAN, strm') = (wrap Item_NT)(strm')
+      val (SR_RES, SR_SPAN, strm') = EBNF.optional(NamedItem_PROD_1_SUBRULE_1_PRED, NamedItem_PROD_1_SUBRULE_1_NT, strm)
+      val (Item_RES, Item_SPAN, strm') = Item_NT(strm')
       val FULL_SPAN = (#1(SR_SPAN), #2(Item_SPAN))
       in
         (UserCode.NamedItem_PROD_1_ACT (SR_RES, Item_RES, SR_SPAN : (Lex.pos * Lex.pos), Item_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
           FULL_SPAN, strm')
       end
 and Item_NT (strm) = let
-      val (PrimItem_RES, PrimItem_SPAN, strm') = (wrap PrimItem_NT)(strm)
+      val (PrimItem_RES, PrimItem_SPAN, strm') = PrimItem_NT(strm)
       val (SR_RES, SR_SPAN, strm') = let
       fun Item_PROD_1_SUBRULE_1_NT (strm) = let
             fun Item_PROD_1_SUBRULE_1_PROD_1 (strm) = let
                   val (STAR_RES, STAR_SPAN, strm') = matchSTAR(strm)
                   val FULL_SPAN = (#1(STAR_SPAN), #2(STAR_SPAN))
                   in
-                    (UserCode.Item_PROD_1_Item_Item_PROD_1_SUBRULE_1_PROD_1_ACT (STAR_RES, PrimItem_RES, STAR_SPAN : (Lex.pos * Lex.pos), PrimItem_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
+                    (UserCode.Item_PROD_1_SUBRULE_1_PROD_1_ACT (STAR_RES, PrimItem_RES, STAR_SPAN : (Lex.pos * Lex.pos), PrimItem_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
                       FULL_SPAN, strm')
                   end
             fun Item_PROD_1_SUBRULE_1_PROD_2 (strm) = let
                   val (PLUS_RES, PLUS_SPAN, strm') = matchPLUS(strm)
                   val FULL_SPAN = (#1(PLUS_SPAN), #2(PLUS_SPAN))
                   in
-                    (UserCode.Item_PROD_1_Item_Item_PROD_1_SUBRULE_1_PROD_2_ACT (PLUS_RES, PrimItem_RES, PLUS_SPAN : (Lex.pos * Lex.pos), PrimItem_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
+                    (UserCode.Item_PROD_1_SUBRULE_1_PROD_2_ACT (PLUS_RES, PrimItem_RES, PLUS_SPAN : (Lex.pos * Lex.pos), PrimItem_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
                       FULL_SPAN, strm')
                   end
             fun Item_PROD_1_SUBRULE_1_PROD_3 (strm) = let
                   val (QUERY_RES, QUERY_SPAN, strm') = matchQUERY(strm)
                   val FULL_SPAN = (#1(QUERY_SPAN), #2(QUERY_SPAN))
                   in
-                    (UserCode.Item_PROD_1_Item_Item_PROD_1_SUBRULE_1_PROD_3_ACT (QUERY_RES, PrimItem_RES, QUERY_SPAN : (Lex.pos * Lex.pos), PrimItem_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
+                    (UserCode.Item_PROD_1_SUBRULE_1_PROD_3_ACT (QUERY_RES, PrimItem_RES, QUERY_SPAN : (Lex.pos * Lex.pos), PrimItem_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
                       FULL_SPAN, strm')
                   end
             fun Item_PROD_1_SUBRULE_1_PROD_4 (strm) = let
-                  val FULL_SPAN = (R.getPos(strm), R.getPos(strm))
+                  val FULL_SPAN = (Err.getPos(strm), Err.getPos(strm))
                   in
-                    (UserCode.Item_PROD_1_Item_Item_PROD_1_SUBRULE_1_PROD_4_ACT (PrimItem_RES, PrimItem_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
+                    (UserCode.Item_PROD_1_SUBRULE_1_PROD_4_ACT (PrimItem_RES, PrimItem_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
                       FULL_SPAN, strm)
                   end
             in
@@ -637,11 +635,11 @@ and Item_NT (strm) = let
                 | (Tok.PLUS, _, strm') => Item_PROD_1_SUBRULE_1_PROD_2(strm)
                 | (Tok.STAR, _, strm') => Item_PROD_1_SUBRULE_1_PROD_1(strm)
                 | (Tok.QUERY, _, strm') => Item_PROD_1_SUBRULE_1_PROD_3(strm)
-                | _ => raise(ParseError)
+                | _ => fail()
               (* end case *))
             end
       in
-        (wrap Item_PROD_1_SUBRULE_1_NT)(strm')
+        Item_PROD_1_SUBRULE_1_NT(strm')
       end
       val FULL_SPAN = (#1(PrimItem_SPAN), #2(SR_SPAN))
       in
@@ -650,10 +648,10 @@ and Item_NT (strm) = let
       end
 and PrimItem_NT (strm) = let
       fun PrimItem_PROD_1 (strm) = let
-            val (Symbol_RES, Symbol_SPAN, strm') = (wrap Symbol_NT)(strm)
+            val (Symbol_RES, Symbol_SPAN, strm') = Symbol_NT(strm)
             fun PrimItem_PROD_1_SUBRULE_1_NT (strm) = let
                   val (AT_RES, AT_SPAN, strm') = matchAT(strm)
-                  val (Code_RES, Code_SPAN, strm') = (wrap Code_NT)(strm')
+                  val (Code_RES, Code_SPAN, strm') = Code_NT(strm')
                   val FULL_SPAN = (#1(AT_SPAN), #2(Code_SPAN))
                   in
                     ((Code_RES), FULL_SPAN, strm')
@@ -662,7 +660,7 @@ and PrimItem_NT (strm) = let
                    of (Tok.AT, _, strm') => true
                     | _ => false
                   (* end case *))
-            val (SR_RES, SR_SPAN, strm') = EBNF.optional(PrimItem_PROD_1_SUBRULE_1_PRED, (wrap PrimItem_PROD_1_SUBRULE_1_NT), strm')
+            val (SR_RES, SR_SPAN, strm') = EBNF.optional(PrimItem_PROD_1_SUBRULE_1_PRED, PrimItem_PROD_1_SUBRULE_1_NT, strm')
             val FULL_SPAN = (#1(Symbol_SPAN), #2(SR_SPAN))
             in
               (UserCode.PrimItem_PROD_1_ACT (SR_RES, Symbol_RES, SR_SPAN : (Lex.pos * Lex.pos), Symbol_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
@@ -670,7 +668,7 @@ and PrimItem_NT (strm) = let
             end
       fun PrimItem_PROD_2 (strm) = let
             val (LP_RES, LP_SPAN, strm') = matchLP(strm)
-            val (AltList_RES, AltList_SPAN, strm') = (wrap AltList_NT)(strm')
+            val (AltList_RES, AltList_SPAN, strm') = AltList_NT(strm')
             val (RP_RES, RP_SPAN, strm') = matchRP(strm')
             val FULL_SPAN = (#1(LP_SPAN), #2(RP_SPAN))
             in
@@ -682,7 +680,7 @@ and PrimItem_NT (strm) = let
          of (Tok.LP, _, strm') => PrimItem_PROD_2(strm)
           | (Tok.ID(_), _, strm') => PrimItem_PROD_1(strm)
           | (Tok.STRING(_), _, strm') => PrimItem_PROD_1(strm)
-          | _ => raise(ParseError)
+          | _ => fail()
         (* end case *))
       end
 fun Formals_NT (strm) = let
@@ -699,7 +697,7 @@ fun Formals_NT (strm) = let
              of (Tok.COMMA, _, strm') => true
               | _ => false
             (* end case *))
-      val (SR_RES, SR_SPAN, strm') = EBNF.closure(Formals_PROD_1_SUBRULE_1_PRED, (wrap Formals_PROD_1_SUBRULE_1_NT), strm')
+      val (SR_RES, SR_SPAN, strm') = EBNF.closure(Formals_PROD_1_SUBRULE_1_PRED, Formals_PROD_1_SUBRULE_1_NT, strm')
       val (RP_RES, RP_SPAN, strm') = matchRP(strm')
       val FULL_SPAN = (#1(LP_SPAN), #2(RP_SPAN))
       in
@@ -715,7 +713,7 @@ fun QualID_NT (strm) = let
             end
       fun QualID_PROD_2 (strm) = let
             val (IDDOT_RES, IDDOT_SPAN, strm') = matchIDDOT(strm)
-            val (QualID_RES, QualID_SPAN, strm') = (wrap QualID_NT)(strm')
+            val (QualID_RES, QualID_SPAN, strm') = QualID_NT(strm')
             val FULL_SPAN = (#1(IDDOT_SPAN), #2(QualID_SPAN))
             in
               (UserCode.QualID_PROD_2_ACT (QualID_RES, IDDOT_RES, QualID_SPAN : (Lex.pos * Lex.pos), IDDOT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
@@ -725,7 +723,7 @@ fun QualID_NT (strm) = let
         (case (lex(strm))
          of (Tok.IDDOT(_), _, strm') => QualID_PROD_2(strm)
           | (Tok.ID(_), _, strm') => QualID_PROD_1(strm)
-          | _ => raise(ParseError)
+          | _ => fail()
         (* end case *))
       end
 fun Label_NT (strm) = let
@@ -745,13 +743,13 @@ fun Label_NT (strm) = let
         (case (lex(strm))
          of (Tok.INT(_), _, strm') => Label_PROD_2(strm)
           | (Tok.ID(_), _, strm') => Label_PROD_1(strm)
-          | _ => raise(ParseError)
+          | _ => fail()
         (* end case *))
       end
 fun Ty_NT (strm) = let
       fun Ty_PROD_1 (strm) = let
             val (LCB_RES, LCB_SPAN, strm') = matchLCB(strm)
-            val (RowList_RES, RowList_SPAN, strm') = (wrap RowList_NT)(strm')
+            val (RowList_RES, RowList_SPAN, strm') = RowList_NT(strm')
             val (RCB_RES, RCB_SPAN, strm') = matchRCB(strm')
             val FULL_SPAN = (#1(LCB_SPAN), #2(RCB_SPAN))
             in
@@ -767,7 +765,7 @@ fun Ty_NT (strm) = let
                 FULL_SPAN, strm')
             end
       fun Ty_PROD_3 (strm) = let
-            val (TyApp_RES, TyApp_SPAN, strm') = (wrap TyApp_NT)(strm)
+            val (TyApp_RES, TyApp_SPAN, strm') = TyApp_NT(strm)
             val FULL_SPAN = (#1(TyApp_SPAN), #2(TyApp_SPAN))
             in
               ((TyApp_RES), FULL_SPAN, strm')
@@ -783,18 +781,18 @@ fun Ty_NT (strm) = let
                of (Tok.ID(_), _, strm') => Ty_PROD_1(strm)
                 | (Tok.INT(_), _, strm') => Ty_PROD_1(strm)
                 | (Tok.RCB, _, strm') => Ty_PROD_2(strm)
-                | _ => raise(ParseError)
+                | _ => fail()
               (* end case *))
-          | _ => raise(ParseError)
+          | _ => fail()
         (* end case *))
       end
 and TyApp_NT (strm) = let
       fun TyApp_PROD_1 (strm) = let
             val (LP_RES, LP_SPAN, strm') = matchLP(strm)
-            val (Ty_RES, Ty_SPAN, strm') = (wrap Ty_NT)(strm')
+            val (Ty_RES, Ty_SPAN, strm') = Ty_NT(strm')
             fun TyApp_PROD_1_SUBRULE_1_NT (strm) = let
                   val (COMMA_RES, COMMA_SPAN, strm') = matchCOMMA(strm)
-                  val (Ty_RES, Ty_SPAN, strm') = (wrap Ty_NT)(strm')
+                  val (Ty_RES, Ty_SPAN, strm') = Ty_NT(strm')
                   val FULL_SPAN = (#1(COMMA_SPAN), #2(Ty_SPAN))
                   in
                     ((Ty_RES), FULL_SPAN, strm')
@@ -803,29 +801,29 @@ and TyApp_NT (strm) = let
                    of (Tok.COMMA, _, strm') => true
                     | _ => false
                   (* end case *))
-            val (SR_RES, SR_SPAN, strm') = EBNF.closure(TyApp_PROD_1_SUBRULE_1_PRED, (wrap TyApp_PROD_1_SUBRULE_1_NT), strm')
+            val (SR_RES, SR_SPAN, strm') = EBNF.closure(TyApp_PROD_1_SUBRULE_1_PRED, TyApp_PROD_1_SUBRULE_1_NT, strm')
             val (RP_RES, RP_SPAN, strm') = matchRP(strm')
-            val (QualID_RES, QualID_SPAN, strm') = (wrap QualID_NT)(strm')
+            val (QualID_RES, QualID_SPAN, strm') = QualID_NT(strm')
             val FULL_SPAN = (#1(LP_SPAN), #2(QualID_SPAN))
             in
               (UserCode.TyApp_PROD_1_ACT (LP_RES, RP_RES, SR_RES, Ty_RES, QualID_RES, LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), SR_SPAN : (Lex.pos * Lex.pos), Ty_SPAN : (Lex.pos * Lex.pos), QualID_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
                 FULL_SPAN, strm')
             end
       fun TyApp_PROD_2 (strm) = let
-            val (TyProd_RES, TyProd_SPAN, strm') = (wrap TyProd_NT)(strm)
+            val (TyProd_RES, TyProd_SPAN, strm') = TyProd_NT(strm)
             val (SR_RES, SR_SPAN, strm') = let
             fun TyApp_PROD_2_SUBRULE_1_NT (strm) = let
                   fun TyApp_PROD_2_SUBRULE_1_PROD_1 (strm) = let
-                        val (QualID_RES, QualID_SPAN, strm') = (wrap QualID_NT)(strm)
+                        val (QualID_RES, QualID_SPAN, strm') = QualID_NT(strm)
                         val FULL_SPAN = (#1(QualID_SPAN), #2(QualID_SPAN))
                         in
-                          (UserCode.TyApp_PROD_2_TyApp_TyApp_PROD_2_SUBRULE_1_PROD_1_ACT (QualID_RES, TyProd_RES, QualID_SPAN : (Lex.pos * Lex.pos), TyProd_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
+                          (UserCode.TyApp_PROD_2_SUBRULE_1_PROD_1_ACT (QualID_RES, TyProd_RES, QualID_SPAN : (Lex.pos * Lex.pos), TyProd_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
                             FULL_SPAN, strm')
                         end
                   fun TyApp_PROD_2_SUBRULE_1_PROD_2 (strm) = let
-                        val FULL_SPAN = (R.getPos(strm), R.getPos(strm))
+                        val FULL_SPAN = (Err.getPos(strm), Err.getPos(strm))
                         in
-                          (UserCode.TyApp_PROD_2_TyApp_TyApp_PROD_2_SUBRULE_1_PROD_2_ACT (TyProd_RES, TyProd_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
+                          (UserCode.TyApp_PROD_2_SUBRULE_1_PROD_2_ACT (TyProd_RES, TyProd_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
                             FULL_SPAN, strm)
                         end
                   in
@@ -848,11 +846,11 @@ and TyApp_NT (strm) = let
                           TyApp_PROD_2_SUBRULE_1_PROD_1(strm)
                       | (Tok.IDDOT(_), _, strm') =>
                           TyApp_PROD_2_SUBRULE_1_PROD_1(strm)
-                      | _ => raise(ParseError)
+                      | _ => fail()
                     (* end case *))
                   end
             in
-              (wrap TyApp_PROD_2_SUBRULE_1_NT)(strm')
+              TyApp_PROD_2_SUBRULE_1_NT(strm')
             end
             val FULL_SPAN = (#1(TyProd_SPAN), #2(SR_SPAN))
             in
@@ -865,14 +863,14 @@ and TyApp_NT (strm) = let
           | (Tok.IDDOT(_), _, strm') => TyApp_PROD_2(strm)
           | (Tok.TYVAR(_), _, strm') => TyApp_PROD_2(strm)
           | (Tok.LP, _, strm') => tryProds(strm, [TyApp_PROD_1, TyApp_PROD_2])
-          | _ => raise(ParseError)
+          | _ => fail()
         (* end case *))
       end
 and TyProd_NT (strm) = let
-      val (TyFun_RES, TyFun_SPAN, strm') = (wrap TyFun_NT)(strm)
+      val (TyFun_RES, TyFun_SPAN, strm') = TyFun_NT(strm)
       fun TyProd_PROD_1_SUBRULE_1_NT (strm) = let
             val (STAR_RES, STAR_SPAN, strm') = matchSTAR(strm)
-            val (TyFun_RES, TyFun_SPAN, strm') = (wrap TyFun_NT)(strm')
+            val (TyFun_RES, TyFun_SPAN, strm') = TyFun_NT(strm')
             val FULL_SPAN = (#1(STAR_SPAN), #2(TyFun_SPAN))
             in
               ((TyFun_RES), FULL_SPAN, strm')
@@ -881,17 +879,17 @@ and TyProd_NT (strm) = let
              of (Tok.STAR, _, strm') => true
               | _ => false
             (* end case *))
-      val (SR_RES, SR_SPAN, strm') = EBNF.closure(TyProd_PROD_1_SUBRULE_1_PRED, (wrap TyProd_PROD_1_SUBRULE_1_NT), strm')
+      val (SR_RES, SR_SPAN, strm') = EBNF.closure(TyProd_PROD_1_SUBRULE_1_PRED, TyProd_PROD_1_SUBRULE_1_NT, strm')
       val FULL_SPAN = (#1(TyFun_SPAN), #2(SR_SPAN))
       in
         (UserCode.TyProd_PROD_1_ACT (SR_RES, TyFun_RES, SR_SPAN : (Lex.pos * Lex.pos), TyFun_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
           FULL_SPAN, strm')
       end
 and TyFun_NT (strm) = let
-      val (TyAtom_RES, TyAtom_SPAN, strm') = (wrap TyAtom_NT)(strm)
+      val (TyAtom_RES, TyAtom_SPAN, strm') = TyAtom_NT(strm)
       fun TyFun_PROD_1_SUBRULE_1_NT (strm) = let
             val (ARROW_RES, ARROW_SPAN, strm') = matchARROW(strm)
-            val (TyAtom_RES, TyAtom_SPAN, strm') = (wrap TyAtom_NT)(strm')
+            val (TyAtom_RES, TyAtom_SPAN, strm') = TyAtom_NT(strm')
             val FULL_SPAN = (#1(ARROW_SPAN), #2(TyAtom_SPAN))
             in
               ((TyAtom_RES), FULL_SPAN, strm')
@@ -900,7 +898,7 @@ and TyFun_NT (strm) = let
              of (Tok.ARROW, _, strm') => true
               | _ => false
             (* end case *))
-      val (SR_RES, SR_SPAN, strm') = EBNF.closure(TyFun_PROD_1_SUBRULE_1_PRED, (wrap TyFun_PROD_1_SUBRULE_1_NT), strm')
+      val (SR_RES, SR_SPAN, strm') = EBNF.closure(TyFun_PROD_1_SUBRULE_1_PRED, TyFun_PROD_1_SUBRULE_1_NT, strm')
       val FULL_SPAN = (#1(TyAtom_SPAN), #2(SR_SPAN))
       in
         (UserCode.TyFun_PROD_1_ACT (SR_RES, TyAtom_RES, SR_SPAN : (Lex.pos * Lex.pos), TyAtom_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
@@ -915,7 +913,7 @@ and TyAtom_NT (strm) = let
             end
       fun TyAtom_PROD_2 (strm) = let
             val (LP_RES, LP_SPAN, strm') = matchLP(strm)
-            val (Ty_RES, Ty_SPAN, strm') = (wrap Ty_NT)(strm')
+            val (Ty_RES, Ty_SPAN, strm') = Ty_NT(strm')
             val (RP_RES, RP_SPAN, strm') = matchRP(strm')
             val FULL_SPAN = (#1(LP_SPAN), #2(RP_SPAN))
             in
@@ -923,7 +921,7 @@ and TyAtom_NT (strm) = let
                 FULL_SPAN, strm')
             end
       fun TyAtom_PROD_3 (strm) = let
-            val (QualID_RES, QualID_SPAN, strm') = (wrap QualID_NT)(strm)
+            val (QualID_RES, QualID_SPAN, strm') = QualID_NT(strm)
             val FULL_SPAN = (#1(QualID_SPAN), #2(QualID_SPAN))
             in
               ((QualID_RES), FULL_SPAN, strm')
@@ -934,14 +932,14 @@ and TyAtom_NT (strm) = let
           | (Tok.IDDOT(_), _, strm') => TyAtom_PROD_3(strm)
           | (Tok.TYVAR(_), _, strm') => TyAtom_PROD_1(strm)
           | (Tok.LP, _, strm') => TyAtom_PROD_2(strm)
-          | _ => raise(ParseError)
+          | _ => fail()
         (* end case *))
       end
 and RowList_NT (strm) = let
-      val (Row_RES, Row_SPAN, strm') = (wrap Row_NT)(strm)
+      val (Row_RES, Row_SPAN, strm') = Row_NT(strm)
       fun RowList_PROD_1_SUBRULE_1_NT (strm) = let
             val (COMMA_RES, COMMA_SPAN, strm') = matchCOMMA(strm)
-            val (Row_RES, Row_SPAN, strm') = (wrap Row_NT)(strm')
+            val (Row_RES, Row_SPAN, strm') = Row_NT(strm')
             val FULL_SPAN = (#1(COMMA_SPAN), #2(Row_SPAN))
             in
               ((Row_RES), FULL_SPAN, strm')
@@ -950,16 +948,16 @@ and RowList_NT (strm) = let
              of (Tok.COMMA, _, strm') => true
               | _ => false
             (* end case *))
-      val (SR_RES, SR_SPAN, strm') = EBNF.closure(RowList_PROD_1_SUBRULE_1_PRED, (wrap RowList_PROD_1_SUBRULE_1_NT), strm')
+      val (SR_RES, SR_SPAN, strm') = EBNF.closure(RowList_PROD_1_SUBRULE_1_PRED, RowList_PROD_1_SUBRULE_1_NT, strm')
       val FULL_SPAN = (#1(Row_SPAN), #2(SR_SPAN))
       in
         (UserCode.RowList_PROD_1_ACT (SR_RES, Row_RES, SR_SPAN : (Lex.pos * Lex.pos), Row_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
           FULL_SPAN, strm')
       end
 and Row_NT (strm) = let
-      val (Label_RES, Label_SPAN, strm') = (wrap Label_NT)(strm)
+      val (Label_RES, Label_SPAN, strm') = Label_NT(strm)
       val (COLON_RES, COLON_SPAN, strm') = matchCOLON(strm')
-      val (Ty_RES, Ty_SPAN, strm') = (wrap Ty_NT)(strm')
+      val (Ty_RES, Ty_SPAN, strm') = Ty_NT(strm')
       val FULL_SPAN = (#1(Label_SPAN), #2(Ty_SPAN))
       in
         (UserCode.Row_PROD_1_ACT (Ty_RES, COLON_RES, Label_RES, Ty_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), Label_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
@@ -971,15 +969,15 @@ fun TyAnn_NT (strm) = let
       fun TyAnn_PROD_1_SUBRULE_1_NT (strm) = let
             fun TyAnn_PROD_1_SUBRULE_1_PROD_1 (strm) = let
                   val (OF_RES, OF_SPAN, strm') = matchOF(strm)
-                  val (Ty_RES, Ty_SPAN, strm') = (wrap Ty_NT)(strm')
+                  val (Ty_RES, Ty_SPAN, strm') = Ty_NT(strm')
                   val FULL_SPAN = (#1(OF_SPAN), #2(Ty_SPAN))
                   in
                     ((Ty_RES), FULL_SPAN, strm')
                   end
             fun TyAnn_PROD_1_SUBRULE_1_PROD_2 (strm) = let
-                  val FULL_SPAN = (R.getPos(strm), R.getPos(strm))
+                  val FULL_SPAN = (Err.getPos(strm), Err.getPos(strm))
                   in
-                    (UserCode.TyAnn_PROD_1_TyAnn_TyAnn_PROD_1_SUBRULE_1_PROD_2_ACT (ID_RES, ID_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
+                    (UserCode.TyAnn_PROD_1_SUBRULE_1_PROD_2_ACT (ID_RES, ID_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
                       FULL_SPAN, strm)
                   end
             in
@@ -987,11 +985,11 @@ fun TyAnn_NT (strm) = let
                of (Tok.SEMI, _, strm') => TyAnn_PROD_1_SUBRULE_1_PROD_2(strm)
                 | (Tok.BAR, _, strm') => TyAnn_PROD_1_SUBRULE_1_PROD_2(strm)
                 | (Tok.OF, _, strm') => TyAnn_PROD_1_SUBRULE_1_PROD_1(strm)
-                | _ => raise(ParseError)
+                | _ => fail()
               (* end case *))
             end
       in
-        (wrap TyAnn_PROD_1_SUBRULE_1_NT)(strm')
+        TyAnn_PROD_1_SUBRULE_1_NT(strm')
       end
       val FULL_SPAN = (#1(ID_SPAN), #2(SR_SPAN))
       in
@@ -999,10 +997,10 @@ fun TyAnn_NT (strm) = let
           FULL_SPAN, strm')
       end
 fun SymList_NT (strm) = let
-      val (Symbol_RES, Symbol_SPAN, strm') = (wrap Symbol_NT)(strm)
+      val (Symbol_RES, Symbol_SPAN, strm') = Symbol_NT(strm)
       fun SymList_PROD_1_SUBRULE_1_NT (strm) = let
             val (COMMA_RES, COMMA_SPAN, strm') = matchCOMMA(strm)
-            val (Symbol_RES, Symbol_SPAN, strm') = (wrap Symbol_NT)(strm')
+            val (Symbol_RES, Symbol_SPAN, strm') = Symbol_NT(strm')
             val FULL_SPAN = (#1(COMMA_SPAN), #2(Symbol_SPAN))
             in
               ((Symbol_RES), FULL_SPAN, strm')
@@ -1011,7 +1009,7 @@ fun SymList_NT (strm) = let
              of (Tok.COMMA, _, strm') => true
               | _ => false
             (* end case *))
-      val (SR_RES, SR_SPAN, strm') = EBNF.closure(SymList_PROD_1_SUBRULE_1_PRED, (wrap SymList_PROD_1_SUBRULE_1_NT), strm')
+      val (SR_RES, SR_SPAN, strm') = EBNF.closure(SymList_PROD_1_SUBRULE_1_PRED, SymList_PROD_1_SUBRULE_1_NT, strm')
       val FULL_SPAN = (#1(Symbol_SPAN), #2(SR_SPAN))
       in
         (UserCode.SymList_PROD_1_ACT (SR_RES, Symbol_RES, SR_SPAN : (Lex.pos * Lex.pos), Symbol_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
@@ -1030,7 +1028,7 @@ fun Constr_NT (strm) = let
       val (ID_RES, ID_SPAN, strm') = matchID(strm)
       fun Constr_PROD_1_SUBRULE_1_NT (strm) = let
             val (OF_RES, OF_SPAN, strm') = matchOF(strm)
-            val (Ty_RES, Ty_SPAN, strm') = (wrap Ty_NT)(strm')
+            val (Ty_RES, Ty_SPAN, strm') = Ty_NT(strm')
             val FULL_SPAN = (#1(OF_SPAN), #2(Ty_SPAN))
             in
               ((Ty_RES), FULL_SPAN, strm')
@@ -1039,9 +1037,9 @@ fun Constr_NT (strm) = let
              of (Tok.OF, _, strm') => true
               | _ => false
             (* end case *))
-      val (SR_RES, SR_SPAN, strm') = EBNF.optional(Constr_PROD_1_SUBRULE_1_PRED, (wrap Constr_PROD_1_SUBRULE_1_NT), strm')
+      val (SR_RES, SR_SPAN, strm') = EBNF.optional(Constr_PROD_1_SUBRULE_1_PRED, Constr_PROD_1_SUBRULE_1_NT, strm')
       fun Constr_PROD_1_SUBRULE_2_NT (strm) = let
-            val (Abbrev_RES, Abbrev_SPAN, strm') = (wrap Abbrev_NT)(strm)
+            val (Abbrev_RES, Abbrev_SPAN, strm') = Abbrev_NT(strm)
             val FULL_SPAN = (#1(Abbrev_SPAN), #2(Abbrev_SPAN))
             in
               ((Abbrev_RES), FULL_SPAN, strm')
@@ -1050,17 +1048,17 @@ fun Constr_NT (strm) = let
              of (Tok.LP, _, strm') => true
               | _ => false
             (* end case *))
-      val (Abbrev_RES, Abbrev_SPAN, strm') = EBNF.optional(Constr_PROD_1_SUBRULE_2_PRED, (wrap Constr_PROD_1_SUBRULE_2_NT), strm')
+      val (Abbrev_RES, Abbrev_SPAN, strm') = EBNF.optional(Constr_PROD_1_SUBRULE_2_PRED, Constr_PROD_1_SUBRULE_2_NT, strm')
       val FULL_SPAN = (#1(ID_SPAN), #2(Abbrev_SPAN))
       in
         (UserCode.Constr_PROD_1_ACT (ID_RES, SR_RES, Abbrev_RES, ID_SPAN : (Lex.pos * Lex.pos), SR_SPAN : (Lex.pos * Lex.pos), Abbrev_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
           FULL_SPAN, strm')
       end
 fun ConstrList_NT (strm) = let
-      val (Constr_RES, Constr_SPAN, strm') = (wrap Constr_NT)(strm)
+      val (Constr_RES, Constr_SPAN, strm') = Constr_NT(strm)
       fun ConstrList_PROD_1_SUBRULE_1_NT (strm) = let
             val (BAR_RES, BAR_SPAN, strm') = matchBAR(strm)
-            val (Constr_RES, Constr_SPAN, strm') = (wrap Constr_NT)(strm')
+            val (Constr_RES, Constr_SPAN, strm') = Constr_NT(strm')
             val FULL_SPAN = (#1(BAR_SPAN), #2(Constr_SPAN))
             in
               ((Constr_RES), FULL_SPAN, strm')
@@ -1069,7 +1067,7 @@ fun ConstrList_NT (strm) = let
              of (Tok.BAR, _, strm') => true
               | _ => false
             (* end case *))
-      val (SR_RES, SR_SPAN, strm') = EBNF.closure(ConstrList_PROD_1_SUBRULE_1_PRED, (wrap ConstrList_PROD_1_SUBRULE_1_NT), strm')
+      val (SR_RES, SR_SPAN, strm') = EBNF.closure(ConstrList_PROD_1_SUBRULE_1_PRED, ConstrList_PROD_1_SUBRULE_1_NT, strm')
       val FULL_SPAN = (#1(Constr_SPAN), #2(SR_SPAN))
       in
         (UserCode.ConstrList_PROD_1_ACT (SR_RES, Constr_RES, SR_SPAN : (Lex.pos * Lex.pos), Constr_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
@@ -1083,10 +1081,10 @@ fun ID'_NT (strm) = let
           FULL_SPAN, strm')
       end
 fun IDList_NT (strm) = let
-      val (ID'_RES, ID'_SPAN, strm') = (wrap ID'_NT)(strm)
+      val (ID'_RES, ID'_SPAN, strm') = ID'_NT(strm)
       fun IDList_PROD_1_SUBRULE_1_NT (strm) = let
             val (COMMA_RES, COMMA_SPAN, strm') = matchCOMMA(strm)
-            val (ID'_RES, ID'_SPAN, strm') = (wrap ID'_NT)(strm')
+            val (ID'_RES, ID'_SPAN, strm') = ID'_NT(strm')
             val FULL_SPAN = (#1(COMMA_SPAN), #2(ID'_SPAN))
             in
               ((ID'_RES), FULL_SPAN, strm')
@@ -1095,7 +1093,7 @@ fun IDList_NT (strm) = let
              of (Tok.COMMA, _, strm') => true
               | _ => false
             (* end case *))
-      val (SR_RES, SR_SPAN, strm') = EBNF.closure(IDList_PROD_1_SUBRULE_1_PRED, (wrap IDList_PROD_1_SUBRULE_1_NT), strm')
+      val (SR_RES, SR_SPAN, strm') = EBNF.closure(IDList_PROD_1_SUBRULE_1_PRED, IDList_PROD_1_SUBRULE_1_NT, strm')
       val FULL_SPAN = (#1(ID'_SPAN), #2(SR_SPAN))
       in
         (UserCode.IDList_PROD_1_ACT (SR_RES, ID'_RES, SR_SPAN : (Lex.pos * Lex.pos), ID'_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
@@ -1120,7 +1118,7 @@ fun Decl_NT (strm) = let
             end
       fun Decl_PROD_3 (strm) = let
             val (KW_entry_RES, KW_entry_SPAN, strm') = matchKW_entry(strm)
-            val (IDList_RES, IDList_SPAN, strm') = (wrap IDList_NT)(strm')
+            val (IDList_RES, IDList_SPAN, strm') = IDList_NT(strm')
             val FULL_SPAN = (#1(KW_entry_SPAN), #2(IDList_SPAN))
             in
               (UserCode.Decl_PROD_3_ACT (KW_entry_RES, IDList_RES, KW_entry_SPAN : (Lex.pos * Lex.pos), IDList_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
@@ -1128,7 +1126,7 @@ fun Decl_NT (strm) = let
             end
       fun Decl_PROD_4 (strm) = let
             val (KW_keywords_RES, KW_keywords_SPAN, strm') = matchKW_keywords(strm)
-            val (SymList_RES, SymList_SPAN, strm') = (wrap SymList_NT)(strm')
+            val (SymList_RES, SymList_SPAN, strm') = SymList_NT(strm')
             val FULL_SPAN = (#1(KW_keywords_SPAN), #2(SymList_SPAN))
             in
               (UserCode.Decl_PROD_4_ACT (KW_keywords_RES, SymList_RES, KW_keywords_SPAN : (Lex.pos * Lex.pos), SymList_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
@@ -1136,7 +1134,7 @@ fun Decl_NT (strm) = let
             end
       fun Decl_PROD_5 (strm) = let
             val (KW_defs_RES, KW_defs_SPAN, strm') = matchKW_defs(strm)
-            val (Code_RES, Code_SPAN, strm') = (wrap Code_NT)(strm')
+            val (Code_RES, Code_SPAN, strm') = Code_NT(strm')
             val FULL_SPAN = (#1(KW_defs_SPAN), #2(Code_SPAN))
             in
               (UserCode.Decl_PROD_5_ACT (Code_RES, KW_defs_RES, Code_SPAN : (Lex.pos * Lex.pos), KW_defs_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
@@ -1154,8 +1152,8 @@ fun Decl_NT (strm) = let
                    of (Tok.COLON, _, strm') => true
                     | _ => false
                   (* end case *))
-            val (COLON_RES, COLON_SPAN, strm') = EBNF.optional(Decl_PROD_6_SUBRULE_1_PRED, (wrap Decl_PROD_6_SUBRULE_1_NT), strm')
-            val (ConstrList_RES, ConstrList_SPAN, strm') = (wrap ConstrList_NT)(strm')
+            val (COLON_RES, COLON_SPAN, strm') = EBNF.optional(Decl_PROD_6_SUBRULE_1_PRED, Decl_PROD_6_SUBRULE_1_NT, strm')
+            val (ConstrList_RES, ConstrList_SPAN, strm') = ConstrList_NT(strm')
             val FULL_SPAN = (#1(KW_tokens_SPAN), #2(ConstrList_SPAN))
             in
               (UserCode.Decl_PROD_6_ACT (COLON_RES, KW_tokens_RES, ConstrList_RES, COLON_SPAN : (Lex.pos * Lex.pos), KW_tokens_SPAN : (Lex.pos * Lex.pos), ConstrList_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
@@ -1166,7 +1164,7 @@ fun Decl_NT (strm) = let
             val (STRING_RES, STRING_SPAN, strm') = matchSTRING(strm')
             fun Decl_PROD_7_SUBRULE_1_NT (strm) = let
                   val (KW_dropping_RES, KW_dropping_SPAN, strm') = matchKW_dropping(strm)
-                  val (SymList_RES, SymList_SPAN, strm') = (wrap SymList_NT)(strm')
+                  val (SymList_RES, SymList_SPAN, strm') = SymList_NT(strm')
                   val FULL_SPAN = (#1(KW_dropping_SPAN), #2(SymList_SPAN))
                   in
                     ((SymList_RES), FULL_SPAN, strm')
@@ -1175,7 +1173,7 @@ fun Decl_NT (strm) = let
                    of (Tok.KW_dropping, _, strm') => true
                     | _ => false
                   (* end case *))
-            val (SR_RES, SR_SPAN, strm') = EBNF.optional(Decl_PROD_7_SUBRULE_1_PRED, (wrap Decl_PROD_7_SUBRULE_1_NT), strm')
+            val (SR_RES, SR_SPAN, strm') = EBNF.optional(Decl_PROD_7_SUBRULE_1_PRED, Decl_PROD_7_SUBRULE_1_NT, strm')
             val FULL_SPAN = (#1(KW_import_SPAN), #2(SR_SPAN))
             in
               (UserCode.Decl_PROD_7_ACT (SR_RES, STRING_RES, KW_import_RES, SR_SPAN : (Lex.pos * Lex.pos), STRING_SPAN : (Lex.pos * Lex.pos), KW_import_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
@@ -1185,9 +1183,9 @@ fun Decl_NT (strm) = let
             val (KW_refcell_RES, KW_refcell_SPAN, strm') = matchKW_refcell(strm)
             val (ID_RES, ID_SPAN, strm') = matchID(strm')
             val (COLON_RES, COLON_SPAN, strm') = matchCOLON(strm')
-            val (Ty_RES, Ty_SPAN, strm') = (wrap Ty_NT)(strm')
+            val (Ty_RES, Ty_SPAN, strm') = Ty_NT(strm')
             val (EQ_RES, EQ_SPAN, strm') = matchEQ(strm')
-            val (Code_RES, Code_SPAN, strm') = (wrap Code_NT)(strm')
+            val (Code_RES, Code_SPAN, strm') = Code_NT(strm')
             val FULL_SPAN = (#1(KW_refcell_SPAN), #2(Code_SPAN))
             in
               (UserCode.Decl_PROD_8_ACT (EQ_RES, ID_RES, Ty_RES, Code_RES, COLON_RES, KW_refcell_RES, EQ_SPAN : (Lex.pos * Lex.pos), ID_SPAN : (Lex.pos * Lex.pos), Ty_SPAN : (Lex.pos * Lex.pos), Code_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), KW_refcell_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
@@ -1205,11 +1203,11 @@ fun Decl_NT (strm) = let
                    of (Tok.COLON, _, strm') => true
                     | _ => false
                   (* end case *))
-            val (COLON_RES, COLON_SPAN, strm') = EBNF.optional(Decl_PROD_9_SUBRULE_1_PRED, (wrap Decl_PROD_9_SUBRULE_1_NT), strm')
-            val (TyAnn_RES, TyAnn_SPAN, strm') = (wrap TyAnn_NT)(strm')
+            val (COLON_RES, COLON_SPAN, strm') = EBNF.optional(Decl_PROD_9_SUBRULE_1_PRED, Decl_PROD_9_SUBRULE_1_NT, strm')
+            val (TyAnn_RES, TyAnn_SPAN, strm') = TyAnn_NT(strm')
             fun Decl_PROD_9_SUBRULE_2_NT (strm) = let
                   val (BAR_RES, BAR_SPAN, strm') = matchBAR(strm)
-                  val (TyAnn_RES, TyAnn_SPAN, strm') = (wrap TyAnn_NT)(strm')
+                  val (TyAnn_RES, TyAnn_SPAN, strm') = TyAnn_NT(strm')
                   val FULL_SPAN = (#1(BAR_SPAN), #2(TyAnn_SPAN))
                   in
                     ((TyAnn_RES), FULL_SPAN, strm')
@@ -1218,7 +1216,7 @@ fun Decl_NT (strm) = let
                    of (Tok.BAR, _, strm') => true
                     | _ => false
                   (* end case *))
-            val (SR_RES, SR_SPAN, strm') = EBNF.closure(Decl_PROD_9_SUBRULE_2_PRED, (wrap Decl_PROD_9_SUBRULE_2_NT), strm')
+            val (SR_RES, SR_SPAN, strm') = EBNF.closure(Decl_PROD_9_SUBRULE_2_PRED, Decl_PROD_9_SUBRULE_2_NT, strm')
             val FULL_SPAN = (#1(KW_nonterms_SPAN), #2(SR_SPAN))
             in
               (UserCode.Decl_PROD_9_ACT (SR_RES, COLON_RES, TyAnn_RES, KW_nonterms_RES, SR_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), TyAnn_SPAN : (Lex.pos * Lex.pos), KW_nonterms_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
@@ -1227,7 +1225,7 @@ fun Decl_NT (strm) = let
       fun Decl_PROD_10 (strm) = let
             val (ID_RES, ID_SPAN, strm') = matchID(strm)
             fun Decl_PROD_10_SUBRULE_1_NT (strm) = let
-                  val (Formals_RES, Formals_SPAN, strm') = (wrap Formals_NT)(strm)
+                  val (Formals_RES, Formals_SPAN, strm') = Formals_NT(strm)
                   val FULL_SPAN = (#1(Formals_SPAN), #2(Formals_SPAN))
                   in
                     ((Formals_RES), FULL_SPAN, strm')
@@ -1236,9 +1234,9 @@ fun Decl_NT (strm) = let
                    of (Tok.LP, _, strm') => true
                     | _ => false
                   (* end case *))
-            val (Formals_RES, Formals_SPAN, strm') = EBNF.optional(Decl_PROD_10_SUBRULE_1_PRED, (wrap Decl_PROD_10_SUBRULE_1_NT), strm')
+            val (Formals_RES, Formals_SPAN, strm') = EBNF.optional(Decl_PROD_10_SUBRULE_1_PRED, Decl_PROD_10_SUBRULE_1_NT, strm')
             val (COLON_RES, COLON_SPAN, strm') = matchCOLON(strm')
-            val (AltList_RES, AltList_SPAN, strm') = (wrap AltList_NT)(strm')
+            val (AltList_RES, AltList_SPAN, strm') = AltList_NT(strm')
             val FULL_SPAN = (#1(ID_SPAN), #2(AltList_SPAN))
             in
               (UserCode.Decl_PROD_10_ACT (ID_RES, COLON_RES, AltList_RES, Formals_RES, ID_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), AltList_SPAN : (Lex.pos * Lex.pos), Formals_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
@@ -1256,22 +1254,22 @@ fun Decl_NT (strm) = let
           | (Tok.KW_defs, _, strm') => Decl_PROD_5(strm)
           | (Tok.KW_import, _, strm') => Decl_PROD_7(strm)
           | (Tok.KW_nonterms, _, strm') => Decl_PROD_9(strm)
-          | _ => raise(ParseError)
+          | _ => fail()
         (* end case *))
       end
 fun File_NT (fileName_RES, sm_RES) (strm) = let
       val (SR1_RES, SR1_SPAN, strm') = let
       fun File_PROD_1_SUBRULE_1_NT (strm) = let
-            val FULL_SPAN = (R.getPos(strm), R.getPos(strm))
+            val FULL_SPAN = (Err.getPos(strm), Err.getPos(strm))
             in
-              (UserCode.File_PROD_1_File_File_PROD_1_SUBRULE_1_PROD_1_ACT (sm_RES, fileName_RES, FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
+              (UserCode.File_PROD_1_SUBRULE_1_PROD_1_ACT (sm_RES, fileName_RES, FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
                 FULL_SPAN, strm)
             end
       in
-        (wrap File_PROD_1_SUBRULE_1_NT)(strm)
+        File_PROD_1_SUBRULE_1_NT(strm)
       end
       fun File_PROD_1_SUBRULE_2_NT (strm) = let
-            val (Decl_RES, Decl_SPAN, strm') = (wrap Decl_NT)(strm)
+            val (Decl_RES, Decl_SPAN, strm') = Decl_NT(strm)
             val (SEMI_RES, SEMI_SPAN, strm') = matchSEMI(strm')
             val FULL_SPAN = (#1(Decl_SPAN), #2(SEMI_SPAN))
             in
@@ -1290,7 +1288,7 @@ fun File_NT (fileName_RES, sm_RES) (strm) = let
               | (Tok.ID(_), _, strm') => true
               | _ => false
             (* end case *))
-      val (SR2_RES, SR2_SPAN, strm') = EBNF.closure(File_PROD_1_SUBRULE_2_PRED, (wrap File_PROD_1_SUBRULE_2_NT), strm')
+      val (SR2_RES, SR2_SPAN, strm') = EBNF.closure(File_PROD_1_SUBRULE_2_PRED, File_PROD_1_SUBRULE_2_NT, strm')
       val FULL_SPAN = (#1(SR1_SPAN), #2(SR2_SPAN))
       in
         (UserCode.File_PROD_1_ACT (sm_RES, SR1_RES, SR2_RES, fileName_RES, SR1_SPAN : (Lex.pos * Lex.pos), SR2_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
@@ -1299,7 +1297,7 @@ fun File_NT (fileName_RES, sm_RES) (strm) = let
 in
   (File_NT)
 end
-val File_NT =  fn x => fn s => unwrap (Err.launch eh (reqEOF (File_NT x )) (R.wrap (s, lexFn)))
+val File_NT =  fn x => fn s => unwrap (Err.launch (eh, lexFn, File_NT x , true) s)
 
 in (File_NT) end
   in

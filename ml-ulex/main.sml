@@ -25,7 +25,7 @@ structure Main =
 
     fun mlULex () = let
           val _ = if String.size (!Options.fname) = 0 
-		  then (print ("No input file specified (usage: " ^ name ^ " [options] file)\n");
+		  then (print ("No input file specified (usage: " ^ name ^ " [--dot] [--dump] [--match] [--ml-lex-mode] [--minimize] file)\n");
 			OS.Process.exit OS.Process.failure)
 		  else ()
 	  val _ = status "parsing"

@@ -16,16 +16,17 @@ structure ParseFile =
     fun parse filename = let
 	  val _ = Err.status ("parsing " ^ filename) 
 	  val file = TextIO.openIn filename
-          val sm = StreamPos.mkSourcemap()
+          val sm = AntlrStreamPos.mkSourcemap()
 	  val strm = SpecLex.streamifyInstream file
-(*  performance testing
+(*  performance testing 
 fun go 0 = ()
-  | go n = (ignore (P.parse (SpecLex.lex (StreamPos.mkSourcemap())) (filename, sm) strm);
+  | go n = (ignore (P.parse (SpecLex.lex (AntlrStreamPos.mkSourcemap())) (filename, sm) strm);
 	    go (n - 1))
+val _ = go 1000
 *)
 	  val (res, strm', errs, _) = P.parse (SpecLex.lex sm) (filename, sm) strm
 	  fun doErr err = Err.errMsg ["Syntax error ",
-			    Repair.repairToString SpecTokens.toString sm err]
+			    AntlrRepair.repairToString SpecTokens.toString sm err]
           in 
             app doErr errs;
             TextIO.closeIn file;

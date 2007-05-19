@@ -5,6 +5,7 @@
 is
   $/basis.cm
   $/smlnj-lib.cm
+  $/ml-lpt-lib.cm
 
   dragon.g.sml
   dragon.l.sml

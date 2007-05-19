@@ -19,7 +19,7 @@ structure GLA :>
     val lookK : (gla * LLKSpec.prod * prepath * Int.int) -> Token.Set.set
     val lookKFollow : (gla * LLKSpec.nonterm * prepath * Int.int) -> Token.Set.set
 
-    val dumpGraph : (LLKSpec.grammar * gla) -> unit
+    val dumpGraph : (string * LLKSpec.grammar * gla) -> unit
 
   end = struct
 
@@ -244,7 +244,7 @@ structure GLA :>
           in wrGraph graph
           end
 
-    fun dumpGraph (grm, gla) = let
+    fun dumpGraph (fname, grm, gla) = let
           val S.Grammar {toks, nterms, prods, eof, ...} = grm
 	  val GLA {startOf, nodes, ...} = gla
 	  val seen = ref NodeSet.empty
@@ -283,7 +283,6 @@ structure GLA :>
 			     else NONE
 	  val nodes = (map doNT nterms) @ (List.mapPartial doFinal nodes)
 	  val graph = GRAPH ("dump", nodes, edges, [ATTR ("rankdir", "LR")])
-	  val fname = "dump"
 	  val out = TextIO.openOut (fname ^ ".dot")
           in 
             print (" writing " ^ fname ^ ".dot\n");

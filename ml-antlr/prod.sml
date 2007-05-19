@@ -24,12 +24,14 @@ structure Prod =
     fun pred (PROD{pred, ...}) = pred
 
     fun name (PROD{name, ...}) = name
-    fun fullName p = (case Nonterm.parent (lhs p)
+    fun fullName p = name p
+(*    fun fullName p = (case Nonterm.parent (lhs p)
           of SOME p' => String.concat [
 	       fullName p', "_",
 	       Nonterm.name (lhs p'), "_",
 	       name p]
 	   | NONE => name p)
+*)
 
     fun toString p = concat[
 	    Nonterm.qualName (lhs p), " ::= ",

@@ -11,7 +11,7 @@
 structure MLULexInput =
   struct
 
-    structure SP = StreamPos
+    structure SP = AntlrStreamPos
     structure L = MLULexLex
     structure P = MLULexParseFn(L)
 
@@ -36,7 +36,7 @@ structure MLULexInput =
 	  in
             app (errMsg " Syntax error: ") 
 	        (map (fn (p, e) => 
-			 (p, Repair.actionToString MLULexTokens.toString e)) 
+			 (p, AntlrRepair.actionToString MLULexTokens.toString e)) 
 		     errors);
 	    app (errMsg " ") 
 		(map (fn ((p, _), e) => (p, e)) errs);

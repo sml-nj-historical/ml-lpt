@@ -31,7 +31,7 @@ structure SMLTblOutput : OUTPUT =
 	  in 
             String.concat [
 	      "([", 
-	      String.concatWith ", " allTransitions, 
+	      String.concatWith ",\n" allTransitions, 
 	      "], [", 
 	      String.concatWith ", " (map Int.toString final),
 	      "])"]

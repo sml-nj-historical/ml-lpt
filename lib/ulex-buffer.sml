@@ -13,7 +13,7 @@ structure ULexBuffer : sig
   type stream
   val mkStream : (unit -> string) -> stream
   val getc : stream -> (Char.char * stream) option
-  val getpos : stream -> StreamPos.pos
+  val getpos : stream -> AntlrStreamPos.pos
   val subtract : stream * stream -> Substring.substring
   val eof : stream -> bool
 
@@ -22,7 +22,7 @@ end = struct
   datatype stream = S of (buf * int) 
   and buf = B of { 
     data : string,
-    basePos : StreamPos.pos,
+    basePos : AntlrStreamPos.pos,
     more : more ref,
     input : unit -> string
   }
@@ -49,7 +49,7 @@ end = struct
 		       | data' => let 
 			   val buf' = B {
                                data = data',
-			       basePos = StreamPos.forward (basePos, String.size data),
+			       basePos = AntlrStreamPos.forward (basePos, String.size data),
 			       more = ref UNKNOWN,
 			       input = input
 			     }
@@ -60,7 +60,7 @@ end = struct
 		     (* end case *))
               (* end case *))
 
-  fun getpos (S (B {basePos, ...}, pos)) = StreamPos.forward (basePos, pos)
+  fun getpos (S (B {basePos, ...}, pos)) = AntlrStreamPos.forward (basePos, pos)
 
   fun subtract (new, old) = let
         val (S (B {data = ndata, basePos = nbasePos, ...}, npos)) = new

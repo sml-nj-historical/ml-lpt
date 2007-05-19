@@ -12,7 +12,7 @@
 signature ANTLR_LEXER = sig
 
   type strm
-  type pos = StreamPos.pos
+  type pos = AntlrStreamPos.pos
 
   val getPos : strm -> pos
 

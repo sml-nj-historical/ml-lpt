@@ -56,7 +56,7 @@
 %keywords
   "%defs", "%name", "%states", "%let", "%charset" ;
 
-%refcell errs : (StreamPos.span * string) list = ([]);
+%refcell errs : (AntlrStreamPos.span * string) list = ([]);
 
 file
   : decls@(LS.mkSpec(), AMap.empty)

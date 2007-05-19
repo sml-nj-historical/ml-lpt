@@ -15,5 +15,6 @@ signature ANTLR_TOKENS = sig
   val allToks : token list
   val isKW    : token -> bool
   val isEOF   : token -> bool
+  val toString : token -> string
 
 end

@@ -33,23 +33,17 @@ val _ = app (Err.debug o Prod.toString) prods
             grm
           end
 
-    fun process file = let
+    fun process() = let
 	  val _ = Err.anyErrors := false
-
-(*
-	  fun loop 0 = ()
-	    | loop n = (print "-"; ignore (ParseFile.parse file); loop (n-1))
-	  val _ = loop 200
-*)
-
+	  val file = !Options.fname
 	  val grm = checkPT (ParseFile.parse file)
 	  val gla = GLA.mkGLA grm
 	  val pm = ComputePredict.mkPM (grm, gla)
 	  val outspec = (grm, pm, file)
 	  in
-            GLA.dumpGraph (grm, gla);
             SMLOutput.output outspec;
-	    LaTeXOutput.output outspec;
+            if !Options.dotOutput then GLA.dumpGraph (file, grm, gla) else ();
+	    if !Options.texOutput then LaTeXOutput.output outspec else ();
 	    if !Err.anyErrors
 	      then OS.Process.failure
 	      else OS.Process.success
@@ -63,8 +57,11 @@ val _ = app (Err.debug o Prod.toString) prods
 	    List.app (fn s => Err.errMsg ["  raised at ", s]) (SMLofNJ.exnHistory ex);
 	    OS.Process.failure)
 
-    fun main (_, [file]) = process file
-      | main _ = (Err.errMsg ["usage: ml-antlr grammarfile"]; OS.Process.failure)
+    fun main (_, args) = 
+	  (app Options.procArg args;
+	   if String.size (!Options.fname) = 0 then
+	     (Err.errMsg ["usage: ml-antlr [--dot] [--latex] file"]; OS.Process.failure)
+	   else process())
 
   (* these functions are for debugging in the interactive loop *)
     fun load file = let

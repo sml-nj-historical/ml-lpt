@@ -60,7 +60,7 @@ fun dec (ri as ref i) = (ri := i-1)
 	(* get one char of input *)
 	  fun yygetc strm = (case UTF8.getu ULexBuffer.getc strm
                 of (SOME (0w10, s')) => 
-		     (StreamPos.markNewLine yysm (ULexBuffer.getpos strm);
+		     (AntlrStreamPos.markNewLine yysm (ULexBuffer.getpos strm);
 		      SOME (0w10, s'))
 		 | x => x)
           fun yygetList getc strm = let
@@ -83,8 +83,8 @@ fun dec (ri as ref i) = (ri := i-1)
 	      | yystuck (yyMATCH (strm, action, old)) = 
 		  action (strm, old)
 	    val yypos = yygetPos()
-	    fun yygetlineNo strm = StreamPos.lineNo yysm (ULexBuffer.getpos strm)
-	    fun yygetcolNo  strm = StreamPos.colNo  yysm (ULexBuffer.getpos strm)
+	    fun yygetlineNo strm = AntlrStreamPos.lineNo yysm (ULexBuffer.getpos strm)
+	    fun yygetcolNo  strm = AntlrStreamPos.colNo  yysm (ULexBuffer.getpos strm)
 	    fun yyactsToMatches (strm, [],	  oldMatches) = oldMatches
 	      | yyactsToMatches (strm, act::acts, oldMatches) = 
 		  yyMATCH (strm, act, yyactsToMatches (strm, acts, oldMatches))
@@ -1765,8 +1765,8 @@ end
             lex()
           end
   in
-    type pos = StreamPos.pos
-    type span = StreamPos.span
+    type pos = AntlrStreamPos.pos
+    type span = AntlrStreamPos.span
     type tok = UserDeclarations.lex_result
 
     datatype prestrm = STRM of ULexBuffer.stream * 

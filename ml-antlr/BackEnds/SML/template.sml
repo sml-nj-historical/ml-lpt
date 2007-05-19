@@ -25,27 +25,23 @@ end
 
     end
 
-    structure R = RepairableStrm(Tok)(Lex)
-    structure Err = ErrHandler(R)
-    structure EBNF = EBNF(R)
-
-    exception ParseError = Err.RepairableError
+    structure Err = AntlrErrHandler(Tok)(Lex)
+    structure EBNF = AntlrEBNF(struct
+			         type strm = Err.wstream
+			         val getSpan = Err.getSpan
+			       end)
 
     fun mk lexFn = let
 @ehargs@
 
-        val eh = Err.mkErrHandler {get = getS, put = putS}
-	fun wrap f = Err.wrap eh f
-	fun reqEOF' f s = let
-	      val (act, span, s') = f s
-	      in (wrap (fn s' => (case R.get1 s'
-		  of (Tok.EOF, _, _) => (act, span, s')
-		   | _ => raise ParseError))) s'
-	      end
-	fun reqEOF f = wrap (reqEOF' f)
-	val whileDisabled = Err.whileDisabled eh
-	fun tryProds (strm, prods) = (wrap (Err.tryProds eh prods)) strm
-	val lex = R.get1
+        val (eh, lex) = Err.mkErrHandler {get = getS, put = putS}
+	fun fail() = Err.failure eh
+	fun tryProds (strm, prods) = let
+	  fun try [] = fail()
+	    | try (prod :: prods) = 
+	        (Err.whileDisabled eh (fn() => prod strm)) 
+		handle Err.ParseError => try (prods)
+          in try prods end
 @matchfns@
 
 @parser@

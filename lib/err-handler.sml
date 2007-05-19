@@ -8,55 +8,251 @@
  * Error repair for ml-antlr
  *)
 
-functor ErrHandler(R : REPAIRABLE_STRM) : sig
+functor AntlrErrHandler (Tok : ANTLR_TOKENS) (Lex : ANTLR_LEXER) : sig
 
-  exception RepairableError
+  exception ParseError
+
   type 'a err_handler
-  val mkErrHandler : { get : unit -> 'a,
-		       put : 'a -> unit }
-		     -> 'a err_handler
-  val whileDisabled : 'b err_handler -> (unit -> 'a) -> 'a
+  type wstream
+  type lexer = Lex.strm -> Tok.token * AntlrStreamPos.span * Lex.strm
+  type 'a wreader = wstream -> 'a * AntlrStreamPos.span * wstream
 
-(*      val wrap   : err_handler -> (R.strm -> ('a * R.strm)) -> R.strm -> ('a * R.strm) *)
-  val wrap   : 'c err_handler -> (R.strm -> 'a) -> R.strm -> 'a
-  val launch : 'c err_handler -> (R.strm -> ('a * 'b * R.strm)) -> 
-	       R.strm -> ('a option * R.strm * R.token Repair.repair list)
+  val mkErrHandler : { get : unit -> 'a, put : 'a -> unit }
+		     -> 'a err_handler * Tok.token wreader
+  val launch  : 'a err_handler * lexer * 'b wreader * bool ->
+	        Lex.strm -> ('b option * Lex.strm * Tok.token AntlrRepair.repair list)
+  val failure : 'a err_handler -> 'b
 
+  val getPos    : wstream -> AntlrStreamPos.pos
+  val getSpan   : wstream -> AntlrStreamPos.span
+
+  val whileDisabled : 'b err_handler -> (unit -> 'a) -> 'a 
+
+(*
+  val wrap   : err_handler -> (R.strm -> ('a * R.strm)) -> R.strm -> ('a * R.strm)
   val tryProds : 'b err_handler -> (R.strm -> 'a) list -> R.strm -> 'a
+*)
 
 end = struct
 
-  type repair_cont = R.strm option SMLofNJ.Cont.cont 
-  type retry_cont  = R.strm        SMLofNJ.Cont.cont
+  exception ParseError
+  exception Unrepairable
 
-  exception RepairableError
-  exception UnrepairableError
-  exception JumpOut of (R.strm * retry_cont) list
+  structure AR = AntlrRepair
 
-  datatype 'a err_handler = EH of {
-    cont : repair_cont option ref,
-    enabled : bool ref,
-    repairs : R.token Repair.repair list ref,
+  structure WS = AntlrWrappedStream(Tok)(Lex)
+  type wstream = WS.wstream
+  val getPos = WS.getPos
+  val getSpan = WS.getSpan
+
+  type lexer = Lex.strm -> Tok.token * AntlrStreamPos.span * Lex.strm
+  type 'a wreader = wstream -> 'a * AntlrStreamPos.span * wstream
+  type 'a checkpoint = 'a * unit SMLofNJ.Cont.cont * wstream
+
+  datatype 'a err_handler = EH of {				  
+    checkpoints : 'a checkpoint list ref,
+    maxPos : WS.tok_pos ref,
+    cont : unit SMLofNJ.Cont.cont option ref,
     get : unit -> 'a,
-    put : 'a -> unit
+    put : 'a -> unit,
+    rs : WS.repair_state,
+    enabled : bool ref
   }
 
-  fun getCont    (EH {cont,    ...}) = !cont
-  fun getEnabled (EH {enabled, ...}) = !enabled
-  fun getRepairs (EH {repairs, ...}) = !repairs
-  fun getGet	 (EH {get,     ...}) = get
-  fun getPut	 (EH {put,     ...}) = put
-					   
-  fun setCont    (EH {cont,    ...}, n) = cont := n
-  fun setEnabled (EH {enabled, ...}, n) = enabled := n
-  fun addRepair  (EH {repairs, ...}, n) = repairs := (!repairs) @ [n]
+  fun getGet (EH {get,  ...}) = get
+  fun getPut (EH {put,  ...}) = put
+  fun getRS  (EH {rs,   ...}) = rs
 
-  fun mkErrHandler {get,put} = EH {
-	cont = ref NONE, 
-	enabled = ref true,
-	repairs = ref [],
-	get = get, put = put
-      }
+  fun getCont (EH {cont, ...}) = !cont
+  fun setCont (EH {cont, ...}, new) = cont := new
+
+  fun getCheckpoints (EH {checkpoints,   ...}) = !checkpoints
+  fun setCheckpoints (EH {checkpoints,   ...}, new) = checkpoints := new
+
+  fun getMaxPos (EH {maxPos,   ...}) = !maxPos
+  fun setMaxPos (EH {maxPos,   ...}, new) = maxPos := new
+ 
+  fun getEnabled (EH {enabled, ...}) = !enabled
+  fun setEnabled (EH {enabled, ...}, n) = enabled := n
+(*
+  fun getRepairs (EH {repairs, ...}) = !repairs 
+  fun addRepair  (EH {repairs, ...}, n) = repairs := (!repairs) @ [n] *)
+
+  fun mkErrHandler {get, put} = let
+        val cont = ref NONE
+	val checkpoints = ref []
+	val maxPos = ref ~1
+        val eh = EH {
+	      cont = cont, checkpoints = checkpoints,
+	      maxPos = maxPos, get = get, put = put,
+	      rs = WS.mkRepairState(), enabled = ref false
+	    }
+        fun lex ws = 
+	  if isSome (!cont)
+	  then (maxPos := Int.max (WS.getTokPos ws, !maxPos);
+		WS.get1 ws)
+	  else 
+	    if WS.getTokPos ws > !maxPos 
+	    then let
+	      val () = SMLofNJ.Cont.callcc 
+		(fn k => (checkpoints := (get(), k, ws) :: !checkpoints;
+			  maxPos := WS.getTokPos ws))
+	      in
+		WS.get1 ws
+	      end
+	    else WS.get1 ws
+        in (eh, lex)
+        end
+
+  val isEOF = Tok.isEOF o #1 o WS.get1
+
+  val minAdvance = 1
+
+  fun restoreCheckpoint (eh, (x, cont, strm)) =
+        (getPut eh x;  (* retore refcell data for checkpoint *)
+	 setMaxPos (eh, WS.getTokPos strm);
+	 SMLofNJ.Cont.throw cont ())
+
+  fun tryRepair (eh, c) = let
+        val oldMax = getMaxPos eh
+	val firstTime = ref true
+	val () = SMLofNJ.Cont.callcc (fn k => (setCont (eh, SOME k)))
+        in if !firstTime then 
+	     (* first time through, try the repair *)
+	     (firstTime := false; restoreCheckpoint (eh, c))
+	   else
+	     (* second time through, return the distance achieved *)
+	     (setCont (eh, NONE); getMaxPos eh - oldMax)
+        end
+
+  local
+
+    val allToks = List.filter (not o Tok.isEOF) Tok.allToks
+    fun mkDelete strm = (WS.getPos strm, AR.Delete [#1 (WS.get1 strm)])
+    fun mkInsert strm tok = (WS.getPos strm, AR.Insert [tok])
+    fun mkSubst  strm tok = (WS.getPos strm, AR.Subst { old = [#1 (WS.get1 strm)], new = [tok] })
+    fun allRepairs strm = 
+	  (if isEOF strm then [] else [mkDelete strm]) @
+	  map (mkInsert strm) allToks @
+	  map (mkSubst strm)  allToks
+
+    fun involvesKW (_, r) = (case r
+	  of AR.Insert toks => List.exists Tok.isKW toks
+	   | AR.Delete toks => List.exists Tok.isKW toks
+	   | AR.Subst {old,new} => List.exists Tok.isKW (old @ new)
+	   | AR.FailureAt _ => false
+         (* end case *))
+
+  in
+  fun trySingleToken eh = let
+	val RS = getRS eh
+	val oldRepairs = WS.getRepairs RS
+	val oldMax = getMaxPos eh
+	val oldMaxRepair = WS.maxRepairPos RS
+	val oldCheckpoints = getCheckpoints eh
+	fun restoreToErr() = (WS.setRepairs (RS, oldRepairs); setMaxPos (eh, oldMax))
+      (* stream value for checkpoint *)
+	fun strmOf (_, _, strm) = strm
+	fun setupRepair (r, c::cs) = 
+	      WS.setRepairs (RS, WS.addRepair (oldRepairs, WS.getTokPos (strmOf c), r))
+	  | setupRepair _ = raise Fail "bug"
+	fun try (_::c::cs, [], best, n) = 
+	      if n < 15 andalso WS.getTokPos (strmOf c) > oldMaxRepair
+	      then try (c::cs, allRepairs (strmOf c), best, n+1)
+	      else try ([], [], best, n)
+	  | try (c::cs, r::rs, best, n) = (
+	      restoreToErr(); setupRepair (r, c::cs);
+	      let val score = tryRepair (eh, c) 
+			        - (if involvesKW r then 2 else 0)
+			        + (case #2 r
+				    of AR.Insert _ => ~1
+				     | AR.Delete _ => 1
+				     | AR.Subst  _ => 0
+				     | _ => 0)
+		  val oldScore = case best of NONE => 0 
+					    | SOME (_, _, s) => s
+	      in if score > oldScore andalso score > minAdvance
+		 then try (c::cs, rs, SOME (c::cs, r, score), n)
+		 else try (c::cs, rs, best, n)
+	      end)
+	  | try (_, [], SOME (c::cs, r, score), _) = 
+	      (setupRepair (r, c::cs); 
+	       setCheckpoints (eh, c::cs);
+	       setMaxPos (eh, List.length cs); 
+	       restoreCheckpoint (eh, c))
+	  | try _ = restoreToErr()
+	val curStrm = strmOf (hd oldCheckpoints)
+        in if WS.getTokPos curStrm <= WS.maxRepairPos RS then ()
+	   else try (oldCheckpoints, allRepairs curStrm, NONE, 1)
+        end
+  end
+
+  val maxDel = 50
+
+  fun tryDeletion eh = let
+        fun getn (strm, 0, acc) = SOME (rev acc)
+	  | getn (strm, n, acc) = let
+	      val (tok, _, strm') = WS.get1 strm
+	      in
+	        if Tok.isEOF tok then NONE
+		else getn (strm', n-1, tok::acc)
+	      end
+	val rs = getRS eh
+	val oldRepairs = WS.getRepairs rs
+	val oldMax = getMaxPos eh
+	val oldRepairMax = WS.maxRepairPos rs
+	fun restoreToErr() = (WS.setRepairs (rs, oldRepairs); setMaxPos (eh, oldMax))
+      (* stream value for checkpoint *)
+	fun strmOf (_, _, strm) = strm
+	val cs = getCheckpoints eh
+	fun tryCS ([], n, max) = ()
+	  | tryCS (c::cs, n, max) = 
+	      if WS.getTokPos (strmOf c) <= oldRepairMax 
+	         orelse oldMax - WS.getTokPos (strmOf c) > maxDel then () 
+	      else
+	        (WS.setRepairs (rs, 
+		   WS.addRepair (oldRepairs, WS.getTokPos (strmOf c),
+	             (WS.getPos (strmOf c), AR.Delete (valOf (getn (strmOf c, n, []))))));
+		 setMaxPos (eh, WS.getTokPos (strmOf c));
+		 if tryRepair (eh, c) > minAdvance + 2
+		 then (setCheckpoints (eh, c::cs); 
+		       restoreCheckpoint (eh, c))
+		 else (restoreToErr(); tryCS (cs, n+1, max)))
+	and tryN (n, c::cs, max) = (case getn (strmOf c, n, [])
+              of NONE => ()
+	       | SOME toks => (tryCS (c::cs, n, max);
+			       if n > max then () else tryN (n+1, c::cs, max))
+             (* end case *))
+	  | tryN _ = raise Fail "bug"
+        in 
+          tryN (1, [hd cs], 5);
+	  tryN (1, cs, maxDel)
+        end
+
+  fun failure eh = 
+        if getEnabled eh 
+	then (case getCont eh
+               of NONE => (trySingleToken eh;
+			   tryDeletion eh;
+			   raise Unrepairable)
+		| SOME k => SMLofNJ.Cont.throw k ()
+	      (* end case *))
+	else raise ParseError
+
+  fun launch (eh, lex, parse, reqEOF) strm = let
+	val wstrm = WS.wrap (getRS eh, strm, lex)
+        in let val (result, _, wstrm') = parse wstrm
+	       val (strm', repairs) = WS.unwrap wstrm'
+	   in 
+	     if reqEOF andalso not (isEOF wstrm') then failure eh
+	     else ();
+	     (SOME result, strm', repairs) 
+	   end
+	   handle Unrepairable => let
+	     val (_, repairs) = WS.unwrap wstrm
+	     val (tok, (pos, _), _) = (WS.get1 o #3 o hd o getCheckpoints) eh
+	     in (NONE, strm, repairs @ [(pos, AR.FailureAt tok)]) end
+        end
 
   fun whileDisabled eh f = let
         val oldEnabled = getEnabled eh
@@ -67,6 +263,7 @@ end = struct
 	  before setEnabled (eh, oldEnabled)
         end
 
+(*
   fun throwIfEH (eh, t) = 
         if getEnabled eh then 
 	  Option.app (fn k => SMLofNJ.Cont.throw k (SOME t)) (getCont eh)
@@ -176,7 +373,9 @@ end = struct
         end
     handle UnrepairableError =>
       (NONE, t, getRepairs eh)
+*)
 
+(*
   fun tryProds eh prods strm = let
 	fun try [] = raise RepairableError
 	  | try (prod :: prods) = let 
@@ -190,5 +389,6 @@ end = struct
         in
           try prods
         end
+*)
 
 end

@@ -81,9 +81,6 @@ structure SMLOutput =
 
     fun rawCode code = ML_Raw [ML.Tok code]
 
-    fun wrap f = "(wrap " ^ f ^ ")"
-    fun wrapApp (f, params) = ML_App (wrap f, params)
-
   (* make an expression for the given (polymorphic) decision tree *)
     fun mkPredict (pickFn, choiceFn, strm, tree, errAction) = let
           fun mkPredict (strm, P.Pick p) = 
@@ -120,7 +117,7 @@ structure SMLOutput =
 			    bindingSuffix, true, refcells, rcSuffix)
 		       ^ "))"
 		   | _ => NTFnName nt
-	        val innerExp = wrapApp (name, [strmExp])
+	        val innerExp = ML_App (name, [strmExp])
 	        in
 	          if NT.isSubrule nt
 		  then letFn (mkNonterm (grm, pm) (nt, innerExp))
@@ -128,7 +125,7 @@ structure SMLOutput =
 	        end
 	  fun mkEBNF (nt, strmExp, fname, letFn) = let
 	        val predName = predFnName nt
-	        val innerExp = letFn (ML_App (fname, [ML_Var predName, ML_Var (wrap (NTFnName nt)), strmExp]))
+	        val innerExp = letFn (ML_App (fname, [ML_Var predName, ML_Var (NTFnName nt), strmExp]))
 		val Predict.PMaps {ebnfPredict, ...} = pm
 		val predTree = ebnfPredict nt
 		fun mkBool true = ML_Var "true"
@@ -182,8 +179,8 @@ structure SMLOutput =
 	  fun innerExp strm = let
 	        val strmVar = ML_Var (strm)
 	        val span = if List.length itemBindings = 0 then
-			     ML_Tuple [ML_App ("R.getPos", [strmVar]),
-				       ML_App ("R.getPos", [strmVar])]
+			     ML_Tuple [ML_App ("Err.getPos", [strmVar]),
+				       ML_App ("Err.getPos", [strmVar])]
 			   else
 			     ML_Tuple [ML_App ("#1", [ML_Var (hd itemBindings ^ spanSuffix)]),
 				       ML_App ("#2", [ML_Var (hd (rev itemBindings) ^ spanSuffix)])]
@@ -198,7 +195,7 @@ structure SMLOutput =
 				       refcells, rcSuffix)
 				  ^ ")")], 
 				spanExp,
-				ML_Raw [ML.Tok "raise ParseError"])
+				ML_App ("fail", []))
 		     | _ => spanExp
 	        end
 	  val parse = case (ListPair.zip (rhs, itemBindings))
@@ -220,7 +217,7 @@ structure SMLOutput =
 	  fun choiceFn prods = 
 	        ML_App ("tryProds", [ML_Var "strm", 
 					ML_List (map (ML_Var o Prod.name) prods)])
-	  val errAction = ML_App ("raise", [ML_Var "ParseError"])
+	  val errAction = ML_App ("fail", [])
 	  val caseExp = mkPredict (pickFn, choiceFn, "strm", tree, errAction)
           in
 	    foldr mkProdFun caseExp (Nonterm.prods nt)
@@ -261,11 +258,10 @@ structure SMLOutput =
 	  fun optParamFn nt = if length (Nonterm.formals nt) > 0 then " fn x => " else " "
 	  fun wrWrapParse nt = TextIO.output (strm, String.concat [
 		"val ", NTFnName nt, " = ", optParamFn nt, 
-		"fn s => unwrap (Err.launch eh (",
-		(if Nonterm.same (nt, startnt) then "reqEOF "		  
-		 else ""),
-		"(", NTFnName nt, optParam nt, ")",
-		") (R.wrap (s, lexFn)))\n"])
+		"fn s => unwrap (Err.launch (eh, lexFn, ",
+		NTFnName nt, optParam nt, ", ",
+		if Nonterm.same (nt, startnt) then "true" else "false",
+		") s)\n"])
 	  fun wrEntry (name, nt) = TextIO.output (strm, String.concat [
 		"fun ", name, " lexFn ", optParam nt,
 		"s = let ", entriesVal, "mk lexFn in ", NTFnName nt,
@@ -301,12 +297,12 @@ structure SMLOutput =
 		 if Token.hasTy t
 		 then ML_Tuple [ML_Var "x", ML_Var "span", ML_Var "strm'"]
 		 else ML_Tuple [ML_Var "()", ML_Var "span", ML_Var "strm'"])
-	  val errCase = (ML_Wild, ML_App ("raise", [ML_Var "ParseError"]))
+	  val errCase = (ML_Wild, ML_App ("fail", []))
           val exp = ML_Case (mkGet1 "strm", [matchCase, errCase])
 	  in
-            TextIO.output (strm, "val " ^ tokMatch' t ^ " = wrap (fn strm => ");
+            TextIO.output (strm, "fun " ^ tokMatch' t ^ " strm = ");
 	    ML.ppML (ppStrm, exp);
-	    TextIO.output (strm, ")\n")
+	    TextIO.output (strm, "\n")
           end
 
   (* output the tokens datatype and related functions *)
@@ -382,12 +378,17 @@ structure SMLOutput =
 		    Item.bindingsLeftOf (itm, prod), "", true, refcells, ""),
 		  " = \n  (", Action.toString code, ")\n"]
 	    | args _ _ = ()
+	  fun outCell (S.REFCELL {name, initCode, ty, ...}) = TextIO.output (strm, 
+		String.concat [
+		  "fun mk", name ^ rcSuffix, "() : (", ty, ") ref = ref (", 
+		  Action.toString initCode, ")\n"])
           in
             TextIO.output (strm, Action.toString defs);
 	    TextIO.output (strm, "\n\n");
 	    app (actionLevel ("_ACT", Prod.action, false)) prods;
 	    app (actionLevel ("_PRED", Prod.pred, true)) prods;
-	    app (fn prod => app (args prod) (Prod.items prod)) prods
+	    app (fn prod => app (args prod) (Prod.items prod)) prods;
+	    app outCell refcells
           end
 
     fun ehargsHook spec strm = let
@@ -396,9 +397,8 @@ structure SMLOutput =
 	  val names = map (fn (S.REFCELL {name, ...}) => name) refcells
 	  fun prepend pre s = pre ^ s
 	  fun append post s = s ^ post
-	  fun mkc (S.REFCELL {name, initCode, ty, ...}) = String.concat [
-		"val ", name ^ rcSuffix, " : (", ty, ") ref = ref (", 
-		Action.toString initCode, ")\n"]
+	  fun mkc (S.REFCELL {name, ...}) = String.concat [
+		"val ", name, rcSuffix, " = UserCode.mk", name, rcSuffix, "()\n"]
           in
             app (out o mkc) refcells;
 	    out (String.concat ["fun getS() = {",
@@ -414,7 +414,7 @@ structure SMLOutput =
 			       names),
 		   ")\n"]);
 	    out (String.concat ["fun unwrap (ret, strm, repairs) = ",
-		   "(ret, R.unwrap strm, repairs",
+		   "(ret, strm, repairs",
 		   if List.length names > 0 then ", getS()" else "",
 		   ")"])
           end

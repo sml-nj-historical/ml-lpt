@@ -1,7 +1,7 @@
 %defs (
-  open Tok;
+  open Tokens;
   fun eof() = EOF
-  type lex_result = Tok.token
+  type lex_result = token
 );
 
 %let eol=("\n"|"\013\n"|"\013");
@@ -12,8 +12,8 @@
 %let idchars=({alpha}|{digit}|"_");
 %let id={alpha}{idchars}*;
 
-{ws}+		=> (continue());
-"{" [^}]* "}"	=> (continue());
+{ws}+		=> (skip());
+"{" [^}]* "}"	=> (skip());
 
 "program"	=> (KW_program);
 "("		=> (LP);

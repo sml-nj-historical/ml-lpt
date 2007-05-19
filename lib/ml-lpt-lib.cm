@@ -13,15 +13,12 @@ Library
   signature ANTLR_LEXER
   signature ANTLR_TOKENS
 
-  structure Repair
-  structure StreamPos
-  structure UTF8
+  structure AntlrRepair
+  structure AntlrStreamPos
   structure ULexBuffer
 
-  functor WrappedStrm
-  functor RepairableStrm
-  functor EBNF
-  functor ErrHandler
+  functor AntlrEBNF
+  functor AntlrErrHandler
 
 is
 
@@ -32,8 +29,10 @@ is
   antlr-lexer-sig.sml
   repair.sml
 
+(*
   repairable-strm-sig.sml
   repairable-strm.sml
+*)
   wrapped-strm.sml
 
   stream-pos.sml
