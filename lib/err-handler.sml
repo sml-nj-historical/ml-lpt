@@ -85,7 +85,7 @@ end = struct
         val eh = EH {
 	      cont = cont, checkpoints = checkpoints,
 	      maxPos = maxPos, get = get, put = put,
-	      rs = WS.mkRepairState(), enabled = ref false
+	      rs = WS.mkRepairState(), enabled = ref true
 	    }
         fun lex ws = 
 	  if isSome (!cont)
