@@ -7,7 +7,6 @@ structure AntlrTool = struct
     val _ = Tools.registerStdShellCmdTool {
 	      tool = "MLAntlr",
 	      class = "ml-antlr",
-	      suffixes = ["grm"],
 	      cmdStdPath = fn () => ("ml-antlr", []),
 	      template = NONE,
 	      extensionStyle =

@@ -45,10 +45,4 @@ fi
 # Build the ml-ulex standalone program:
 "$BUILD" -DNO_ML_ANTLR -DNO_ML_LEX -DNO_ML_YACC sources.cm Main.main $HEAP_IMAGE
 
-#
-# Install CM support for ml-ulex (lex-ext.cm is currently turned off
-# to avoid conflict with ml-lex):
-"$SML" -m \$smlnj/library-install.cm tool/ml-ulex-tool.cm ${LIB}
-# "$SML" -m \$smlnj/library-install.cm tool/lex-ext.cm ${LIB}
-
 exit 0

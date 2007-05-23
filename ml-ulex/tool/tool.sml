@@ -7,7 +7,6 @@ structure ULexTool = struct
     val _ = Tools.registerStdShellCmdTool {
 	      tool = "MLULex",
 	      class = "ml-ulex",
-	      suffixes = ["lex"],
 	      cmdStdPath = fn () => ("ml-ulex", []),
 	      template = NONE,
 	      extensionStyle =

@@ -1,5 +1,5 @@
 (*
- * A pointer to the plugin library for ML-Antlr.
+ * Plugin for registering "grm" suffix that points to ml-antlr.
  *
  * (C) 2007 The Fellowship of SML/NJ.
  *
@@ -7,6 +7,7 @@
  * the equally-named plugin library for legacy ml-yacc.
  *)
 Library
-	structure AntlrTool
+	structure AntlrGrmExt
 is
-	$/ml-antlr-tool.cm
+	$smlnj/cm/tools.cm
+	ext.sml

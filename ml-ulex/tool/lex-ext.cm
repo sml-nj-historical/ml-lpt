@@ -1,5 +1,5 @@
 (*
- * A pointer to the plugin library for ML-ULex.
+ * Plugin for "lex" suffix that points to ml-ulex.
  *
  * (C) 2007 The Fellowship of SML/NJ.
  *
@@ -7,6 +7,7 @@
  * the equally-named plugin library for legacy ml-lex.
  *)
 Library
-	structure ULexTool
+	structure ULexLexExt
 is
-	$/ml-ulex-tool.cm
+	$smlnj/cm/tools.cm
+	ext.sml

@@ -12,9 +12,7 @@ ROOT="ml-antlr"
 HEAP_IMAGE=""
 SMLNJROOT=`pwd`/../..
 BIN=${INSTALLDIR:-$SMLNJROOT}/bin
-LIB=${INSTALLDIR:-$SMLNJROOT}/lib
 BUILD=$BIN/ml-build
-SML=$BIN/sml
 
 #
 # process command-line options
@@ -44,11 +42,5 @@ fi
 #
 # Build the ml-antlr standalone program:
 "$BUILD" -DNO_ML_ULEX -DNO_ML_ANTLR sources.cm Main.main $HEAP_IMAGE
-
-#
-# Install CM support for ml-antlr (grm-ext.cm is currently turned off
-# to avoid conflict with ml-yacc):
-"$SML" -m \$smlnj/library-install.cm tool/ml-antlr-tool.cm ${LIB}
-# "$SML" -m \$smlnj/library-install.cm tool/grm-ext.cm ${LIB}
 
 exit 0
