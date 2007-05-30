@@ -163,10 +163,12 @@
 @lexer@
 
             end
-	  in continue() end
+	  in 
+            continue() 	  
+	    handle IO.Io{cause, ...} => raise cause
+          end
         in 
           lex 
-	  handle IO.Io{cause, ...} => raise cause
         end
     in
     fun makeLexer yyinputN = mk (yyInput.mkStream yyinputN)
