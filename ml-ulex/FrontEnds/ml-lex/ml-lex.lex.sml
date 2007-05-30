@@ -162,17 +162,18 @@ val highAscii = SIS.interval(0w128, 0w255)
 
     fun mk yyins = let
         (* current start state *)
-          val yyss = ref INITIAL
-	  fun YYBEGIN ss = (yyss := ss)
+        val yyss = ref INITIAL
+	fun YYBEGIN ss = (yyss := ss)
 	(* current input stream *)
-          val yystrm = ref yyins
+        val yystrm = ref yyins
 	(* get one char of input *)
-	  val yygetc = yyInput.getc 
+	val yygetc = yyInput.getc 
 	(* create yytext *)
-	  fun yymktext(strm) = yyInput.subtract (strm, !yystrm)
-          open UserDeclarations
-          fun lex 
-(yyarg as ()) = let
+	fun yymktext(strm) = yyInput.subtract (strm, !yystrm)
+        open UserDeclarations
+        fun lex 
+(yyarg as ()) = let 
+     fun continue() = let
             fun yystuck (yyNO_MATCH) = raise Fail "stuck state"
 	      | yystuck (yyMATCH (strm, action, old)) = 
 		  action (strm, old)
@@ -202,7 +203,7 @@ val highAscii = SIS.interval(0w128, 0w255)
 					 yyactsToMatches (strm, finals, oldMatches)))
 			   | NONE => tryfinal()
 		      end)
-	    fun continue() = 
+	    in 
 let
 fun yyAction0 (strm, lastMatch : yymatch) = let
       val yylineno = ref(yygetlineNo(!(yystrm)))
@@ -1705,11 +1706,12 @@ in
     | INITIAL => yyQ7(!(yystrm), yyNO_MATCH)
   (* end case *))
 end
-	    in continue() end
-          in 
-            lex 
-	    handle IO.Io{cause, ...} => raise cause
-          end
+            end
+	  in continue() end
+        in 
+          lex 
+	  handle IO.Io{cause, ...} => raise cause
+        end
     in
     fun makeLexer yyinputN = mk (yyInput.mkStream yyinputN)
     fun makeLexer' ins = mk (yyInput.mkStream ins)
