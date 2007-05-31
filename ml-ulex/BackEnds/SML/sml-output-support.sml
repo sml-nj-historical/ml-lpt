@@ -125,15 +125,24 @@ structure SMLOutputSupport =
   (* generate args parameter for the lexer *)
     fun argsHook spec strm = let
           val LO.Spec {arg, ...} = spec
-	  val arg' = if String.size arg = 0 
-		     then "(yyarg as ())"
-		     else "(yyarg as " ^ arg ^ ") ()"
+	  val arg' = case (String.size arg, !Options.lexCompat)
+		      of (0, true)  => "(yyarg as ())"
+		       | (_, true)  => "(yyarg as " ^ arg ^ ") ()"
+		       | (0, false) => ""
+		       | (_, false) => "(yyarg as " ^ arg ^ ")"
           in 
             TextIO.output (strm, arg')
 	  end
 
+  (* ml-ulex mode only *)
+    fun pargsHook spec strm = let
+          val LO.Spec {arg, ...} = spec
+          in 
+            TextIO.output (strm, 
+	      if String.size arg > 0 then "yyarg" else "")
+	  end
+
     val lexTemplate  = ExpandFile.mkTemplate "BackEnds/SML/template-ml-lex.sml" 
     val ulexTemplate = ExpandFile.mkTemplate "BackEnds/SML/template-ml-ulex.sml" 
-
 
   end

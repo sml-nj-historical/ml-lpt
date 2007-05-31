@@ -216,7 +216,7 @@ The \kw{refcell} directive is used to declare a backtracking-safe reference cell
     exp
       : INT
       | (exp)
-      | ID => ( symbols := StringSet.add!symbols, ID); ID )
+      | ID => ( symbols := StringSet.add(!symbols, ID); ID )
       ;
 \end{verbatim}
 The result of this fragment is that all symbol uses are tracked, in any use of the {\tt exp} nonterminal, but without having to manually thread the data structure state through the grammar.
@@ -489,3 +489,4 @@ Thus, although error reporting is customizable, a reasonable default is provided
       print (String.concatWith "\n" errStrings)
     end
 \end{verbatim}
+The {\tt toksToString} function will convert each token to its symbol as given in a \kw{tokens} directive, using abbreviations when they are available. By substituting a different function for {\tt toksToString}, this behavior can be altered.

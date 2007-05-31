@@ -48,7 +48,8 @@ structure Main =
 		     DotOutput.output (outSpec, !Options.fname))
 		  else ()
 	  val _ = status "SML gen"
-	  val _ = if numStates outSpec > 150 
+	  val _ = if (numStates outSpec > 150 andalso !Options.beMode = Options.BySize)
+		     orelse !Options.beMode = Options.TableBased
 		  then SMLTblOutput.output (outSpec, !Options.fname) 
 		  else SMLFunOutput.output (outSpec, !Options.fname)
 	  val _ = if !Options.match then 

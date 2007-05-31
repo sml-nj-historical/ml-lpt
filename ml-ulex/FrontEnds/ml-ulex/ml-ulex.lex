@@ -67,6 +67,7 @@
 	=> (skip());
 
 <INITIAL>"%defs"	=> (YYBEGIN CODE; clrText(); Tok.KW_defs);
+<INITIAL>"%arg"		=> (YYBEGIN CODE; clrText(); Tok.KW_arg);
 <INITIAL>"%name"	=> (YYBEGIN DIRECTIVE; Tok.KW_name);
 <INITIAL>"%states"	=> (YYBEGIN DIRECTIVE; Tok.KW_states);
 <INITIAL>"%let"		=> (YYBEGIN DIRECTIVE; Tok.KW_let);

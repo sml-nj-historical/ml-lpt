@@ -26,8 +26,13 @@ where {\tt file} is the name of the input \ulex{} specification, and where {\tt 
   \\
   {\tt --match} & enter interactive matching mode.  This will allow interactive testing of the machine; presently, only the {\tt INITIAL} start state is available for testing (see Section~\ref{sec:start-states} for details on start states).  \\
   \\
-  {\tt --ml-lex-mode} & operate in {\tt ml-lex} compatibility mode.  See Section~\ref{sec:lex-compat} for details.
-%  {\tt --minimize} & generate a minimal machine.  Note that this is slow, and is almost never necessary.
+  {\tt --ml-lex-mode} & operate in {\tt ml-lex} compatibility mode.  See Section~\ref{sec:lex-compat} for details. \\
+  \\
+  {\tt --table-based} & generate a table-based lexer.\\
+  \\
+  {\tt --fn-based} & generate a lexer that represents states as functions and transitions as tail calls.\\
+  \\
+  {\tt --minimize} & generate a minimal machine.  Note that this is slow, and is almost never necessary.
 \end{tabular}
 
 \vskip 10pt \noindent
@@ -104,14 +109,16 @@ A \ulex{} specification is a list of semicolon-terminated \emph{declarations}.  
 %\GNextB
 %	{\T{\_}}
 \GFirstB{CHAR}
-	{any character not one of \ \T{\^{ } < > $\backslash$ ( ) \{ \} [ \& | * ? + " . ; = }}
+	{any printable character not one of \ \T{\^{ } < > $\backslash$ ( ) \{ \} [ \& | * ? + " . ; = }}
 \GNextB{an SML or Unicode escape code}
 \GFirstB{CCHAR}
-	{any character not one of \ \T{\^{ } - ] $\backslash$}}
+	{any printable character not one of \ \T{\^{ } - ] $\backslash$}}
 \GNextB{an SML or Unicode escape code}
 \GFirstB{SCHAR}
-	{any character not one of \ \T{" $\backslash$}}
+	{any printable character not one of \ \T{" $\backslash$}}
 \GNextB{an SML or Unicode escape code}
+\GFirstB{NUM}
+	{one or more digits}
 }
 \caption{The \ulex{} grammar}\label{fig:ulex-syntax}
 \end{figure}
@@ -182,7 +189,7 @@ If the current start state is not {\tt FOO}, none of the rules will be considere
 \begin{figure}
 \begin{minipage}[t]{.5\textwidth}
 \begin{eqnarray*}
-  \sem{\T{.}} &=& \Sigma \setminus \{ \T{$\backslash$n} \} \\
+  \sem{\T{.}} &=& \Sigma \\
   \sem{\REX_1 \ \REX_2} &=& \sem{\REX_1} \cdot \sem{\REX_2} \\
   \sem{\T{\^{ }} \ \REX} &=& \left(\bigcup_{i=0}^\infty \Sigma^i\right)\setminus \sem{\REX} \\
   \sem{\REX_1 \ \T{\&} \ \REX_2} &=& \sem{\REX_1} \cap \sem{\REX_2} \\

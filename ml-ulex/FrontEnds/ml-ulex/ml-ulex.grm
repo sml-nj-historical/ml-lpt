@@ -38,6 +38,7 @@
   | DARROW	("=>")
   | EQ		("=")
   | KW_defs	("%defs")
+  | KW_arg	("%arg")
   | KW_name	("%name")
   | KW_states	("%states")
   | KW_let	("%let")
@@ -54,7 +55,7 @@
   ;
 
 %keywords
-  "%defs", "%name", "%states", "%let", "%charset" ;
+  "%defs", "%name", "%states", "%let", "%charset", "%arg" ;
 
 %refcell errs : (AntlrStreamPos.span * string) list = ([]);
 
@@ -85,6 +86,8 @@ decl(spec, env)
 directive(conf, env)
   : "%let" ID "=" re@(env)
       => (conf, AMap.insert (env, Atom.atom ID, re))
+  | "%arg" CODE
+      => (LS.updArg (conf, CODE), env)
   | "%states" (ID ","? => (ID))+
       => (LS.updStartStates (conf, listToASet (map Atom.atom SR)), 
 	  env)

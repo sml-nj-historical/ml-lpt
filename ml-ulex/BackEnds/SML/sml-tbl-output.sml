@@ -45,7 +45,7 @@ structure SMLTblOutput : OUTPUT =
           end
 
     fun lexerHook spec strm = let
-          val LO.Spec {actions, dfa, startStates, ...} = spec
+          val LO.Spec {actions, dfa, startStates, arg, ...} = spec
 	  fun matchSS (label, state) =
 	        (ML_ConPat (label, []), 
 		   ML_App ("yygo yyactTable ", 
@@ -86,6 +86,7 @@ structure SMLTblOutput : OUTPUT =
 		       ("userdecls", userDeclsHook spec),
 		       ("header", headerHook spec),
 		       ("args", argsHook spec),
+		       ("pargs", pargsHook spec),
 		       ("table", tableHook spec)]
 	    }
 

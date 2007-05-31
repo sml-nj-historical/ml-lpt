@@ -71,7 +71,7 @@ structure SMLFunOutput : OUTPUT =
 		   elseClause)
           end
 
-    fun mkState actionVec (s, k) = let
+    fun mkState (arg, actionVec) (s, k) = let
           val LO.State {id, startState, label, final, next} = s
 	  fun addMatch (i, lastMatch) = let
 		val lastMatch' = if hasREJECT (Vector.sub (actionVec, i))
@@ -176,11 +176,11 @@ structure SMLFunOutput : OUTPUT =
 	      Int.compare (id1, id2)
       end)
 
-    fun mkStates (actions, dfa, startStates, k) = let
+    fun mkStates (arg, actions, dfa, startStates, k) = let
           fun follow (LO.State {next, ...}) = 
 	        #2 (ListPair.unzip (!next))
           val scc = SCC.topOrder' { roots = startStates, follow = follow }
-	  val mkState' = mkState actions
+	  val mkState' = mkState (arg, actions)
 	  fun mkGrp (SCC.SIMPLE state, k) = ML_NewGroup (mkState' (state, k))
 	    | mkGrp (SCC.RECURSIVE states, k) = 
 	        ML_NewGroup (List.foldr mkState' k states)
@@ -189,7 +189,7 @@ structure SMLFunOutput : OUTPUT =
           end
 
     fun lexerHook spec strm = let
-          val LO.Spec {actions, dfa, startStates, ...} = spec
+          val LO.Spec {arg, actions, dfa, startStates, ...} = spec
 	  fun matchSS (label, state) =
 	        (ML_ConPat (label, []), 
 		   ML_App (nameOf state, 
@@ -198,7 +198,7 @@ structure SMLFunOutput : OUTPUT =
 	  val innerExp = ML_Case (ML_RefGet (ML_Var "yyss"),
 				  List.map matchSS startStates)
 	  val statesExp = mkStates 
-			    (actions, dfa, 
+			    (arg, actions, dfa, 
 			     #2 (ListPair.unzip startStates), innerExp)
 	  val lexerExp = Vector.foldri mkAction statesExp actions
           val ppStrm = TextIOPP.openOut {dst = strm, wid = 80}
@@ -216,6 +216,7 @@ structure SMLFunOutput : OUTPUT =
 		       ("userdecls", userDeclsHook spec),
 		       ("header", headerHook spec),
 		       ("args", argsHook spec),
+		       ("pargs", pargsHook spec),
 		       ("table", fn _ => ())]
 	    }
 

@@ -10,6 +10,8 @@
 structure Options = 
   struct
 
+    datatype be_mode = BySize | TableBased | FnBased
+
     val fname     : string ref = ref ""
     val lexCompat : bool ref   = ref false
     val dump      : bool ref   = ref false
@@ -17,6 +19,7 @@ structure Options =
     val match     : bool ref   = ref false
     val beTest    : bool ref   = ref false
     val minimize  : bool ref   = ref false
+    val beMode	  : be_mode ref = ref BySize
 
     fun procArg arg = 
 	  (case arg
@@ -24,8 +27,10 @@ structure Options =
 	     | "--dump"	  => dump := true
 	     | "--match"  => match := true
 	     | "--testbe" => beTest := true
-	     | "--ml-lex-mode" => lexCompat := true
-	     | "--minimize" => minimize := true
+	     | "--ml-lex-mode"	=> lexCompat := true
+	     | "--minimize"	=> minimize := true
+	     | "--table-based"	=> beMode := TableBased
+	     | "--fn-based"	=> beMode := FnBased
 	     | file	  => 
 	         if String.size (!fname) > 0 
 		 then 

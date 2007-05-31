@@ -23,7 +23,9 @@
 @table@
 ]
 
-    fun innerLex (yystrm_, yyss_, yysm) = let
+    fun innerLex 
+@args@
+(yystrm_, yyss_, yysm) = let
         (* current start state *)
           val yyss = ref yyss_
 	  fun YYBEGIN ss = (yyss := ss)
@@ -101,9 +103,13 @@
 		(yystart_state * tok * span * prestrm * yystart_state) option ref
     type strm = (prestrm * yystart_state)
 
-    fun lex sm (STRM (yystrm, memo), ss) = (case !memo
+    fun lex sm 
+@args@
+(STRM (yystrm, memo), ss) = (case !memo
 	  of NONE => let
-	     val (tok, span, yystrm', ss') = innerLex (yystrm, ss, sm)
+	     val (tok, span, yystrm', ss') = innerLex 
+@pargs@
+(yystrm, ss, sm)
 	     val strm' = STRM (yystrm', ref NONE);
 	     in 
 	       memo := SOME (ss, tok, span, strm', ss');
@@ -114,7 +120,9 @@
 		 (tok, span, (strm', ss''))
 	       else (
 		 memo := NONE;
-		 lex sm (STRM (yystrm, memo), ss))
+		 lex sm 
+@pargs@
+(STRM (yystrm, memo), ss))
          (* end case *))
 
     fun streamify input = (STRM (ULexBuffer.mkStream input, ref NONE), 
