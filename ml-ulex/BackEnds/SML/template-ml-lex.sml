@@ -122,7 +122,7 @@
 	(* current input stream *)
         val yystrm = ref yyins
 	(* get one char of input *)
-	val yylastwasnref = ref false
+	val yylastwasnref = ref true
 	fun yygetc strm = (case yyInput.getc strm
               of NONE => NONE
 	       | SOME (#"\n", strm') => (yylastwasnref := true; SOME (#"\n", strm'))
