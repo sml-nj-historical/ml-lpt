@@ -98,6 +98,7 @@ id	= {alpha}({alpha} | {num} | "_" | "'")*;
 <RE> "$"	=> (DOLLAR(!yylineno, !yylineno));
 <RE> "/"	=> (SLASH(!yylineno, !yylineno));
 <RE> "."	=> (DOT(!yylineno, !yylineno));
+<RE>"^"		=> (CARAT(!yylineno, !yylineno));
 
 <RE> "{"	=> (YYBEGIN RECB; lex());
 <RE> "\""       => (YYBEGIN STRING; lex());

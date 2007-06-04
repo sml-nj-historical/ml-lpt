@@ -5,7 +5,7 @@ state 0:
 
 	DECLS	shift 2
 
-	Start	goto 83
+	Start	goto 86
 	Decls	goto 1
 
 	.	reduce by rule 2
@@ -149,16 +149,18 @@ state 13:
 
 	Start : Decls LEXMARK Defs LEXMARK . Rules 
 
-	LT	shift 32
-	LP	shift 31
-	LB	shift 30
-	CHAR	shift 29
-	UNICHAR	shift 28
-	DOT	shift 27
-	ID	shift 26
+	LT	shift 34
+	LP	shift 33
+	LB	shift 32
+	CARAT	shift 31
+	CHAR	shift 30
+	UNICHAR	shift 29
+	DOT	shift 28
+	ID	shift 27
 
-	Rules	goto 25
-	Rule	goto 24
+	Rules	goto 26
+	Rule	goto 25
+	LineBreakExp	goto 24
 	OrExp	goto 23
 	CatExp	goto 22
 	Exp	goto 21
@@ -171,7 +173,7 @@ state 14:
 
 	Defs : Defs ID . EQ OrExp SEMI 
 
-	EQ	shift 33
+	EQ	shift 35
 
 
 	.	error
@@ -208,7 +210,7 @@ state 18:
 
 	Defs : Defs STATES StartStates . SEMI 
 
-	SEMI	shift 34
+	SEMI	shift 36
 
 
 	.	error
@@ -221,82 +223,93 @@ state 19:
 
 	LEXSTATE	shift 19
 
-	StartStates	goto 35
+	StartStates	goto 37
 
 	.	reduce by rule 13
 
 
 state 20:
 
-	Exp : InExp .  (reduce by rule 30)
+	Exp : InExp .  (reduce by rule 32)
 
 
 
-	.	reduce by rule 30
+	.	reduce by rule 32
 
 
 state 21:
 
-	CatExp : Exp .  (reduce by rule 24)
+	CatExp : Exp .  (reduce by rule 26)
 	Exp : Exp . QMARK 
 	Exp : Exp . STAR 
 	Exp : Exp . PLUS 
 	Exp : Exp . REPS RCB 
 	Exp : Exp . REPS COMMA REPS RCB 
 
-	QMARK	shift 39
-	STAR	shift 38
-	PLUS	shift 37
-	REPS	shift 36
+	QMARK	shift 41
+	STAR	shift 40
+	PLUS	shift 39
+	REPS	shift 38
 
 
-	.	reduce by rule 24
+	.	reduce by rule 26
 
 
 state 22:
 
-	OrExp : CatExp .  (reduce by rule 22)
+	OrExp : CatExp .  (reduce by rule 24)
 	CatExp : CatExp . Exp 
 
-	LP	shift 31
-	LB	shift 30
-	CHAR	shift 29
-	UNICHAR	shift 28
-	DOT	shift 27
-	ID	shift 26
+	LP	shift 33
+	LB	shift 32
+	CHAR	shift 30
+	UNICHAR	shift 29
+	DOT	shift 28
+	ID	shift 27
 
-	Exp	goto 40
+	Exp	goto 42
 	InExp	goto 20
 
-	.	reduce by rule 22
+	.	reduce by rule 24
 
 
 state 23:
 
-	Rule : OrExp . ARROW ACT 
+	LineBreakExp : OrExp .  (reduce by rule 22)
 	OrExp : OrExp . BAR CatExp 
 
-	BAR	shift 42
-	ARROW	shift 41
+	BAR	shift 43
+
+
+	.	reduce by rule 22
+
+
+state 24:
+
+	Rule : LineBreakExp . ARROW ACT 
+
+	ARROW	shift 44
 
 
 	.	error
 
 
-state 24:
+state 25:
 
 	Rules : Rule . Rules 
 
-	LT	shift 32
-	LP	shift 31
-	LB	shift 30
-	CHAR	shift 29
-	UNICHAR	shift 28
-	DOT	shift 27
-	ID	shift 26
+	LT	shift 34
+	LP	shift 33
+	LB	shift 32
+	CARAT	shift 31
+	CHAR	shift 30
+	UNICHAR	shift 29
+	DOT	shift 28
+	ID	shift 27
 
-	Rules	goto 43
-	Rule	goto 24
+	Rules	goto 45
+	Rule	goto 25
+	LineBreakExp	goto 24
 	OrExp	goto 23
 	CatExp	goto 22
 	Exp	goto 21
@@ -305,7 +318,7 @@ state 24:
 	.	reduce by rule 15
 
 
-state 25:
+state 26:
 
 	Start : Decls LEXMARK Defs LEXMARK Rules .  (reduce by rule 0)
 
@@ -314,72 +327,55 @@ state 25:
 	.	reduce by rule 0
 
 
-state 26:
+state 27:
 
 	InExp : ID . RCB 
 
-	RCB	shift 44
+	RCB	shift 46
 
 
 	.	error
 
 
-state 27:
+state 28:
 
-	InExp : DOT .  (reduce by rule 33)
+	InExp : DOT .  (reduce by rule 35)
+
+
+
+	.	reduce by rule 35
+
+
+state 29:
+
+	InExp : UNICHAR .  (reduce by rule 34)
+
+
+
+	.	reduce by rule 34
+
+
+state 30:
+
+	InExp : CHAR .  (reduce by rule 33)
 
 
 
 	.	reduce by rule 33
 
 
-state 28:
-
-	InExp : UNICHAR .  (reduce by rule 32)
-
-
-
-	.	reduce by rule 32
-
-
-state 29:
-
-	InExp : CHAR .  (reduce by rule 31)
-
-
-
-	.	reduce by rule 31
-
-
-state 30:
-
-	InExp : LB . CARAT CharClass 
-	InExp : LB . CharClass 
-
-	CARAT	shift 51
-	DASH	shift 50
-	CHAR	shift 49
-	UNICHAR	shift 48
-
-	CharClass	goto 47
-	CharClass'	goto 46
-	NonCarat	goto 45
-
-	.	error
-
-
 state 31:
 
-	InExp : LP . OrExp RP 
+	LineBreakExp : CARAT . OrExp 
 
-	LP	shift 31
-	LB	shift 30
-	CHAR	shift 29
-	UNICHAR	shift 28
-	DOT	shift 27
-	ID	shift 26
+	LP	shift 33
+	LB	shift 32
+	CHAR	shift 30
+	UNICHAR	shift 29
+	DOT	shift 28
+	ID	shift 27
 
-	OrExp	goto 52
+	OrExp	goto 47
 	CatExp	goto 22
 	Exp	goto 21
 	InExp	goto 20
@@ -389,25 +385,31 @@ state 31:
 
 state 32:
 
-	Rule : LT . RuleStates GT OrExp ARROW ACT 
+	InExp : LB . CARAT CharClass 
+	InExp : LB . CharClass 
 
-	LEXSTATE	shift 54
+	CARAT	shift 54
+	DASH	shift 53
+	CHAR	shift 52
+	UNICHAR	shift 51
 
-	RuleStates	goto 53
+	CharClass	goto 50
+	CharClass'	goto 49
+	NonCarat	goto 48
 
 	.	error
 
 
 state 33:
 
-	Defs : Defs ID EQ . OrExp SEMI 
+	InExp : LP . OrExp RP 
 
-	LP	shift 31
-	LB	shift 30
-	CHAR	shift 29
-	UNICHAR	shift 28
-	DOT	shift 27
-	ID	shift 26
+	LP	shift 33
+	LB	shift 32
+	CHAR	shift 30
+	UNICHAR	shift 29
+	DOT	shift 28
+	ID	shift 27
 
 	OrExp	goto 55
 	CatExp	goto 22
@@ -419,6 +421,36 @@ state 33:
 
 state 34:
 
+	Rule : LT . RuleStates GT LineBreakExp ARROW ACT 
+
+	LEXSTATE	shift 57
+
+	RuleStates	goto 56
+
+	.	error
+
+
+state 35:
+
+	Defs : Defs ID EQ . OrExp SEMI 
+
+	LP	shift 33
+	LB	shift 32
+	CHAR	shift 30
+	UNICHAR	shift 29
+	DOT	shift 28
+	ID	shift 27
+
+	OrExp	goto 58
+	CatExp	goto 22
+	Exp	goto 21
+	InExp	goto 20
+
+	.	error
+
+
+state 36:
+
 	Defs : Defs STATES StartStates SEMI .  (reduce by rule 4)
 
 
@@ -426,7 +458,7 @@ state 34:
 	.	reduce by rule 4
 
 
-state 35:
+state 37:
 
 	StartStates : LEXSTATE StartStates .  (reduce by rule 14)
 
@@ -435,92 +467,92 @@ state 35:
 	.	reduce by rule 14
 
 
-state 36:
+state 38:
 
 	Exp : Exp REPS . RCB 
 	Exp : Exp REPS . COMMA REPS RCB 
 
-	RCB	shift 57
-	COMMA	shift 56
+	RCB	shift 60
+	COMMA	shift 59
 
 
 	.	error
 
 
-state 37:
+state 39:
 
-	Exp : Exp PLUS .  (reduce by rule 27)
+	Exp : Exp PLUS .  (reduce by rule 29)
+
+
+
+	.	reduce by rule 29
+
+
+state 40:
+
+	Exp : Exp STAR .  (reduce by rule 28)
+
+
+
+	.	reduce by rule 28
+
+
+state 41:
+
+	Exp : Exp QMARK .  (reduce by rule 27)
 
 
 
 	.	reduce by rule 27
 
 
-state 38:
+state 42:
 
-	Exp : Exp STAR .  (reduce by rule 26)
-
-
-
-	.	reduce by rule 26
-
-
-state 39:
-
-	Exp : Exp QMARK .  (reduce by rule 25)
-
-
-
-	.	reduce by rule 25
-
-
-state 40:
-
-	CatExp : CatExp Exp .  (reduce by rule 23)
+	CatExp : CatExp Exp .  (reduce by rule 25)
 	Exp : Exp . QMARK 
 	Exp : Exp . STAR 
 	Exp : Exp . PLUS 
 	Exp : Exp . REPS RCB 
 	Exp : Exp . REPS COMMA REPS RCB 
 
-	QMARK	shift 39
-	STAR	shift 38
-	PLUS	shift 37
-	REPS	shift 36
+	QMARK	shift 41
+	STAR	shift 40
+	PLUS	shift 39
+	REPS	shift 38
 
 
-	.	reduce by rule 23
+	.	reduce by rule 25
 
 
-state 41:
-
-	Rule : OrExp ARROW . ACT 
-
-	ACT	shift 58
-
-
-	.	error
-
-
-state 42:
+state 43:
 
 	OrExp : OrExp BAR . CatExp 
 
-	LP	shift 31
-	LB	shift 30
-	CHAR	shift 29
-	UNICHAR	shift 28
-	DOT	shift 27
-	ID	shift 26
+	LP	shift 33
+	LB	shift 32
+	CHAR	shift 30
+	UNICHAR	shift 29
+	DOT	shift 28
+	ID	shift 27
 
-	CatExp	goto 59
+	CatExp	goto 61
 	Exp	goto 21
 	InExp	goto 20
 
 	.	error
 
 
-state 43:
+state 44:
+
+	Rule : LineBreakExp ARROW . ACT 
+
+	ACT	shift 62
+
+
+	.	error
+
+
+state 45:
 
 	Rules : Rule Rules .  (reduce by rule 16)
 
@@ -529,125 +561,136 @@ state 43:
 	.	reduce by rule 16
 
 
-state 44:
+state 46:
 
-	InExp : ID RCB .  (reduce by rule 34)
-
-
-
-	.	reduce by rule 34
+	InExp : ID RCB .  (reduce by rule 36)
 
 
-state 45:
 
-	CharClass' : NonCarat .  (reduce by rule 41)
+	.	reduce by rule 36
+
+
+state 47:
+
+	LineBreakExp : CARAT OrExp .  (reduce by rule 21)
+	OrExp : OrExp . BAR CatExp 
+
+	BAR	shift 43
+
+
+	.	reduce by rule 21
+
+
+state 48:
+
+	CharClass' : NonCarat .  (reduce by rule 43)
 	CharClass' : NonCarat . DASH AChar 
 
-	DASH	shift 60
+	DASH	shift 63
 
 
-	.	reduce by rule 41
+	.	reduce by rule 43
 
 
-state 46:
+state 49:
 
 	CharClass : CharClass' . RB 
 	CharClass : CharClass' . RBD 
 	CharClass' : CharClass' . CharRng 
 
-	RB	shift 66
-	RBD	shift 65
-	CARAT	shift 64
-	CHAR	shift 49
-	UNICHAR	shift 48
+	RB	shift 69
+	RBD	shift 68
+	CARAT	shift 67
+	CHAR	shift 52
+	UNICHAR	shift 51
 
-	CharRng	goto 63
-	AChar	goto 62
-	NonCarat	goto 61
+	CharRng	goto 66
+	AChar	goto 65
+	NonCarat	goto 64
 
 	.	error
-
-
-state 47:
-
-	InExp : LB CharClass .  (reduce by rule 37)
-
-
-
-	.	reduce by rule 37
-
-
-state 48:
-
-	NonCarat : UNICHAR .  (reduce by rule 49)
-
-
-
-	.	reduce by rule 49
-
-
-state 49:
-
-	NonCarat : CHAR .  (reduce by rule 48)
-
-
-
-	.	reduce by rule 48
 
 
 state 50:
 
-	CharClass : DASH . CharClass' RB 
+	InExp : LB CharClass .  (reduce by rule 39)
 
-	CHAR	shift 49
-	UNICHAR	shift 48
 
-	CharClass'	goto 67
-	NonCarat	goto 45
 
-	.	error
+	.	reduce by rule 39
 
 
 state 51:
 
-	InExp : LB CARAT . CharClass 
+	NonCarat : UNICHAR .  (reduce by rule 51)
 
-	DASH	shift 50
-	CHAR	shift 49
-	UNICHAR	shift 48
 
-	CharClass	goto 68
-	CharClass'	goto 46
-	NonCarat	goto 45
 
-	.	error
+	.	reduce by rule 51
 
 
 state 52:
 
-	OrExp : OrExp . BAR CatExp 
-	InExp : LP OrExp . RP 
-
-	RP	shift 69
-	BAR	shift 42
+	NonCarat : CHAR .  (reduce by rule 50)
 
 
-	.	error
+
+	.	reduce by rule 50
 
 
 state 53:
 
-	Rule : LT RuleStates . GT OrExp ARROW ACT 
-	RuleStates : RuleStates . COMMA LEXSTATE 
+	CharClass : DASH . CharClass' RB 
 
-	GT	shift 71
-	COMMA	shift 70
+	CHAR	shift 52
+	UNICHAR	shift 51
 
+	CharClass'	goto 70
+	NonCarat	goto 48
 
 	.	error
 
 
 state 54:
+
+	InExp : LB CARAT . CharClass 
+
+	DASH	shift 53
+	CHAR	shift 52
+	UNICHAR	shift 51
+
+	CharClass	goto 71
+	CharClass'	goto 49
+	NonCarat	goto 48
+
+	.	error
+
+
+state 55:
+
+	OrExp : OrExp . BAR CatExp 
+	InExp : LP OrExp . RP 
+
+	RP	shift 72
+	BAR	shift 43
+
+
+	.	error
+
+
+state 56:
+
+	Rule : LT RuleStates . GT LineBreakExp ARROW ACT 
+	RuleStates : RuleStates . COMMA LEXSTATE 
+
+	GT	shift 74
+	COMMA	shift 73
+
+
+	.	error
+
+
+state 57:
 
 	RuleStates : LEXSTATE .  (reduce by rule 19)
 
@@ -656,191 +699,193 @@ state 54:
 	.	reduce by rule 19
 
 
-state 55:
+state 58:
 
 	Defs : Defs ID EQ OrExp . SEMI 
 	OrExp : OrExp . BAR CatExp 
 
-	BAR	shift 42
-	SEMI	shift 72
+	BAR	shift 43
+	SEMI	shift 75
 
 
 	.	error
 
 
-state 56:
+state 59:
 
 	Exp : Exp REPS COMMA . REPS RCB 
 
-	REPS	shift 73
+	REPS	shift 76
 
 
 	.	error
 
 
-state 57:
+state 60:
 
-	Exp : Exp REPS RCB .  (reduce by rule 28)
-
-
-
-	.	reduce by rule 28
+	Exp : Exp REPS RCB .  (reduce by rule 30)
 
 
-state 58:
 
-	Rule : OrExp ARROW ACT .  (reduce by rule 17)
+	.	reduce by rule 30
+
+
+state 61:
+
+	OrExp : OrExp BAR CatExp .  (reduce by rule 23)
+	CatExp : CatExp . Exp 
+
+	LP	shift 33
+	LB	shift 32
+	CHAR	shift 30
+	UNICHAR	shift 29
+	DOT	shift 28
+	ID	shift 27
+
+	Exp	goto 42
+	InExp	goto 20
+
+	.	reduce by rule 23
+
+
+state 62:
+
+	Rule : LineBreakExp ARROW ACT .  (reduce by rule 17)
 
 
 
 	.	reduce by rule 17
 
 
-state 59:
-
-	OrExp : OrExp BAR CatExp .  (reduce by rule 21)
-	CatExp : CatExp . Exp 
-
-	LP	shift 31
-	LB	shift 30
-	CHAR	shift 29
-	UNICHAR	shift 28
-	DOT	shift 27
-	ID	shift 26
-
-	Exp	goto 40
-	InExp	goto 20
-
-	.	reduce by rule 21
-
-
-state 60:
+state 63:
 
 	CharClass' : NonCarat DASH . AChar 
 
-	CARAT	shift 64
-	CHAR	shift 49
-	UNICHAR	shift 48
+	CARAT	shift 67
+	CHAR	shift 52
+	UNICHAR	shift 51
 
-	AChar	goto 74
-	NonCarat	goto 61
+	AChar	goto 77
+	NonCarat	goto 64
 
 	.	error
 
 
-state 61:
+state 64:
 
-	AChar : NonCarat .  (reduce by rule 47)
+	AChar : NonCarat .  (reduce by rule 49)
 
+
+
+	.	reduce by rule 49
+
+
+state 65:
+
+	CharRng : AChar . DASH AChar 
+	CharRng : AChar .  (reduce by rule 47)
+
+	DASH	shift 78
 
 
 	.	reduce by rule 47
 
 
-state 62:
+state 66:
 
-	CharRng : AChar . DASH AChar 
-	CharRng : AChar .  (reduce by rule 45)
+	CharClass' : CharClass' CharRng .  (reduce by rule 45)
 
-	DASH	shift 75
 
 
 	.	reduce by rule 45
 
 
-state 63:
+state 67:
 
-	CharClass' : CharClass' CharRng .  (reduce by rule 43)
-
-
-
-	.	reduce by rule 43
-
-
-state 64:
-
-	AChar : CARAT .  (reduce by rule 46)
+	AChar : CARAT .  (reduce by rule 48)
 
 
 
-	.	reduce by rule 46
+	.	reduce by rule 48
 
 
-state 65:
+state 68:
 
-	CharClass : CharClass' RBD .  (reduce by rule 40)
+	CharClass : CharClass' RBD .  (reduce by rule 42)
+
+
+
+	.	reduce by rule 42
+
+
+state 69:
+
+	CharClass : CharClass' RB .  (reduce by rule 40)
 
 
 
 	.	reduce by rule 40
 
 
-state 66:
-
-	CharClass : CharClass' RB .  (reduce by rule 38)
-
-
-
-	.	reduce by rule 38
-
-
-state 67:
+state 70:
 
 	CharClass : DASH CharClass' . RB 
 	CharClass' : CharClass' . CharRng 
 
-	RB	shift 76
-	CARAT	shift 64
-	CHAR	shift 49
-	UNICHAR	shift 48
+	RB	shift 79
+	CARAT	shift 67
+	CHAR	shift 52
+	UNICHAR	shift 51
 
-	CharRng	goto 63
-	AChar	goto 62
-	NonCarat	goto 61
-
-	.	error
-
-
-state 68:
-
-	InExp : LB CARAT CharClass .  (reduce by rule 36)
-
-
-
-	.	reduce by rule 36
-
-
-state 69:
-
-	InExp : LP OrExp RP .  (reduce by rule 35)
-
-
-
-	.	reduce by rule 35
-
-
-state 70:
-
-	RuleStates : RuleStates COMMA . LEXSTATE 
-
-	LEXSTATE	shift 77
-
+	CharRng	goto 66
+	AChar	goto 65
+	NonCarat	goto 64
 
 	.	error
 
 
 state 71:
 
-	Rule : LT RuleStates GT . OrExp ARROW ACT 
+	InExp : LB CARAT CharClass .  (reduce by rule 38)
 
-	LP	shift 31
-	LB	shift 30
-	CHAR	shift 29
-	UNICHAR	shift 28
-	DOT	shift 27
-	ID	shift 26
 
-	OrExp	goto 78
+
+	.	reduce by rule 38
+
+
+state 72:
+
+	InExp : LP OrExp RP .  (reduce by rule 37)
+
+
+
+	.	reduce by rule 37
+
+
+state 73:
+
+	RuleStates : RuleStates COMMA . LEXSTATE 
+
+	LEXSTATE	shift 80
+
+
+	.	error
+
+
+state 74:
+
+	Rule : LT RuleStates GT . LineBreakExp ARROW ACT 
+
+	LP	shift 33
+	LB	shift 32
+	CARAT	shift 31
+	CHAR	shift 30
+	UNICHAR	shift 29
+	DOT	shift 28
+	ID	shift 27
+
+	LineBreakExp	goto 81
+	OrExp	goto 23
 	CatExp	goto 22
 	Exp	goto 21
 	InExp	goto 20
@@ -848,7 +893,7 @@ state 71:
 	.	error
 
 
-state 72:
+state 75:
 
 	Defs : Defs ID EQ OrExp SEMI .  (reduce by rule 12)
 
@@ -857,49 +902,49 @@ state 72:
 	.	reduce by rule 12
 
 
-state 73:
+state 76:
 
 	Exp : Exp REPS COMMA REPS . RCB 
 
-	RCB	shift 79
+	RCB	shift 82
 
 
 	.	error
-
-
-state 74:
-
-	CharClass' : NonCarat DASH AChar .  (reduce by rule 42)
-
-
-
-	.	reduce by rule 42
-
-
-state 75:
-
-	CharRng : AChar DASH . AChar 
-
-	CARAT	shift 64
-	CHAR	shift 49
-	UNICHAR	shift 48
-
-	AChar	goto 80
-	NonCarat	goto 61
-
-	.	error
-
-
-state 76:
-
-	CharClass : DASH CharClass' RB .  (reduce by rule 39)
-
-
-
-	.	reduce by rule 39
 
 
 state 77:
+
+	CharClass' : NonCarat DASH AChar .  (reduce by rule 44)
+
+
+
+	.	reduce by rule 44
+
+
+state 78:
+
+	CharRng : AChar DASH . AChar 
+
+	CARAT	shift 67
+	CHAR	shift 52
+	UNICHAR	shift 51
+
+	AChar	goto 83
+	NonCarat	goto 64
+
+	.	error
+
+
+state 79:
+
+	CharClass : DASH CharClass' RB .  (reduce by rule 41)
+
+
+
+	.	reduce by rule 41
+
+
+state 80:
 
 	RuleStates : RuleStates COMMA LEXSTATE .  (reduce by rule 20)
 
@@ -908,41 +953,11 @@ state 77:
 	.	reduce by rule 20
 
 
-state 78:
-
-	Rule : LT RuleStates GT OrExp . ARROW ACT 
-	OrExp : OrExp . BAR CatExp 
-
-	BAR	shift 42
-	ARROW	shift 81
-
-
-	.	error
-
-
-state 79:
-
-	Exp : Exp REPS COMMA REPS RCB .  (reduce by rule 29)
-
-
-
-	.	reduce by rule 29
-
-
-state 80:
-
-	CharRng : AChar DASH AChar .  (reduce by rule 44)
-
-
-
-	.	reduce by rule 44
-
-
 state 81:
 
-	Rule : LT RuleStates GT OrExp ARROW . ACT 
+	Rule : LT RuleStates GT LineBreakExp . ARROW ACT 
 
-	ACT	shift 82
+	ARROW	shift 84
 
 
 	.	error
@@ -950,14 +965,42 @@ state 81:
 
 state 82:
 
-	Rule : LT RuleStates GT OrExp ARROW ACT .  (reduce by rule 18)
+	Exp : Exp REPS COMMA REPS RCB .  (reduce by rule 31)
+
+
+
+	.	reduce by rule 31
+
+
+state 83:
+
+	CharRng : AChar DASH AChar .  (reduce by rule 46)
+
+
+
+	.	reduce by rule 46
+
+
+state 84:
+
+	Rule : LT RuleStates GT LineBreakExp ARROW . ACT 
+
+	ACT	shift 85
+
+
+	.	error
+
+
+state 85:
+
+	Rule : LT RuleStates GT LineBreakExp ARROW ACT .  (reduce by rule 18)
 
 
 
 	.	reduce by rule 18
 
 
-state 83:
+state 86:
 
 
 	EOF	accept
@@ -965,5 +1008,5 @@ state 83:
 
 	.	error
 
-95 of 207 action table entries left after compaction
-55 goto table entries
+103 of 219 action table entries left after compaction
+62 goto table entries

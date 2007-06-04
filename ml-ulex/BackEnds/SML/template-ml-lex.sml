@@ -122,7 +122,12 @@
 	(* current input stream *)
         val yystrm = ref yyins
 	(* get one char of input *)
-	val yygetc = yyInput.getc 
+	val yylastwasnref = ref false
+	fun yygetc strm = (case yyInput.getc strm
+              of NONE => NONE
+	       | SOME (#"\n", strm') => (yylastwasnref := true; SOME (#"\n", strm'))
+	       | SOME (c, strm') => (yylastwasnref := false; SOME (c, strm'))
+             (* end case *))
 	(* create yytext *)
 	fun yymktext(strm) = yyInput.subtract (strm, !yystrm)
         open UserDeclarations
@@ -130,6 +135,7 @@
 @args@ 
  = let 
      fun continue() = let
+            val yylastwasn = !yylastwasnref
             fun yystuck (yyNO_MATCH) = raise Fail "stuck state"
 	      | yystuck (yyMATCH (strm, action, old)) = 
 		  action (strm, old)

@@ -9,6 +9,10 @@ val wildcard = SIS.complement (SIS.singleton 0w10) (* everything but \n *)
 fun charToSym c = Word.fromInt (Char.ord c)
 fun strToSym s = charToSym (String.sub (s, 0))
 
+fun mkRule (ss, (false, re), act) = ((ss, re), act)
+  | mkRule (ss, (true,  re), act) = ((ss, re),
+      "if not yylastwasn then REJECT() else (" ^ act ^")")
+
 %%
 
 %name MLLex
@@ -63,6 +67,7 @@ fun strToSym s = charToSym (String.sub (s, 0))
   | Rules of S.rule list
   | Rule of S.rule
   | RuleStates of AtomSet.set
+  | LineBreakExp of (bool * RE.re)
   | OrExp of RE.re
   | CatExp of RE.re
   | Exp of RE.re
@@ -136,16 +141,22 @@ Rules
 		(Rule :: Rules)
 
 Rule	
-	: OrExp ARROW ACT
-		((NONE, OrExp), ACT)
-	| LT RuleStates GT OrExp ARROW ACT
-		((SOME RuleStates, OrExp), ACT)
+	: LineBreakExp ARROW ACT
+		(mkRule (NONE, LineBreakExp, ACT))
+	| LT RuleStates GT LineBreakExp ARROW ACT
+		(mkRule (SOME RuleStates, LineBreakExp, ACT))
 
 RuleStates
 	: LEXSTATE
 		(AtomSet.singleton (Atom.atom LEXSTATE))
 	| RuleStates COMMA LEXSTATE
 		(AtomSet.add (RuleStates, Atom.atom LEXSTATE))
+
+LineBreakExp
+	: CARAT OrExp
+		(true, OrExp)
+	| OrExp
+		(false, OrExp)
 
 OrExp
 	: OrExp BAR CatExp
