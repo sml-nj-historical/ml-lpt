@@ -123,7 +123,7 @@ COM | CODE | STRING | CHARSET | CHARCLASS | CURLY | RESTRING | INITIAL | DIRECTI
 (0w48,0w58,90),
 (0w64,0w90,90),
 (0w95,0w122,90),
-(0w126,0w255,90),
+(0w127,0w255,90),
 (0w9,0w9,91),
 (0w11,0w12,91),
 (0w32,0w32,91),
@@ -151,51 +151,52 @@ COM | CODE | STRING | CHARSET | CHARCLASS | CURLY | RESTRING | INITIAL | DIRECTI
 (0w94,0w94,112),
 (0w123,0w123,113),
 (0w124,0w124,114),
-(0w125,0w125,77)], []), ([(0w0,0w8,144),
-(0w14,0w31,144),
-(0w33,0w43,144),
-(0w45,0w58,144),
-(0w60,0w60,144),
-(0w63,0w64,144),
-(0w91,0w96,144),
-(0w123,0w255,144),
-(0w9,0w12,145),
-(0w32,0w32,145),
-(0w13,0w13,146),
-(0w44,0w44,147),
-(0w59,0w59,148),
-(0w61,0w61,149),
-(0w62,0w62,150),
-(0w65,0w90,151),
-(0w97,0w122,151)], []), ([], [53, 68]), ([(0w10,0w10,15)], [53, 68]), ([(0w42,0w42,14)], [53, 68]), ([(0w41,0w41,13)], [53, 68]), ([], [52]), ([], [51]), ([], [53]), ([(0w0,0w33,21),
+(0w125,0w125,77),
+(0w126,0w126,115)], []), ([(0w0,0w8,145),
+(0w14,0w31,145),
+(0w33,0w43,145),
+(0w45,0w58,145),
+(0w60,0w60,145),
+(0w63,0w64,145),
+(0w91,0w96,145),
+(0w123,0w255,145),
+(0w9,0w12,146),
+(0w32,0w32,146),
+(0w13,0w13,147),
+(0w44,0w44,148),
+(0w59,0w59,149),
+(0w61,0w61,150),
+(0w62,0w62,151),
+(0w65,0w90,152),
+(0w97,0w122,152)], []), ([], [54, 69]), ([(0w10,0w10,15)], [54, 69]), ([(0w42,0w42,14)], [54, 69]), ([(0w41,0w41,13)], [54, 69]), ([], [53]), ([], [52]), ([], [54]), ([(0w0,0w33,21),
 (0w35,0w39,21),
-(0w42,0w255,21)], [57, 68]), ([], [56, 68]), ([(0w42,0w42,20)], [54, 68]), ([], [55, 68]), ([], [50]), ([(0w0,0w33,21),
+(0w42,0w255,21)], [58, 69]), ([], [57, 69]), ([(0w42,0w42,20)], [55, 69]), ([], [56, 69]), ([], [51]), ([(0w0,0w33,21),
 (0w35,0w39,21),
-(0w42,0w255,21)], [57]), ([(0w0,0w9,30),
+(0w42,0w255,21)], [58]), ([(0w0,0w9,30),
 (0w11,0w12,30),
 (0w14,0w33,30),
 (0w35,0w91,30),
-(0w93,0w255,30)], [63, 68]), ([], [59, 68]), ([(0w10,0w10,29)], [59, 68]), ([], [58, 68]), ([(0w34,0w34,27),
-(0w92,0w92,28)], [60, 68]), ([], [62]), ([], [61]), ([], [59]), ([(0w0,0w9,30),
+(0w93,0w255,30)], [64, 69]), ([], [60, 69]), ([(0w10,0w10,29)], [60, 69]), ([], [59, 69]), ([(0w34,0w34,27),
+(0w92,0w92,28)], [61, 69]), ([], [63]), ([], [62]), ([], [60]), ([(0w0,0w9,30),
 (0w11,0w12,30),
 (0w14,0w33,30),
 (0w35,0w91,30),
-(0w93,0w255,30)], [63]), ([], [17, 68]), ([(0w9,0w12,52),
+(0w93,0w255,30)], [64]), ([], [17, 69]), ([(0w9,0w12,52),
 (0w32,0w32,52),
-(0w13,0w13,53)], [0, 17, 68]), ([(0w9,0w12,52),
+(0w13,0w13,53)], [0, 17, 69]), ([(0w9,0w12,52),
 (0w32,0w32,52),
-(0w13,0w13,53)], [0, 17, 68]), ([], [16, 17, 68]), ([(0w83,0w83,49)], [17, 68]), ([(0w84,0w84,48)], [17, 68]), ([(0w115,0w115,42)], [17, 68]), ([(0w116,0w116,39)], [17, 68]), ([(0w102,0w102,40)], []), ([(0w56,0w56,41)], []), ([], [13]), ([(0w99,0w99,43)], []), ([(0w105,0w105,44)], []), ([(0w105,0w105,45)], []), ([(0w55,0w55,46),
+(0w13,0w13,53)], [0, 17, 69]), ([], [16, 17, 69]), ([(0w83,0w83,49)], [17, 69]), ([(0w84,0w84,48)], [17, 69]), ([(0w115,0w115,42)], [17, 69]), ([(0w116,0w116,39)], [17, 69]), ([(0w102,0w102,40)], []), ([(0w56,0w56,41)], []), ([], [13]), ([(0w99,0w99,43)], []), ([(0w105,0w105,44)], []), ([(0w105,0w105,45)], []), ([(0w55,0w55,46),
 (0w56,0w56,47)], []), ([], [14]), ([], [15]), ([(0w70,0w70,40)], []), ([(0w67,0w67,50)], []), ([(0w73,0w73,51)], []), ([(0w73,0w73,45)], []), ([(0w9,0w12,52),
 (0w32,0w32,52),
 (0w13,0w13,53)], [0]), ([(0w9,0w12,52),
 (0w32,0w32,52),
-(0w13,0w13,53)], [0]), ([], [48, 68]), ([(0w9,0w12,52),
+(0w13,0w13,53)], [0]), ([], [49, 69]), ([(0w9,0w12,52),
 (0w32,0w32,52),
-(0w13,0w13,53)], [0, 48, 68]), ([(0w9,0w12,52),
+(0w13,0w13,53)], [0, 49, 69]), ([(0w9,0w12,52),
 (0w32,0w32,52),
-(0w13,0w13,53)], [0, 68]), ([(0w9,0w12,52),
+(0w13,0w13,53)], [0, 69]), ([(0w9,0w12,52),
 (0w32,0w32,52),
-(0w13,0w13,53)], [0, 48, 68]), ([], [43, 48, 68]), ([(0w0,0w33,62),
+(0w13,0w13,53)], [0, 49, 69]), ([], [44, 49, 69]), ([(0w0,0w33,62),
 (0w35,0w47,62),
 (0w58,0w64,62),
 (0w91,0w91,62),
@@ -209,17 +210,17 @@ COM | CODE | STRING | CHARSET | CHARCLASS | CURLY | RESTRING | INITIAL | DIRECTI
 (0w97,0w116,65),
 (0w118,0w122,65),
 (0w85,0w85,66),
-(0w117,0w117,67)], [68]), ([], [47, 48, 68]), ([], [42, 48, 68]), ([], [46]), ([], [44, 46]), ([(0w48,0w57,76)], [46]), ([], [44]), ([(0w48,0w57,72),
+(0w117,0w117,67)], [69]), ([], [48, 49, 69]), ([], [43, 49, 69]), ([], [47]), ([], [45, 47]), ([(0w48,0w57,76)], [47]), ([], [45]), ([(0w48,0w57,72),
 (0w65,0w90,72),
-(0w97,0w122,72)], [44]), ([(0w48,0w57,68),
+(0w97,0w122,72)], [45]), ([(0w48,0w57,68),
 (0w65,0w90,68),
-(0w97,0w122,68)], [44]), ([(0w48,0w57,69),
+(0w97,0w122,68)], [45]), ([(0w48,0w57,69),
 (0w65,0w90,69),
 (0w97,0w122,69)], []), ([(0w48,0w57,70),
 (0w65,0w90,70),
 (0w97,0w122,70)], []), ([(0w48,0w57,71),
 (0w65,0w90,71),
-(0w97,0w122,71)], []), ([], [45]), ([(0w48,0w57,73),
+(0w97,0w122,71)], []), ([], [46]), ([(0w48,0w57,73),
 (0w65,0w90,73),
 (0w97,0w122,73)], []), ([(0w48,0w57,74),
 (0w65,0w90,74),
@@ -227,13 +228,13 @@ COM | CODE | STRING | CHARSET | CHARCLASS | CURLY | RESTRING | INITIAL | DIRECTI
 (0w65,0w90,75),
 (0w97,0w122,75)], []), ([(0w48,0w57,68),
 (0w65,0w90,68),
-(0w97,0w122,68)], []), ([(0w48,0w57,65)], []), ([], [68]), ([], [34, 68]), ([(0w48,0w57,83)], [33, 68]), ([(0w48,0w57,82),
+(0w97,0w122,68)], []), ([(0w48,0w57,65)], []), ([], [69]), ([], [35, 69]), ([(0w48,0w57,83)], [34, 69]), ([(0w48,0w57,82),
 (0w65,0w90,82),
 (0w95,0w95,82),
-(0w97,0w122,82)], [32, 68]), ([], [31, 68]), ([(0w48,0w57,82),
+(0w97,0w122,82)], [33, 69]), ([], [32, 69]), ([(0w48,0w57,82),
 (0w65,0w90,82),
 (0w95,0w95,82),
-(0w97,0w122,82)], [32]), ([(0w48,0w57,83)], [33]), ([], [66, 68]), ([], [65, 66, 68]), ([(0w10,0w10,89)], [65, 66, 68]), ([], [64, 66, 68]), ([(0w0,0w33,62),
+(0w97,0w122,82)], [33]), ([(0w48,0w57,83)], [34]), ([], [67, 69]), ([], [66, 67, 69]), ([(0w10,0w10,89)], [66, 67, 69]), ([], [65, 67, 69]), ([(0w0,0w33,62),
 (0w35,0w47,62),
 (0w58,0w64,62),
 (0w91,0w91,62),
@@ -247,16 +248,16 @@ COM | CODE | STRING | CHARSET | CHARCLASS | CURLY | RESTRING | INITIAL | DIRECTI
 (0w97,0w116,65),
 (0w118,0w122,65),
 (0w85,0w85,66),
-(0w117,0w117,67)], [66, 68]), ([], [65]), ([], [67, 68]), ([(0w9,0w12,52),
+(0w117,0w117,67)], [67, 69]), ([], [66]), ([], [68, 69]), ([(0w9,0w12,52),
 (0w32,0w32,52),
-(0w13,0w13,53)], [0, 67, 68]), ([(0w9,0w12,52),
+(0w13,0w13,53)], [0, 68, 69]), ([(0w9,0w12,52),
 (0w32,0w32,52),
-(0w13,0w13,53)], [0, 67, 68]), ([], [41, 67, 68]), ([], [20, 67, 68]), ([(0w97,0w97,117),
-(0w99,0w99,118),
-(0w100,0w100,119),
-(0w108,0w108,120),
-(0w110,0w110,121),
-(0w115,0w115,122)], [67, 68]), ([], [22, 67, 68]), ([(0w42,0w42,116)], [26, 67, 68]), ([], [27, 67, 68]), ([], [23, 67, 68]), ([], [21, 67, 68]), ([], [37, 67, 68]), ([], [19, 67, 68]), ([], [38, 67, 68]), ([], [25, 68]), ([], [35, 67, 68]), ([(0w62,0w62,115)], [39, 67, 68]), ([], [36, 67, 68]), ([], [24, 67, 68]), ([], [28, 67, 68]), ([(0w0,0w33,62),
+(0w13,0w13,53)], [0, 68, 69]), ([], [42, 68, 69]), ([], [20, 68, 69]), ([(0w97,0w97,118),
+(0w99,0w99,119),
+(0w100,0w100,120),
+(0w108,0w108,121),
+(0w110,0w110,122),
+(0w115,0w115,123)], [68, 69]), ([], [22, 68, 69]), ([(0w42,0w42,117)], [27, 68, 69]), ([], [28, 68, 69]), ([], [23, 68, 69]), ([], [21, 68, 69]), ([], [38, 68, 69]), ([], [19, 68, 69]), ([], [39, 68, 69]), ([], [26, 69]), ([], [36, 68, 69]), ([(0w62,0w62,116)], [40, 68, 69]), ([], [37, 68, 69]), ([], [24, 68, 69]), ([], [29, 68, 69]), ([(0w0,0w33,62),
 (0w35,0w47,62),
 (0w58,0w64,62),
 (0w91,0w91,62),
@@ -270,17 +271,17 @@ COM | CODE | STRING | CHARSET | CHARCLASS | CURLY | RESTRING | INITIAL | DIRECTI
 (0w97,0w116,65),
 (0w118,0w122,65),
 (0w85,0w85,66),
-(0w117,0w117,67)], [67, 68]), ([], [29, 67, 68]), ([], [42, 67, 68]), ([], [30, 68]), ([], [18, 67, 68]), ([], [40]), ([], [49]), ([(0w114,0w114,142)], []), ([(0w104,0w104,136)], []), ([(0w101,0w101,133)], []), ([(0w101,0w101,131)], []), ([(0w97,0w97,128)], []), ([(0w116,0w116,123)], []), ([(0w97,0w97,124)], []), ([(0w116,0w116,125)], []), ([(0w101,0w101,126)], []), ([(0w115,0w115,127)], []), ([], [4]), ([(0w109,0w109,129)], []), ([(0w101,0w101,130)], []), ([], [3]), ([(0w116,0w116,132)], []), ([], [5]), ([(0w102,0w102,134)], []), ([(0w115,0w115,135)], []), ([], [1]), ([(0w97,0w97,137)], []), ([(0w114,0w114,138)], []), ([(0w115,0w115,139)], []), ([(0w101,0w101,140)], []), ([(0w116,0w116,141)], []), ([], [6]), ([(0w103,0w103,143)], []), ([], [2]), ([], [12, 68]), ([(0w9,0w12,52),
+(0w117,0w117,67)], [68, 69]), ([], [30, 68, 69]), ([], [43, 68, 69]), ([], [31, 69]), ([], [18, 68, 69]), ([], [25, 68, 69]), ([], [41]), ([], [50]), ([(0w114,0w114,143)], []), ([(0w104,0w104,137)], []), ([(0w101,0w101,134)], []), ([(0w101,0w101,132)], []), ([(0w97,0w97,129)], []), ([(0w116,0w116,124)], []), ([(0w97,0w97,125)], []), ([(0w116,0w116,126)], []), ([(0w101,0w101,127)], []), ([(0w115,0w115,128)], []), ([], [4]), ([(0w109,0w109,130)], []), ([(0w101,0w101,131)], []), ([], [3]), ([(0w116,0w116,133)], []), ([], [5]), ([(0w102,0w102,135)], []), ([(0w115,0w115,136)], []), ([], [1]), ([(0w97,0w97,138)], []), ([(0w114,0w114,139)], []), ([(0w115,0w115,140)], []), ([(0w101,0w101,141)], []), ([(0w116,0w116,142)], []), ([], [6]), ([(0w103,0w103,144)], []), ([], [2]), ([], [12, 69]), ([(0w9,0w12,52),
 (0w32,0w32,52),
-(0w13,0w13,53)], [0, 12, 68]), ([(0w9,0w12,52),
+(0w13,0w13,53)], [0, 12, 69]), ([(0w9,0w12,52),
 (0w32,0w32,52),
-(0w13,0w13,53)], [0, 12, 68]), ([], [8, 12, 68]), ([], [9, 12, 68]), ([], [10, 12, 68]), ([], [11, 12, 68]), ([(0w48,0w57,152),
-(0w65,0w90,152),
-(0w95,0w95,152),
-(0w97,0w122,152)], [7, 12, 68]), ([(0w48,0w57,152),
-(0w65,0w90,152),
-(0w95,0w95,152),
-(0w97,0w122,152)], [7])]
+(0w13,0w13,53)], [0, 12, 69]), ([], [8, 12, 69]), ([], [9, 12, 69]), ([], [10, 12, 69]), ([], [11, 12, 69]), ([(0w48,0w57,153),
+(0w65,0w90,153),
+(0w95,0w95,153),
+(0w97,0w122,153)], [7, 12, 69]), ([(0w48,0w57,153),
+(0w65,0w90,153),
+(0w95,0w95,153),
+(0w97,0w122,153)], [7])]
 
     fun innerLex 
 (yystrm_, yyss_, yysm) = let
@@ -344,7 +345,8 @@ COM | CODE | STRING | CHARSET | CHARCLASS | CURLY | RESTRING | INITIAL | DIRECTI
 					 yyactsToMatches (strm, finals, oldMatches)))
 			   | NONE => tryfinal()
 		      end)
-	    fun continue() = 
+	    val yylastwasnref = ref (ULexBuffer.lastWasNL (!yystrm))
+	    fun continue() = let val yylastwasn = !yylastwasnref in
 let
 fun yyAction0 (strm, lastMatch : yymatch) = (yystrm := strm;  skip())
 fun yyAction1 (strm, lastMatch : yymatch) = (yystrm := strm;
@@ -398,40 +400,41 @@ fun yyAction21 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.PLUS)
 fun yyAction22 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.AMP)
 fun yyAction23 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.STAR)
 fun yyAction24 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.QUERY)
-fun yyAction25 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.SEMI)
-fun yyAction26 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.LP)
-fun yyAction27 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.RP)
-fun yyAction28 (strm, lastMatch : yymatch) = (yystrm := strm;
+fun yyAction25 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.NEG)
+fun yyAction26 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.SEMI)
+fun yyAction27 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.LP)
+fun yyAction28 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.RP)
+fun yyAction29 (strm, lastMatch : yymatch) = (yystrm := strm;
        YYBEGIN CHARCLASS; Tok.LSB)
-fun yyAction29 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.RSB)
-fun yyAction30 (strm, lastMatch : yymatch) = (yystrm := strm;
-       YYBEGIN CURLY; Tok.LCB)
+fun yyAction30 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.RSB)
 fun yyAction31 (strm, lastMatch : yymatch) = (yystrm := strm;
+       YYBEGIN CURLY; Tok.LCB)
+fun yyAction32 (strm, lastMatch : yymatch) = (yystrm := strm;
        YYBEGIN INITIAL; Tok.RCB)
-fun yyAction32 (strm, lastMatch : yymatch) = let
+fun yyAction33 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;  Tok.ID yytext
       end
-fun yyAction33 (strm, lastMatch : yymatch) = let
+fun yyAction34 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;  Tok.INT (valOf (Int.fromString yytext))
       end
-fun yyAction34 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.COMMA)
-fun yyAction35 (strm, lastMatch : yymatch) = (yystrm := strm;
+fun yyAction35 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.COMMA)
+fun yyAction36 (strm, lastMatch : yymatch) = (yystrm := strm;
        YYBEGIN DIRECTIVE; Tok.LT)
-fun yyAction36 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.GT)
-fun yyAction37 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.COMMA)
-fun yyAction38 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.SLASH)
-fun yyAction39 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.EQ)
-fun yyAction40 (strm, lastMatch : yymatch) = (yystrm := strm;
-       YYBEGIN CODE; clrText(); Tok.DARROW)
+fun yyAction37 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.GT)
+fun yyAction38 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.COMMA)
+fun yyAction39 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.SLASH)
+fun yyAction40 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.EQ)
 fun yyAction41 (strm, lastMatch : yymatch) = (yystrm := strm;
+       YYBEGIN CODE; clrText(); Tok.DARROW)
+fun yyAction42 (strm, lastMatch : yymatch) = (yystrm := strm;
        YYBEGIN RESTRING; continue())
-fun yyAction42 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.CARAT)
-fun yyAction43 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.DASH)
-fun yyAction44 (strm, lastMatch : yymatch) = let
+fun yyAction43 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.CARAT)
+fun yyAction44 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.DASH)
+fun yyAction45 (strm, lastMatch : yymatch) = let
       val yycolno = ref(yygetcolNo(!(yystrm)))
       val yylineno = ref(yygetlineNo(!(yystrm)))
       val yytext = yymktext(strm)
@@ -447,24 +450,24 @@ fun yyAction44 (strm, lastMatch : yymatch) = let
 		     continue())
             end
       end
-fun yyAction45 (strm, lastMatch : yymatch) = let
+fun yyAction46 (strm, lastMatch : yymatch) = let
       val yysubstr = yymksubstr(strm)
       in
         yystrm := strm;  Tok.UCHAR (hexVal (Substring.triml 2 yysubstr))
       end
-fun yyAction46 (strm, lastMatch : yymatch) = let
+fun yyAction47 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;  Tok.CHAR (String.sub (yytext, 1))
       end
-fun yyAction47 (strm, lastMatch : yymatch) = (yystrm := strm;
+fun yyAction48 (strm, lastMatch : yymatch) = (yystrm := strm;
        YYBEGIN INITIAL; Tok.RSB)
-fun yyAction48 (strm, lastMatch : yymatch) = let
+fun yyAction49 (strm, lastMatch : yymatch) = let
       val yyunicode = yymkunicode(strm)
       in
         yystrm := strm;  mkUChar yyunicode
       end
-fun yyAction49 (strm, lastMatch : yymatch) = let
+fun yyAction50 (strm, lastMatch : yymatch) = let
       val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm;
@@ -472,7 +475,7 @@ fun yyAction49 (strm, lastMatch : yymatch) = let
 	    ignore(continue() before YYBEGIN INITIAL);
 	    continue()
       end
-fun yyAction50 (strm, lastMatch : yymatch) = let
+fun yyAction51 (strm, lastMatch : yymatch) = let
       val yylineno = ref(yygetlineNo(!(yystrm)))
       val yytext = yymktext(strm)
       in
@@ -482,12 +485,12 @@ fun yyAction50 (strm, lastMatch : yymatch) = let
 	    ignore(continue() before YYBEGIN CODE);
 	    continue()
       end
-fun yyAction51 (strm, lastMatch : yymatch) = let
+fun yyAction52 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;  addText yytext; comLvl := !comLvl+1; continue()
       end
-fun yyAction52 (strm, lastMatch : yymatch) = let
+fun yyAction53 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;
@@ -496,19 +499,19 @@ fun yyAction52 (strm, lastMatch : yymatch) = let
 	      then (Tok.BOGUS) 
 	      else continue()
       end
-fun yyAction53 (strm, lastMatch : yymatch) = let
+fun yyAction54 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;  addText yytext; continue()
       end
-fun yyAction54 (strm, lastMatch : yymatch) = let
+fun yyAction55 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;
          if !pcount = 0 then () else addText yytext;
 		    inc pcount; continue()
       end
-fun yyAction55 (strm, lastMatch : yymatch) = let
+fun yyAction56 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;
@@ -517,7 +520,7 @@ fun yyAction55 (strm, lastMatch : yymatch) = let
 		      (YYBEGIN INITIAL; Tok.CODE (getText()))
 		    else (addText yytext; continue())
       end
-fun yyAction56 (strm, lastMatch : yymatch) = let
+fun yyAction57 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;
@@ -525,23 +528,18 @@ fun yyAction56 (strm, lastMatch : yymatch) = let
 		    ignore(continue() before YYBEGIN CODE);
 		    addText "\""; continue()
       end
-fun yyAction57 (strm, lastMatch : yymatch) = let
+fun yyAction58 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;  addText yytext; continue()
       end
-fun yyAction58 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.BOGUS)
-fun yyAction59 (strm, lastMatch : yymatch) = let
+fun yyAction59 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.BOGUS)
+fun yyAction60 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;
          addText yytext; print ("unclosed string\n");
  	            Tok.BOGUS
-      end
-fun yyAction60 (strm, lastMatch : yymatch) = let
-      val yytext = yymktext(strm)
-      in
-        yystrm := strm;  addText yytext; continue()
       end
 fun yyAction61 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
@@ -558,21 +556,26 @@ fun yyAction63 (strm, lastMatch : yymatch) = let
       in
         yystrm := strm;  addText yytext; continue()
       end
-fun yyAction64 (strm, lastMatch : yymatch) = (yystrm := strm;
-       YYBEGIN INITIAL; continue())
-fun yyAction65 (strm, lastMatch : yymatch) = (yystrm := strm;
-       print ("unclosed string\n"); continue())
-fun yyAction66 (strm, lastMatch : yymatch) = let
-      val yyunicode = yymkunicode(strm)
+fun yyAction64 (strm, lastMatch : yymatch) = let
+      val yytext = yymktext(strm)
       in
-        yystrm := strm;  mkUChar yyunicode
+        yystrm := strm;  addText yytext; continue()
       end
+fun yyAction65 (strm, lastMatch : yymatch) = (yystrm := strm;
+       YYBEGIN INITIAL; continue())
+fun yyAction66 (strm, lastMatch : yymatch) = (yystrm := strm;
+       print ("unclosed string\n"); continue())
 fun yyAction67 (strm, lastMatch : yymatch) = let
       val yyunicode = yymkunicode(strm)
       in
         yystrm := strm;  mkUChar yyunicode
       end
 fun yyAction68 (strm, lastMatch : yymatch) = let
+      val yyunicode = yymkunicode(strm)
+      in
+        yystrm := strm;  mkUChar yyunicode
+      end
+fun yyAction69 (strm, lastMatch : yymatch) = let
       val yycolno = ref(yygetcolNo(!(yystrm)))
       val yylineno = ref(yygetlineNo(!(yystrm)))
       val yytext = yymktext(strm)
@@ -595,7 +598,7 @@ val yyactTable = Vector.fromList([yyAction0, yyAction1, yyAction2, yyAction3,
   yyAction47, yyAction48, yyAction49, yyAction50, yyAction51, yyAction52,
   yyAction53, yyAction54, yyAction55, yyAction56, yyAction57, yyAction58,
   yyAction59, yyAction60, yyAction61, yyAction62, yyAction63, yyAction64,
-  yyAction65, yyAction66, yyAction67, yyAction68])
+  yyAction65, yyAction66, yyAction67, yyAction68, yyAction69])
 in
   if ULexBuffer.eof(!(yystrm))
     then UserDeclarations.eof(())
@@ -611,7 +614,10 @@ in
         | DIRECTIVE => yygo yyactTable (8, !(yystrm), yyNO_MATCH)
       (* end case *))
 end
-            and skip() = (yystartPos := yygetPos(); continue())
+end
+            and skip() = (yystartPos := yygetPos(); 
+			  yylastwasnref := ULexBuffer.lastWasNL (!yystrm);
+			  continue())
 	    in (continue(), (!yystartPos, yygetPos()), !yystrm, !yyss) end
           in 
             lex()

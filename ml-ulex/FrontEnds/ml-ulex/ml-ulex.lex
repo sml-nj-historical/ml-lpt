@@ -93,6 +93,7 @@
 <INITIAL>"&"	=> (Tok.AMP); 
 <INITIAL>"*"	=> (Tok.STAR);
 <INITIAL>"?"	=> (Tok.QUERY);
+<INITIAL>"~"	=> (Tok.NEG);
 <INITIAL>";"	=> (Tok.SEMI);
 <INITIAL>"("	=> (Tok.LP);
 <INITIAL>")"	=> (Tok.RP);

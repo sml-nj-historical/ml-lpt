@@ -86,10 +86,14 @@
 					 yyactsToMatches (strm, finals, oldMatches)))
 			   | NONE => tryfinal()
 		      end)
-	    fun continue() = 
+	    val yylastwasnref = ref (ULexBuffer.lastWasNL (!yystrm))
+	    fun continue() = let val yylastwasn = !yylastwasnref in
 @lexer@
 
-            and skip() = (yystartPos := yygetPos(); continue())
+end
+            and skip() = (yystartPos := yygetPos(); 
+			  yylastwasnref := ULexBuffer.lastWasNL (!yystrm);
+			  continue())
 	    in (continue(), (!yystartPos, yygetPos()), !yystrm, !yyss) end
           in 
             lex()

@@ -34,6 +34,7 @@
   | SLASH	("/")
   | COMMA	(",")
   | CARAT	("^")
+  | NEG		("~")
   | DASH	("-")
   | DARROW	("=>")
   | EQ		("=")
@@ -100,8 +101,12 @@ directive(conf, env)
   ;
 
 rule(env)
-  : ("<" (ID ","? => (ID))+ ">")? re@(env) "=>" CODE
-      => ((Option.map (listToASet o (map Atom.atom)) SR, re), CODE)
+  : ("<" (ID ","? => (ID))+ ">")? 
+    addNewlCheck = 
+      ( => (fn c => c) 
+      | "^" => (fn c => "if not yylastwasn then REJECT() else (" ^ c ^")"))
+    re@(env) "=>" CODE
+      => ((Option.map (listToASet o (map Atom.atom)) SR1, re), addNewlCheck CODE)
   ;
 
 re(env)
@@ -119,7 +124,7 @@ and_re(env)
   ;
 
 not_re(env)
-  : "^" cat_re@(env)
+  : "~" cat_re@(env)
       => (RE.mkNot cat_re)
   | cat_re@(env)
   ;
