@@ -6,8 +6,7 @@
 This chapter gives a complete example of a simple calculator
 language implemented using both \texttt{ml-ulex} and \texttt{ml-antlr}.
 Figure~\ref{fig:calc-sources} gives the CM file for the project.
-Note that we are assuming that the \texttt{ml-ulex} and \texttt{ml-antlr}
-tools have been run by hand.
+%Note that we are assuming that the \texttt{ml-ulex} and \texttt{ml-antlr} tools have been run by hand.
 \begin{figure}[h]
 \begin{verbatim}
 
@@ -22,8 +21,8 @@ is
   $/smlnj-lib.cm
   $/ml-lpt-lib.cm
 
-  calc.grm.sml
-  calc.lex.sml
+  calc.grm : ml-antlr
+  calc.lex : ml-ulex
   calc-test.sml
 
 \end{verbatim}

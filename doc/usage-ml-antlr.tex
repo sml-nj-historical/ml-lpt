@@ -468,14 +468,13 @@ Note that if the start symbol for the grammar includes an inherited attribute (o
 The {\tt AntlrRepair} module is part of the {\tt ml-lpt-lib} library; it is fully described in Chapter~\ref{ch:ml-lpt-lib}.  It includes a function {\tt repairToString}:
 \begin{verbatim}
     val repairToString : 
-      ('token list -> string) -> AntlrStreamPos.sourcemap -> 
+      ('token -> string) -> AntlrStreamPos.sourcemap -> 
       'token repair -> string
 
 \end{verbatim}
-Likewise, the tokens module ({\tt ParserTokens} in this example) includes two functions:
+Likewise, the tokens module ({\tt ParserTokens} in this example) includes a function:
 \begin{verbatim}
     val toString : token -> string
-    val toksToString : token list -> string
 \end{verbatim}
 Thus, although error reporting is customizable, a reasonable default is provided, as illustrated below:
 \begin{verbatim}
@@ -483,10 +482,10 @@ Thus, although error reporting is customizable, a reasonable default is provided
       val sm = AntlrStreamPos.mkSourcemap()
       val (result, strm', errs) = Parser.parse (Lexer.lex sm) strm
       val errStrings = 
-        map (AntlrRepair.repairToString ParserTokens.toksToString sm)
+        map (AntlrRepair.repairToString ParserTokens.toString sm)
             errs
     in
       print (String.concatWith "\n" errStrings)
     end
 \end{verbatim}
-The {\tt toksToString} function will convert each token to its symbol as given in a \kw{tokens} directive, using abbreviations when they are available. By substituting a different function for {\tt toksToString}, this behavior can be altered.
+The {\tt toString} function will convert each token to its symbol as given in a \kw{tokens} directive, using abbreviations when they are available. By substituting a different function for {\tt toString}, this behavior can be altered.

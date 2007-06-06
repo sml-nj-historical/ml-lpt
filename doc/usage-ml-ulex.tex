@@ -8,7 +8,7 @@ Lexers analyze the lexical structure of an input string, and are usually specifi
 \end{verbatim}
 where {\tt lex\_result} is a type that must be defined by the user of \ulex{}.  Note that the lexer always returns a token: we assume that end-of-file will be explicitly represented by a token.  Compared to ML-Lex, \ulex{} offers the following improvements:
 \begin{itemize}
- \item Unicode is fully supported.
+ \item Unicode is supported under the UTF8 encoding.
  \item Intersection and negation of REs are supported.
  \item Token position spans are automatically generated.
  \item The specification format is somewhat cleaner.
@@ -52,9 +52,10 @@ A \ulex{} specification is a list of semicolon-terminated \emph{declarations}.  
 \GNextB
 	{rule}
 
-%\GFirstB{directive}
 %	{\kw{charset} $($ \T{ASCII7} $|$ \T{ASCII8} $|$ \T{UTF8} $)$}
 
+\GFirstB{directive}
+	{\kw{arg} code}
 \GNextB
 	{\kw{defs} code}
 \GNextB
@@ -69,7 +70,9 @@ A \ulex{} specification is a list of semicolon-terminated \emph{declarations}.  
 	
 \GFirstB{rule}
 	{ $($\T{<} ID $($ \T{,} ID $)^*$ \T{>}$)^?$ re \T{=>} code}
-	
+\GNextB
+	{ $($\T{<} ID $($ \T{,} ID $)^*$ \T{>}$)^?$ \T{<<EOF>>} \T{=>} code}
+
 \GFirstB{re}
 	{CHAR}
 \GNextB
@@ -97,11 +100,11 @@ A \ulex{} specification is a list of semicolon-terminated \emph{declarations}.  
 \GNextC
 	{re re}			{concatenation}
 \GNextC
-	{\T{\^{ }} re}		{negation} %(any string not matched by \textit{re})}
+	{\T{$\sim$} re}	{negation} %(any string not matched by \textit{re})}
 \GNextC
-	{re \T{\&} re}		{intersection}
+	{re \T{\&} re}	{intersection}
 \GNextC
-	{re \T{|} re}		{union}
+	{re \T{|} re}	{union}
 %\GNextB
 %	{re \T{/} re}
 %\GNextB
@@ -109,7 +112,13 @@ A \ulex{} specification is a list of semicolon-terminated \emph{declarations}.  
 %\GNextB
 %	{\T{\_}}
 \GFirstB{CHAR}
-	{any printable character not one of \ \T{\^{ } < > $\backslash$ ( ) \{ \} [ \& | * ? + " . ; = }}
+	{any printable character not one of \ 
+		$\begin{array}[t]{l}
+		\normalfont
+		 \texttt{\^{ } < > $\backslash$ ( ) \{ \} [ \& | * ?}\\
+		\normalfont
+		 \texttt{+ " . ; = $\sim$ }
+		 \end{array}$}
 \GNextB{an SML or Unicode escape code}
 \GFirstB{CCHAR}
 	{any printable character not one of \ \T{\^{ } - ] $\backslash$}}
@@ -129,6 +138,10 @@ A complete example specification appears in Chapter~\ref{ch:example}.
 
 \section{Directives}
 
+\subsection{The \kw{arg} directive}
+
+Specifies an additional curried parameter, appearing after the sourcemap parameter, that will be passed into the \texttt{lex} function and made available to all lexer actions.
+
 \subsection{The \kw{defs} directive}
 
 The \kw{defs} directive is used to include a segment of code in the generated lexer module, as in the following example:
@@ -144,6 +157,7 @@ The definitions must at least fulfill the following signature:
     type lex_result
     val eof : unit -> lex_result
 \end{verbatim}
+unless EOF rules are specified, in which case only the {\tt lex\_result} type is needed~(see Section~\ref{sec:eof-rules}).
 All semantic actions must yield values of type {\tt lex\_result}.  The {\tt eof} function is called by \ulex{} when the end of file is reached -- it acts as the semantic action for the empty input string.  All definitions given will be in scope for the rule actions (see Section~\ref{sec:ulex-rules}).
 
 \subsection{The \kw{let} directive}
@@ -191,7 +205,7 @@ If the current start state is not {\tt FOO}, none of the rules will be considere
 \begin{eqnarray*}
   \sem{\T{.}} &=& \Sigma \\
   \sem{\REX_1 \ \REX_2} &=& \sem{\REX_1} \cdot \sem{\REX_2} \\
-  \sem{\T{\^{ }} \ \REX} &=& \left(\bigcup_{i=0}^\infty \Sigma^i\right)\setminus \sem{\REX} \\
+  \sem{\T{$\sim$} \ \REX} &=& \left(\bigcup_{i=0}^\infty \Sigma^i\right)\setminus \sem{\REX} \\
   \sem{\REX_1 \ \T{\&} \ \REX_2} &=& \sem{\REX_1} \cap \sem{\REX_2} \\
   \sem{\REX_1 \ \T{|} \ \REX_2} &=& \sem{\REX_1} \cup \sem{\REX_2} \\
   \sem{\REX \ \T{?}} &=& \sem{\REX} \cup \{ \epsilon \}
@@ -235,23 +249,40 @@ The semantics for \ulex{} regular expressions are shown in Figure~\ref{ulex-re-s
 \end{array}
 \]
 
+\subsection{EOF rules}\label{sec:eof-rules}
+
+It is sometimes useful for the behavior of a lexer when it reaches the end-of-file to change depending on the current start state.  Normally, there is a single user-defined \texttt{eof} function that defines EOF behavior, but EOF rules can be used to be more selective, as in the following example:
+\begin{verbatim}
+  <INITIAL> <<EOF>> => ( Tok.EOF );
+  <COMMENT> <<EOF>> => ( print "Error: unclosed comment";
+                         Tok.EOF );
+\end{verbatim}
+Other than the special \T{<<EOF>>} symbol, EOF rules work exactly like normal rules.
+
 \subsection{Actions}\label{sec:ulex-actions}
 
 Actions are arbitrary SML code enclosed in parentheses.  The following names are in scope:
 \vskip 12pt
 \begin{tabular}{lp{0.7\textwidth}}
   {\tt YYBEGIN} & a function taking a start state and returning unit; changes to that start state.	\\
+  {\tt yysetStrm} & a function taking a {\tt ULexBuffer.stream} and returning unit; changes the current input source.  The functions {\tt yystreamify}, {\tt yystreamifyInstream} and {\tt yystreamifyReader} can be used to construct the stream; they work identically to the corresponding functions described in Section~\ref{sec:ulex-code}
+\\
   {\tt yytext} & the matched text as a string.	\\
   {\tt yysubstr} & the matched text as a substring (avoids copying).	\\
   {\tt yyunicode} & the matched Unicode text as a list of \texttt{Word.word} values \\
-  {\tt continue} & a unit to ``token'' function which recursively calls the lexer on the input following the matched prefix, and returns its result.  \\
-  {\tt skip} & identical to {\tt continue}, but moves forward the left marker for the position span of the returned token.  This should be used for skipping whitespace.\\
+\\
+  {\tt continue} & a unit to \texttt{lex\_result} function which recursively calls the lexer on the input following the matched prefix, and returns its result.  The span for the resulting token begins at the left border of the match that calls \texttt{continue},  \\
+  {\tt skip} & identical to {\tt continue}, but moves forward the left marker for the position span of the returned token.  Thus \texttt{skip} should be used for skipping whitespace.\\
+\\
+  {\tt yysm} & the sourcemap for the lexer, to be used with the functions in the {\tt AntlrSourcePos} module.\\
+  {\tt yypos} & the position of the left border of the matched RE, starting from 0.	\\  
   {\tt yylineno} & the current line number, starting from 1.	\\
-  {\tt yypos} & the current character, starting from 0.	\\
+  {\tt yycolno} & the current column number, starting from 1.\\
+\\
   ? & any name bound in the \kw{defs} section.
 \end{tabular}
 
-\section{Using the generated code}
+\section{Using the generated code}\label{sec:ulex-code}
 
 The generated lexer module has a signature including the following:
 \begin{verbatim}

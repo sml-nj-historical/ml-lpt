@@ -9,20 +9,28 @@
 
       type pos = Position.int
       type span = pos * pos
+      type sourceloc = { fileName : string option, lineNo : int, colNo : int }
       type sourcemap
 
       (* the result of moving forward an integer number of characters *)
       val forward : pos * int -> pos
 
-      val mkSourcemap : unit -> sourcemap
+      val mkSourcemap  : unit   -> sourcemap
+      val mkSourcemap' : string -> sourcemap
+
       val same : sourcemap * sourcemap -> bool
 
       (* log a new line occurence *)
       val markNewLine : sourcemap -> pos -> unit
+      (* resychronize to a full source location *)
+      val resynch     : sourcemap -> pos * sourceloc -> unit
 
-      val lineNo   : sourcemap -> pos -> int
-      val colNo    : sourcemap -> pos -> int
-      val toString : sourcemap -> pos -> string
+      val sourceLoc : sourcemap -> pos -> sourceloc
+      val fileName  : sourcemap -> pos -> string option
+      val lineNo    : sourcemap -> pos -> int
+      val colNo     : sourcemap -> pos -> int
+      val toString  : sourcemap -> pos -> string
+      val spanToString : sourcemap -> span -> string
 
     end
 \end{verbatim}
@@ -45,7 +53,7 @@
       type 'a repair = AntlrStreamPos.pos * 'token repair_action
       
       val repairToString : 
-            ('token list -> string) -> 
+            ('token -> string) -> 
             AntlrStreamPos.sourcemap -> 
             'token repair -> string
         
