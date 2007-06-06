@@ -23,6 +23,27 @@
 @table@
 ]
 
+    fun yystreamify' p input = ULexBuffer.mkStream (p, input)
+
+    fun yystreamifyReader' p readFn strm = let
+          val s = ref strm
+	  fun iter(strm, n, accum) = 
+	        if n > 1024 then (String.implode (rev accum), strm)
+		else (case readFn strm
+		       of NONE => (String.implode (rev accum), strm)
+			| SOME(c, strm') => iter (strm', n+1, c::accum))
+          fun input() = let
+	        val (data, strm) = iter(!s, 0, [])
+	        in
+	          s := strm;
+		  data
+	        end
+          in
+            yystreamify' p input
+          end
+
+    fun yystreamifyInstream' p strm = yystreamify' p (fn ()=>TextIO.input strm)
+
     fun innerLex 
 @args@
 (yystrm_, yyss_, yysm) = let
@@ -31,7 +52,11 @@
 	  fun YYBEGIN ss = (yyss := ss)
 	(* current input stream *)
           val yystrm = ref yystrm_
+	  fun yysetStrm strm = yystrm := strm
 	  fun yygetPos() = ULexBuffer.getpos (!yystrm)
+	  fun yystreamify input = yystreamify' (yygetPos()) input
+	  fun yystreamifyReader readFn strm = yystreamifyReader' (yygetPos()) readFn strm
+	  fun yystreamifyInstream strm = yystreamifyInstream' (yygetPos()) strm
         (* start position of token -- can be updated via skip() *)
 	  val yystartPos = ref (yygetPos())
 	(* get one char of input *)
@@ -129,27 +154,11 @@ end
 (STRM (yystrm, memo), ss))
          (* end case *))
 
-    fun streamify input = (STRM (ULexBuffer.mkStream input, ref NONE), 
-			   INITIAL)
-
-    fun streamifyReader readFn strm = let
-          val s = ref strm
-	  fun iter(strm, n, accum) = 
-	        if n > 1024 then (String.implode (rev accum), strm)
-		else (case readFn strm
-		       of NONE => (String.implode (rev accum), strm)
-			| SOME(c, strm') => iter (strm', n+1, c::accum))
-          fun input() = let
-	        val (data, strm) = iter(!s, 0, [])
-	        in
-	          s := strm;
-		  data
-	        end
-          in
-            streamify input
-          end
-
-    fun streamifyInstream strm = streamify (fn ()=>TextIO.input strm)
+    fun streamify input = (STRM (yystreamify' 0 input, ref NONE), INITIAL)
+    fun streamifyReader readFn strm = (STRM (yystreamifyReader' 0 readFn strm, ref NONE), 
+				       INITIAL)
+    fun streamifyInstream strm = (STRM (yystreamifyInstream' 0 strm, ref NONE), 
+				  INITIAL)
 
     fun getPos (STRM (strm, _), _) = ULexBuffer.getpos strm
 

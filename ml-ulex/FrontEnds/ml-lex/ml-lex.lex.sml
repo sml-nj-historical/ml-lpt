@@ -549,7 +549,7 @@ fun yyQ120 (strm, lastMatch : yymatch) = (case (yygetc(strm))
       (* end case *))
 fun yyQ7 (strm, lastMatch : yymatch) = (case (yygetc(strm))
        of NONE =>
-            if yyInput.eof(strm)
+            if yyInput.eof(!(yystrm))
               then UserDeclarations.eof(yyarg)
               else yyAction1(strm, yyNO_MATCH)
         | SOME(inp, strm') =>
@@ -634,7 +634,7 @@ fun yyQ111 (strm, lastMatch : yymatch) = (case (yygetc(strm))
       (* end case *))
 fun yyQ6 (strm, lastMatch : yymatch) = (case (yygetc(strm))
        of NONE =>
-            if yyInput.eof(strm)
+            if yyInput.eof(!(yystrm))
               then UserDeclarations.eof(yyarg)
               else yyAction58(strm, yyNO_MATCH)
         | SOME(inp, strm') =>
@@ -734,7 +734,7 @@ fun yyQ104 (strm, lastMatch : yymatch) = yyAction47(strm, yyNO_MATCH)
 fun yyQ41 (strm, lastMatch : yymatch) = yyAction59(strm, yyNO_MATCH)
 fun yyQ5 (strm, lastMatch : yymatch) = (case (yygetc(strm))
        of NONE =>
-            if yyInput.eof(strm)
+            if yyInput.eof(!(yystrm))
               then UserDeclarations.eof(yyarg)
               else yystuck(lastMatch)
         | SOME(inp, strm') =>
@@ -962,7 +962,7 @@ fun yyQ100 (strm, lastMatch : yymatch) = (case (yygetc(strm))
 fun yyQ8 (strm, lastMatch : yymatch) = yyAction45(strm, yyNO_MATCH)
 fun yyQ4 (strm, lastMatch : yymatch) = (case (yygetc(strm))
        of NONE =>
-            if yyInput.eof(strm)
+            if yyInput.eof(!(yystrm))
               then UserDeclarations.eof(yyarg)
               else yystuck(lastMatch)
         | SOME(inp, strm') =>
@@ -973,7 +973,7 @@ fun yyQ4 (strm, lastMatch : yymatch) = (case (yygetc(strm))
                   then yyQ8(strm', lastMatch)
                 else if inp < #"\v"
                   then if inp = #"\n"
-                      then if yyInput.eof(strm)
+                      then if yyInput.eof(!(yystrm))
                           then UserDeclarations.eof(yyarg)
                           else yystuck(lastMatch)
                       else yyQ8(strm', lastMatch)
@@ -993,7 +993,7 @@ fun yyQ4 (strm, lastMatch : yymatch) = (case (yygetc(strm))
 fun yyQ99 (strm, lastMatch : yymatch) = yyAction41(strm, yyNO_MATCH)
 fun yyQ3 (strm, lastMatch : yymatch) = (case (yygetc(strm))
        of NONE =>
-            if yyInput.eof(strm)
+            if yyInput.eof(!(yystrm))
               then UserDeclarations.eof(yyarg)
               else yystuck(lastMatch)
         | SOME(inp, strm') =>
@@ -1001,7 +1001,7 @@ fun yyQ3 (strm, lastMatch : yymatch) = (case (yygetc(strm))
               then yyQ99(strm', lastMatch)
             else if inp < #"\""
               then if inp = #"\n"
-                  then if yyInput.eof(strm)
+                  then if yyInput.eof(!(yystrm))
                       then UserDeclarations.eof(yyarg)
                       else yystuck(lastMatch)
                   else yyQ8(strm', lastMatch)
@@ -1103,7 +1103,7 @@ fun yyQ92 (strm, lastMatch : yymatch) = yyAction32(strm, yyNO_MATCH)
 fun yyQ91 (strm, lastMatch : yymatch) = yyAction32(strm, yyNO_MATCH)
 fun yyQ2 (strm, lastMatch : yymatch) = (case (yygetc(strm))
        of NONE =>
-            if yyInput.eof(strm)
+            if yyInput.eof(!(yystrm))
               then UserDeclarations.eof(yyarg)
               else yystuck(lastMatch)
         | SOME(inp, strm') =>
@@ -1550,7 +1550,7 @@ fun yyQ43 (strm, lastMatch : yymatch) = yyAction2(strm, yyNO_MATCH)
 fun yyQ42 (strm, lastMatch : yymatch) = yyAction2(strm, yyNO_MATCH)
 fun yyQ1 (strm, lastMatch : yymatch) = (case (yygetc(strm))
        of NONE =>
-            if yyInput.eof(strm)
+            if yyInput.eof(!(yystrm))
               then UserDeclarations.eof(yyarg)
               else yystuck(lastMatch)
         | SOME(inp, strm') =>
@@ -1639,7 +1639,7 @@ fun yyQ10 (strm, lastMatch : yymatch) = yyAction14(strm, yyNO_MATCH)
 fun yyQ9 (strm, lastMatch : yymatch) = yyAction14(strm, yyNO_MATCH)
 fun yyQ0 (strm, lastMatch : yymatch) = (case (yygetc(strm))
        of NONE =>
-            if yyInput.eof(strm)
+            if yyInput.eof(!(yystrm))
               then UserDeclarations.eof(yyarg)
               else yystuck(lastMatch)
         | SOME(inp, strm') =>

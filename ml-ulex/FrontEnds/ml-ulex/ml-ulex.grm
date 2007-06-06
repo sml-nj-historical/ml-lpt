@@ -47,6 +47,7 @@
   | UTF8	("utf8")
   | ASCII7	("ascii7")
   | ASCII8	("ascii8")
+  | EOFMARK	("<<EOF>>")
   | INT of int
   | CHAR of char
   | UCHAR of UTF8.wchar
@@ -80,8 +81,22 @@ decl(spec, env)
 	  end)
   | "%defs" CODE
       => (LS.updDecls (spec, CODE), env)
-  | rule@(env)
-      => (LS.addRule (spec, rule), env)
+  | SS = ("<" (ID ","? => (ID))+ ">")? 
+      main = 
+      ( addNewlCheck = 
+          ( => (fn c => c) 
+          | "^" => (fn c => "if not yylastwasn then REJECT() else (" ^ c ^")"))
+        re@(env) "=>" CODE
+          => ( LS.addRule (spec, 
+	         ((Option.map (listToASet o (map Atom.atom)) SS, re), addNewlCheck CODE)),
+	       env )
+      | "<<EOF>>" "=>" CODE
+	  => ( case SS
+		of NONE => (LS.addEOFRule (spec, ("_", CODE)), env)
+		 | SOME ss => (foldl (fn (s, spec) => LS.addEOFRuleFront (spec, (s, CODE)))
+			             spec ss,
+			       env) ) )
+      => ( main )
   ;
 
 directive(conf, env)
@@ -98,15 +113,6 @@ directive(conf, env)
       | "ascii8" =>  (LS.updClamp (conf, LS.CLAMP255), env))
   | "%name" ID
       => (LS.updStructName (conf, ID), env)
-  ;
-
-rule(env)
-  : ("<" (ID ","? => (ID))+ ">")? 
-    addNewlCheck = 
-      ( => (fn c => c) 
-      | "^" => (fn c => "if not yylastwasn then REJECT() else (" ^ c ^")"))
-    re@(env) "=>" CODE
-      => ((Option.map (listToASet o (map Atom.atom)) SR1, re), addNewlCheck CODE)
   ;
 
 re(env)
@@ -157,7 +163,7 @@ prim_re(env)
   | char
       => (RE.mkSym char)
   | "."
-      => (RE.any)
+      => (RE.mkSymSet SIS.universe)
   | "[" 
         ( "^" => (SIS.complement) 
         | %try "-" => (fn x => SIS.union (x, dashSet))

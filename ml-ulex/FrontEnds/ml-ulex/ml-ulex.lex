@@ -15,7 +15,6 @@
   val comStart : int ref = ref 0	(* start line of current comment *)
 
   type lex_result = Tok.token
-  fun eof() = Tok.EOF
 
   val text : string list ref = ref []
   fun addText s = (text := s::(!text))
@@ -58,7 +57,7 @@
 %let qualid ={id}".";
 %let tyvar="'"{idchars}*;
 
-%states STRING COM CODE CHARCLASS DIRECTIVE CHARSET RESTRING CURLY;
+%states STRING COM CODE CHARCLASS DIRECTIVE CHARSET RESTRING CURLY ;
 
 %name MLULexLex;
 (* %charset utf8; *)
@@ -66,12 +65,19 @@
 <INITIAL,DIRECTIVE,CHARSET,CHARCLASS>{ws}+	
 	=> (skip());
 
+
+<<EOF>>	=> (Tok.EOF);
+<RESTRING, STRING><<EOF>> => 
+	   (print (Int.toString (!yylineno) ^ ": unclosed string\n");
+	    Tok.EOF);
+
 <INITIAL>"%defs"	=> (YYBEGIN CODE; clrText(); Tok.KW_defs);
 <INITIAL>"%arg"		=> (YYBEGIN CODE; clrText(); Tok.KW_arg);
 <INITIAL>"%name"	=> (YYBEGIN DIRECTIVE; Tok.KW_name);
 <INITIAL>"%states"	=> (YYBEGIN DIRECTIVE; Tok.KW_states);
 <INITIAL>"%let"		=> (YYBEGIN DIRECTIVE; Tok.KW_let);
 <INITIAL>"%charset"	=> (YYBEGIN CHARSET; Tok.KW_charset);
+<INITIAL>"<<EOF>>"	=> (Tok.EOFMARK);
 
 <DIRECTIVE>{id}	=> (Tok.ID yytext);
 <DIRECTIVE>","	=> (Tok.COMMA);
@@ -187,4 +193,3 @@
 				  ": illegal character '", 
 				  String.toCString yytext, "'\n"]);
 		    continue());
-

@@ -16,6 +16,7 @@ structure LexSpec =
     type action = string
     type rule_spec = AtomSet.set option * RegExp.re
     type rule = rule_spec * action
+    type eof_rule = string * action
 
     datatype config = Conf of {
 	structName : string,
@@ -28,7 +29,8 @@ structure LexSpec =
     datatype spec = Spec of {
         decls : string,
 	conf : config,
-	rules : rule list
+	rules : rule list,
+	eofRules : eof_rule list
       }
 
     fun mkConfig () = Conf {
@@ -98,30 +100,44 @@ structure LexSpec =
 	       }
           end
 
-    fun mkSpec() = Spec {decls = "", conf = mkConfig(), rules = []}
+    fun mkSpec() = Spec {decls = "", conf = mkConfig(), rules = [], eofRules = []}
 
     fun addRule (spec, new) = let
-          val Spec {decls, conf, rules} = spec
+          val Spec {decls, conf, rules, eofRules} = spec
           in
             Spec {decls = decls, conf = conf,
-		  rules = rules @ [new]}
+		  rules = rules @ [new], eofRules = eofRules}
+          end
+
+    fun addEOFRuleFront (spec, new) = let
+          val Spec {decls, conf, rules, eofRules} = spec
+          in
+            Spec {decls = decls, conf = conf,
+		  rules = rules, eofRules = new::eofRules}
+          end
+
+    fun addEOFRule (spec, new) = let
+          val Spec {decls, conf, rules, eofRules} = spec
+          in
+            Spec {decls = decls, conf = conf,
+		  rules = rules, eofRules = eofRules @ [new]}
           end
 
     fun getConf (Spec {conf, ...}) = conf
     fun updConf (spec, new) = let
-          val Spec {decls, conf, rules} = spec
+          val Spec {decls, conf, rules, eofRules} = spec
           in
-            Spec {decls = decls, conf = new, rules = rules}
+            Spec {decls = decls, conf = new, rules = rules, eofRules = eofRules}
           end
 
     fun updDecls (spec, new) = let
-          val Spec {decls, conf, rules} = spec
+          val Spec {decls, conf, rules, eofRules} = spec
           in
-            Spec {decls = new, conf = conf, rules = rules}
+            Spec {decls = new, conf = conf, rules = rules, eofRules = eofRules}
           end
 
     fun emptyActions (spec) = let
-          val Spec {decls, conf, rules} = spec
+          val Spec {decls, conf, rules, eofRules} = spec
           val Conf {structName, header, arg, startStates, clamp} = conf
           val conf' = Conf {
 		 structName = "", header = "", arg = "", clamp = clamp,
@@ -131,7 +147,8 @@ structure LexSpec =
           in Spec {
 	         decls = "fun eof() = ()\ntype lex_result = unit", 
 		 conf = conf', 
-		 rules = List.map clearRule rules
+		 rules = List.map clearRule rules,
+		 eofRules = List.map clearRule eofRules
                }
           end
 

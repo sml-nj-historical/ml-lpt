@@ -12,51 +12,98 @@ structure AntlrStreamPos :> sig
 
   type pos = Position.int
   type span = pos * pos
+  type sourceloc = { fileName : string option, lineNo : int, colNo : int }
   type sourcemap
+
+  exception PosMustIncrease
 
   (* the result of moving forward an integer number of characters *)
   val forward : pos * int -> pos
 
-  val mkSourcemap : unit -> sourcemap
+  val mkSourcemap  : unit   -> sourcemap
+  val mkSourcemap' : string -> sourcemap
+
   val same : sourcemap * sourcemap -> bool
 
   (* log a new line occurence *)
   val markNewLine : sourcemap -> pos -> unit
+  (* resychronize to a full source location *)
+  val resynch     : sourcemap -> pos * sourceloc -> unit
 
-  val lineNo   : sourcemap -> pos -> int
-  val colNo    : sourcemap -> pos -> int
-  val toString : sourcemap -> pos -> string
+  val sourceLoc	: sourcemap -> pos -> sourceloc
+  val fileName	: sourcemap -> pos -> string option
+  val lineNo	: sourcemap -> pos -> int
+  val colNo	: sourcemap -> pos -> int
+  val toString	: sourcemap -> pos -> string
+  val spanToString : sourcemap -> span -> string
 
 end = struct
 
   type pos = Position.int
   type span = pos * pos
-  type sourcemap = (int * pos) list ref
+  type sourceloc = { fileName : string option, lineNo : int, colNo : int }
+  type sourcemap = (sourceloc * pos) list ref
+
+  exception PosMustIncrease
 
   fun forward (p, i) = p + (Position.fromInt i)
 
-  fun mkSourcemap() = ref []
+  fun mkSourcemap() = ref [({fileName = NONE, lineNo = 1, colNo = 0}, ~1)]
+  fun mkSourcemap'(fname) = ref [({fileName = SOME fname, 
+				   lineNo = 1, 
+				   colNo = 0}, ~1)]
   fun same (sm1 : sourcemap, sm2) = (sm1 = sm2)
 
   fun markNewLine sm (newPos : pos) = let
-        val (curLine, pos) = case !sm
-			      of x::_ => x
-			       | nil => (1, ~1)
+        val ({fileName, lineNo, colNo}, pos) = hd (!sm)
         in
           if pos < newPos then
-	    sm := (curLine + 1, newPos)::(!sm)
-	  else ()
+	    sm := ({ fileName = fileName,
+		     lineNo = lineNo + 1,
+		     colNo = 0}, 
+		   newPos)::(!sm)
+	  else () (* raise PosMustIncrease *)
         end
 
-  fun findLB ((lineNo, pos)::sm, pos' : pos) = 
-        if pos <= pos' then (lineNo, pos)
-	else findLB(sm, pos')
-    | findLB _ = (1, ~1)
+  fun resynch sm (newPos : pos, sourceLoc) = let
+        val (_, pos) = hd (!sm)
+        in
+(*          if pos < newPos then *)
+	    sm := (sourceLoc, newPos)::(!sm)
+(*	  else raise PosMustIncrease *)
+        end
 
-  fun lineNo sm pos = #1 (findLB(!sm, pos))
-  fun colNo  sm pos = Position.toInt (pos - (#2 (findLB(!sm, pos))))
+  fun findLB ((loc, pos)::sm, pos' : pos) = 
+        if pos <= pos' then (loc, pos)
+	else findLB(sm, pos')
+    | findLB _ = raise Fail "impossible"
+
+  fun sourceLoc sm pos = let 
+        val ({fileName, lineNo, colNo}, anchor) = findLB(!sm, pos)
+        in
+          {fileName = fileName, lineNo = lineNo, 
+	   colNo = colNo + Position.toInt(pos - anchor)}
+        end
+  fun fileName sm pos = #fileName (sourceLoc sm pos)
+  fun lineNo   sm pos = #lineNo   (sourceLoc sm pos)
+  fun colNo    sm pos = #colNo    (sourceLoc sm pos)
   fun toString sm pos = String.concat [
-	"[", Int.toString (lineNo sm pos), ".",
+	"[", case fileName sm pos
+	      of NONE => ""
+	       | SOME f => f ^ ":",
+	     Int.toString (lineNo sm pos), ".",
 	     Int.toString (colNo  sm pos), "]"]
+  fun spanToString sm (pos1, pos2) = 
+        if lineNo sm pos1 = lineNo sm pos2 andalso
+	   colNo  sm pos1 = colNo  sm pos2 
+	then toString sm pos1
+	else String.concat [
+  	  "[", case fileName sm pos1
+	        of NONE => ""
+	         | SOME f => f ^ ":",
+	       Int.toString (lineNo sm pos1), ".",
+	       Int.toString (colNo  sm pos1), "-",
+	       Int.toString (lineNo sm pos2), ".",
+	       Int.toString (colNo  sm pos2), "]"]
 
 end

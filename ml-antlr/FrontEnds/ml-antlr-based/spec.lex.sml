@@ -48,13 +48,39 @@ fun dec (ri as ref i) = (ri := i-1)
 #[
 ]
 
-    fun innerLex (yystrm_, yyss_, yysm) = let
+    fun yystreamify' p input = ULexBuffer.mkStream (p, input)
+
+    fun yystreamifyReader' p readFn strm = let
+          val s = ref strm
+	  fun iter(strm, n, accum) = 
+	        if n > 1024 then (String.implode (rev accum), strm)
+		else (case readFn strm
+		       of NONE => (String.implode (rev accum), strm)
+			| SOME(c, strm') => iter (strm', n+1, c::accum))
+          fun input() = let
+	        val (data, strm) = iter(!s, 0, [])
+	        in
+	          s := strm;
+		  data
+	        end
+          in
+            yystreamify' p input
+          end
+
+    fun yystreamifyInstream' p strm = yystreamify' p (fn ()=>TextIO.input strm)
+
+    fun innerLex 
+(yystrm_, yyss_, yysm) = let
         (* current start state *)
           val yyss = ref yyss_
 	  fun YYBEGIN ss = (yyss := ss)
 	(* current input stream *)
           val yystrm = ref yystrm_
+	  fun yysetStrm strm = yystrm := strm
 	  fun yygetPos() = ULexBuffer.getpos (!yystrm)
+	  fun yystreamify input = yystreamify' (yygetPos()) input
+	  fun yystreamifyReader readFn strm = yystreamifyReader' (yygetPos()) readFn strm
+	  fun yystreamifyInstream strm = yystreamifyInstream' (yygetPos()) strm
         (* start position of token -- can be updated via skip() *)
 	  val yystartPos = ref (yygetPos())
 	(* get one char of input *)
@@ -109,7 +135,8 @@ fun dec (ri as ref i) = (ri := i-1)
 					 yyactsToMatches (strm, finals, oldMatches)))
 			   | NONE => tryfinal()
 		      end)
-	    fun continue() = 
+	    val yylastwasnref = ref (ULexBuffer.lastWasNL (!yystrm))
+	    fun continue() = let val yylastwasn = !yylastwasnref in
 let
 fun yyAction0 (strm, lastMatch : yymatch) = (yystrm := strm;
        YYBEGIN CONSTR; Tok.OF)
@@ -993,8 +1020,15 @@ fun yyQ55 (strm, lastMatch : yymatch) = (case (yygetc(strm))
 fun yyQ27 (strm, lastMatch : yymatch) = yyAction66(strm, yyNO_MATCH)
 fun yyQ4 (strm, lastMatch : yymatch) = (case (yygetc(strm))
        of NONE =>
-            if ULexBuffer.eof(strm)
-              then UserDeclarations.eof(())
+            if ULexBuffer.eof(!(yystrm))
+              then let
+                val yycolno = ref(yygetcolNo(!(yystrm)))
+                val yylineno = ref(yygetlineNo(!(yystrm)))
+                in
+                  (case (!(yyss))
+                   of _ => (UserDeclarations.eof())
+                  (* end case *))
+                end
               else yystuck(lastMatch)
         | SOME(inp, strm') =>
             if inp = 0wx30
@@ -1474,8 +1508,15 @@ fun yyQ29 (strm, lastMatch : yymatch) = (case (yygetc(strm))
 fun yyQ28 (strm, lastMatch : yymatch) = yyAction49(strm, yyNO_MATCH)
 fun yyQ3 (strm, lastMatch : yymatch) = (case (yygetc(strm))
        of NONE =>
-            if ULexBuffer.eof(strm)
-              then UserDeclarations.eof(())
+            if ULexBuffer.eof(!(yystrm))
+              then let
+                val yycolno = ref(yygetcolNo(!(yystrm)))
+                val yylineno = ref(yygetlineNo(!(yystrm)))
+                in
+                  (case (!(yyss))
+                   of _ => (UserDeclarations.eof())
+                  (* end case *))
+                end
               else yystuck(lastMatch)
         | SOME(inp, strm') =>
             if inp = 0wx3A
@@ -1623,8 +1664,15 @@ fun yyQ18 (strm, lastMatch : yymatch) = (case (yygetc(strm))
       (* end case *))
 fun yyQ2 (strm, lastMatch : yymatch) = (case (yygetc(strm))
        of NONE =>
-            if ULexBuffer.eof(strm)
-              then UserDeclarations.eof(())
+            if ULexBuffer.eof(!(yystrm))
+              then let
+                val yycolno = ref(yygetcolNo(!(yystrm)))
+                val yylineno = ref(yygetlineNo(!(yystrm)))
+                in
+                  (case (!(yyss))
+                   of _ => (UserDeclarations.eof())
+                  (* end case *))
+                end
               else yystuck(lastMatch)
         | SOME(inp, strm') =>
             if inp = 0wxE
@@ -1695,8 +1743,15 @@ fun yyQ12 (strm, lastMatch : yymatch) = (case (yygetc(strm))
       (* end case *))
 fun yyQ1 (strm, lastMatch : yymatch) = (case (yygetc(strm))
        of NONE =>
-            if ULexBuffer.eof(strm)
-              then UserDeclarations.eof(())
+            if ULexBuffer.eof(!(yystrm))
+              then let
+                val yycolno = ref(yygetcolNo(!(yystrm)))
+                val yylineno = ref(yygetlineNo(!(yystrm)))
+                in
+                  (case (!(yyss))
+                   of _ => (UserDeclarations.eof())
+                  (* end case *))
+                end
               else yystuck(lastMatch)
         | SOME(inp, strm') =>
             if inp = 0wx28
@@ -1736,8 +1791,15 @@ fun yyQ6 (strm, lastMatch : yymatch) = (case (yygetc(strm))
 fun yyQ5 (strm, lastMatch : yymatch) = yyAction38(strm, yyNO_MATCH)
 fun yyQ0 (strm, lastMatch : yymatch) = (case (yygetc(strm))
        of NONE =>
-            if ULexBuffer.eof(strm)
-              then UserDeclarations.eof(())
+            if ULexBuffer.eof(!(yystrm))
+              then let
+                val yycolno = ref(yygetcolNo(!(yystrm)))
+                val yylineno = ref(yygetlineNo(!(yystrm)))
+                in
+                  (case (!(yyss))
+                   of _ => (UserDeclarations.eof())
+                  (* end case *))
+                end
               else yystuck(lastMatch)
         | SOME(inp, strm') =>
             if inp = 0wx28
@@ -1759,7 +1821,10 @@ in
     | INITIAL => yyQ4(!(yystrm), yyNO_MATCH)
   (* end case *))
 end
-            and skip() = (yystartPos := yygetPos(); continue())
+end
+            and skip() = (yystartPos := yygetPos(); 
+			  yylastwasnref := ULexBuffer.lastWasNL (!yystrm);
+			  continue())
 	    in (continue(), (!yystartPos, yygetPos()), !yystrm, !yyss) end
           in 
             lex()
@@ -1773,9 +1838,11 @@ end
 		(yystart_state * tok * span * prestrm * yystart_state) option ref
     type strm = (prestrm * yystart_state)
 
-    fun lex sm (STRM (yystrm, memo), ss) = (case !memo
+    fun lex sm 
+(STRM (yystrm, memo), ss) = (case !memo
 	  of NONE => let
-	     val (tok, span, yystrm', ss') = innerLex (yystrm, ss, sm)
+	     val (tok, span, yystrm', ss') = innerLex 
+(yystrm, ss, sm)
 	     val strm' = STRM (yystrm', ref NONE);
 	     in 
 	       memo := SOME (ss, tok, span, strm', ss');
@@ -1786,30 +1853,15 @@ end
 		 (tok, span, (strm', ss''))
 	       else (
 		 memo := NONE;
-		 lex sm (STRM (yystrm, memo), ss))
+		 lex sm 
+(STRM (yystrm, memo), ss))
          (* end case *))
 
-    fun streamify input = (STRM (ULexBuffer.mkStream input, ref NONE), 
-			   INITIAL)
-
-    fun streamifyReader readFn strm = let
-          val s = ref strm
-	  fun iter(strm, n, accum) = 
-	        if n > 1024 then (String.implode (rev accum), strm)
-		else (case readFn strm
-		       of NONE => (String.implode (rev accum), strm)
-			| SOME(c, strm') => iter (strm', n+1, c::accum))
-          fun input() = let
-	        val (data, strm) = iter(!s, 0, [])
-	        in
-	          s := strm;
-		  data
-	        end
-          in
-            streamify input
-          end
-
-    fun streamifyInstream strm = streamify (fn ()=>TextIO.input strm)
+    fun streamify input = (STRM (yystreamify' 0 input, ref NONE), INITIAL)
+    fun streamifyReader readFn strm = (STRM (yystreamifyReader' 0 readFn strm, ref NONE), 
+				       INITIAL)
+    fun streamifyInstream strm = (STRM (yystreamifyInstream' 0 strm, ref NONE), 
+				  INITIAL)
 
     fun getPos (STRM (strm, _), _) = ULexBuffer.getpos strm
 

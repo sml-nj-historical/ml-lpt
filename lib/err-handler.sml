@@ -134,7 +134,7 @@ end = struct
     fun allRepairs strm = 
 	  (if isEOF strm then [] else [mkDelete strm]) @
 	  map (mkInsert strm) allToks @
-	  map (mkSubst strm)  allToks
+	  (if isEOF strm then [] else map (mkSubst strm) allToks)
 
     fun involvesKW (_, r) = (case r
 	  of AR.Insert toks => List.exists Tok.isKW toks

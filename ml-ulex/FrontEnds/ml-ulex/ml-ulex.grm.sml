@@ -8,6 +8,7 @@ MLULexTokens = struct
       | UCHAR of UTF8.wchar
       | CHAR of char
       | INT of int
+      | EOFMARK
       | ASCII8
       | ASCII7
       | UTF8
@@ -41,7 +42,7 @@ MLULexTokens = struct
       | AMP
       | BAR
 
-    val allToks = [EOF, BOGUS, ASCII8, ASCII7, UTF8, KW_charset, KW_let, KW_states, KW_name, KW_arg, KW_defs, EQ, DARROW, DASH, NEG, CARAT, COMMA, SLASH, GT, LT, RCB, LCB, RSB, LSB, RP, LP, SEMI, QUERY, STAR, PLUS, DOLLAR, DOT, AMP, BAR]
+    val allToks = [EOF, BOGUS, EOFMARK, ASCII8, ASCII7, UTF8, KW_charset, KW_let, KW_states, KW_name, KW_arg, KW_defs, EQ, DARROW, DASH, NEG, CARAT, COMMA, SLASH, GT, LT, RCB, LCB, RSB, LSB, RP, LP, SEMI, QUERY, STAR, PLUS, DOLLAR, DOT, AMP, BAR]
 
     fun toString tok =
 (case (tok)
@@ -52,6 +53,7 @@ MLULexTokens = struct
   | (UCHAR(_)) => "UCHAR"
   | (CHAR(_)) => "CHAR"
   | (INT(_)) => "INT"
+  | (EOFMARK) => "<<EOF>>"
   | (ASCII8) => "ascii8"
   | (ASCII7) => "ascii7"
   | (UTF8) => "utf8"
@@ -94,6 +96,7 @@ MLULexTokens = struct
   | (UCHAR(_)) => false
   | (CHAR(_)) => false
   | (INT(_)) => false
+  | (EOFMARK) => false
   | (ASCII8) => false
   | (ASCII7) => false
   | (UTF8) => false
@@ -173,8 +176,24 @@ fun decl_PROD_1_ACT (env, spec, directive, directive_SPAN : (Lex.pos * Lex.pos),
 	  end)
 fun decl_PROD_2_ACT (env, CODE, spec, KW_defs, CODE_SPAN : (Lex.pos * Lex.pos), KW_defs_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( LS.updDecls (spec, CODE), env)
-fun decl_PROD_3_ACT (env, rule, spec, rule_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( LS.addRule (spec, rule), env)
+fun decl_PROD_3_SUBRULE_1_PROD_1_SUBRULE_1_PROD_1_ACT (ID, LT, env, spec, COMMA, ID_SPAN : (Lex.pos * Lex.pos), LT_SPAN : (Lex.pos * Lex.pos), COMMA_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
+  ( ID)
+fun decl_PROD_3_SUBRULE_2_PROD_1_SUBRULE_1_PROD_1_ACT (SS, env, spec, SS_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
+  ( fn c => c)
+fun decl_PROD_3_SUBRULE_2_PROD_1_SUBRULE_1_PROD_2_ACT (SS, env, spec, CARAT, SS_SPAN : (Lex.pos * Lex.pos), CARAT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
+  ( fn c => "if not yylastwasn then REJECT() else (" ^ c ^")")
+fun decl_PROD_3_SUBRULE_2_PROD_1_ACT (SS, re, env, CODE, spec, addNewlCheck, DARROW, SS_SPAN : (Lex.pos * Lex.pos), re_SPAN : (Lex.pos * Lex.pos), CODE_SPAN : (Lex.pos * Lex.pos), addNewlCheck_SPAN : (Lex.pos * Lex.pos), DARROW_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
+  (  LS.addRule (spec, 
+	         ((Option.map (listToASet o (map Atom.atom)) SS, re), addNewlCheck CODE)),
+	       env )
+fun decl_PROD_3_SUBRULE_2_PROD_2_ACT (SS, env, CODE, spec, EOFMARK, DARROW, SS_SPAN : (Lex.pos * Lex.pos), CODE_SPAN : (Lex.pos * Lex.pos), EOFMARK_SPAN : (Lex.pos * Lex.pos), DARROW_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
+  (  case SS
+		of NONE => (LS.addEOFRule (spec, ("_", CODE)), env)
+		 | SOME ss => (foldl (fn (s, spec) => LS.addEOFRuleFront (spec, (s, CODE)))
+			             spec ss,
+			       env) )
+fun decl_PROD_3_ACT (SS, env, main, spec, SS_SPAN : (Lex.pos * Lex.pos), main_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
+  (  main )
 fun directive_PROD_1_ACT (EQ, ID, re, env, conf, KW_let, EQ_SPAN : (Lex.pos * Lex.pos), ID_SPAN : (Lex.pos * Lex.pos), re_SPAN : (Lex.pos * Lex.pos), KW_let_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( conf, AMap.insert (env, Atom.atom ID, re))
 fun directive_PROD_2_ACT (env, CODE, conf, KW_arg, CODE_SPAN : (Lex.pos * Lex.pos), KW_arg_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
@@ -192,14 +211,6 @@ fun directive_PROD_4_SUBRULE_1_PROD_3_ACT (env, conf, ASCII8, KW_charset, ASCII8
   (  LS.updClamp (conf, LS.CLAMP255), env)
 fun directive_PROD_5_ACT (ID, env, conf, KW_name, ID_SPAN : (Lex.pos * Lex.pos), KW_name_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( LS.updStructName (conf, ID), env)
-fun rule_PROD_1_SUBRULE_1_PROD_1_SUBRULE_1_PROD_1_ACT (ID, LT, env, COMMA, ID_SPAN : (Lex.pos * Lex.pos), LT_SPAN : (Lex.pos * Lex.pos), COMMA_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( ID)
-fun rule_PROD_1_SUBRULE_2_PROD_1_ACT (SR1, env, SR1_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( fn c => c)
-fun rule_PROD_1_SUBRULE_2_PROD_2_ACT (SR1, env, CARAT, SR1_SPAN : (Lex.pos * Lex.pos), CARAT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( fn c => "if not yylastwasn then REJECT() else (" ^ c ^")")
-fun rule_PROD_1_ACT (re, SR1, env, CODE, addNewlCheck, DARROW, re_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), CODE_SPAN : (Lex.pos * Lex.pos), addNewlCheck_SPAN : (Lex.pos * Lex.pos), DARROW_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( (Option.map (listToASet o (map Atom.atom)) SR1, re), addNewlCheck CODE)
 fun or_re_PROD_1_ACT (SR, env, and_re, SR_SPAN : (Lex.pos * Lex.pos), and_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( foldl (RE.mkOr o flip) and_re SR)
 fun and_re_PROD_1_ACT (SR, env, not_re, SR_SPAN : (Lex.pos * Lex.pos), not_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
@@ -231,7 +242,7 @@ fun prim_re_PROD_1_ACT (ID, LCB, RCB, env, ID_SPAN : (Lex.pos * Lex.pos), LCB_SP
 fun prim_re_PROD_3_ACT (env, char, char_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( RE.mkSym char)
 fun prim_re_PROD_4_ACT (DOT, env, DOT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( RE.any)
+  ( RE.mkSymSet SIS.universe)
 fun prim_re_PROD_5_SUBRULE_1_PROD_1_ACT (LSB, env, CARAT, LSB_SPAN : (Lex.pos * Lex.pos), CARAT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( SIS.complement)
 fun prim_re_PROD_5_SUBRULE_1_PROD_2_ACT (LSB, env, DASH, LSB_SPAN : (Lex.pos * Lex.pos), DASH_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
@@ -266,11 +277,9 @@ fun ARGS_7 (env, SEMI, decl, spec, errs) =
   (decl)
 fun ARGS_10 (env, spec, errs) = 
   (LS.getConf spec, env)
-fun ARGS_13 (env, spec, errs) = 
+fun ARGS_17 (SS, env, spec, addNewlCheck, errs) = 
   (env)
-fun ARGS_15 (EQ, ID, env, conf, KW_let, errs) = 
-  (env)
-fun ARGS_27 (SR1, env, addNewlCheck, errs) = 
+fun ARGS_20 (EQ, ID, env, conf, KW_let, errs) = 
   (env)
 fun ARGS_28 (env, errs) = 
   (env)
@@ -343,6 +352,10 @@ fun matchCHAR strm = (case (lex(strm))
 (* end case *))
 fun matchINT strm = (case (lex(strm))
  of (Tok.INT(x), span, strm') => (x, span, strm')
+  | _ => fail()
+(* end case *))
+fun matchEOFMARK strm = (case (lex(strm))
+ of (Tok.EOFMARK, span, strm') => ((), span, strm')
   | _ => fail()
 (* end case *))
 fun matchASCII8 strm = (case (lex(strm))
@@ -873,88 +886,12 @@ and prim_re_NT (env_RES) (strm) = let
           | _ => fail()
         (* end case *))
       end
-fun rule_NT (env_RES) (strm) = let
-      fun rule_PROD_1_SUBRULE_1_NT (strm) = let
-            val (LT_RES, LT_SPAN, strm') = matchLT(strm)
-            fun rule_PROD_1_SUBRULE_1_PROD_1_SUBRULE_1_NT (strm) = let
-                  val (ID_RES, ID_SPAN, strm') = matchID(strm)
-                  fun rule_PROD_1_SUBRULE_1_PROD_1_SUBRULE_1_PROD_1_SUBRULE_1_NT (strm) = let
-                        val (COMMA_RES, COMMA_SPAN, strm') = matchCOMMA(strm)
-                        val FULL_SPAN = (#1(COMMA_SPAN), #2(COMMA_SPAN))
-                        in
-                          ((), FULL_SPAN, strm')
-                        end
-                  fun rule_PROD_1_SUBRULE_1_PROD_1_SUBRULE_1_PROD_1_SUBRULE_1_PRED (strm) = (case (lex(strm))
-                         of (Tok.COMMA, _, strm') => true
-                          | _ => false
-                        (* end case *))
-                  val (COMMA_RES, COMMA_SPAN, strm') = EBNF.optional(rule_PROD_1_SUBRULE_1_PROD_1_SUBRULE_1_PROD_1_SUBRULE_1_PRED, rule_PROD_1_SUBRULE_1_PROD_1_SUBRULE_1_PROD_1_SUBRULE_1_NT, strm')
-                  val FULL_SPAN = (#1(ID_SPAN), #2(COMMA_SPAN))
-                  in
-                    (UserCode.rule_PROD_1_SUBRULE_1_PROD_1_SUBRULE_1_PROD_1_ACT (ID_RES, LT_RES, env_RES, COMMA_RES, ID_SPAN : (Lex.pos * Lex.pos), LT_SPAN : (Lex.pos * Lex.pos), COMMA_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
-                      FULL_SPAN, strm')
-                  end
-            fun rule_PROD_1_SUBRULE_1_PROD_1_SUBRULE_1_PRED (strm) = (case (lex(strm))
-                   of (Tok.ID(_), _, strm') => true
-                    | _ => false
-                  (* end case *))
-            val (SR_RES, SR_SPAN, strm') = EBNF.posclos(rule_PROD_1_SUBRULE_1_PROD_1_SUBRULE_1_PRED, rule_PROD_1_SUBRULE_1_PROD_1_SUBRULE_1_NT, strm')
-            val (GT_RES, GT_SPAN, strm') = matchGT(strm')
-            val FULL_SPAN = (#1(LT_SPAN), #2(GT_SPAN))
-            in
-              ((SR_RES), FULL_SPAN, strm')
-            end
-      fun rule_PROD_1_SUBRULE_1_PRED (strm) = (case (lex(strm))
-             of (Tok.LT, _, strm') => true
-              | _ => false
-            (* end case *))
-      val (SR1_RES, SR1_SPAN, strm') = EBNF.optional(rule_PROD_1_SUBRULE_1_PRED, rule_PROD_1_SUBRULE_1_NT, strm)
-      val (addNewlCheck_RES, addNewlCheck_SPAN, strm') = let
-      fun rule_PROD_1_SUBRULE_2_NT (strm) = let
-            fun rule_PROD_1_SUBRULE_2_PROD_1 (strm) = let
-                  val FULL_SPAN = (Err.getPos(strm), Err.getPos(strm))
-                  in
-                    (UserCode.rule_PROD_1_SUBRULE_2_PROD_1_ACT (SR1_RES, env_RES, SR1_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
-                      FULL_SPAN, strm)
-                  end
-            fun rule_PROD_1_SUBRULE_2_PROD_2 (strm) = let
-                  val (CARAT_RES, CARAT_SPAN, strm') = matchCARAT(strm)
-                  val FULL_SPAN = (#1(CARAT_SPAN), #2(CARAT_SPAN))
-                  in
-                    (UserCode.rule_PROD_1_SUBRULE_2_PROD_2_ACT (SR1_RES, env_RES, CARAT_RES, SR1_SPAN : (Lex.pos * Lex.pos), CARAT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
-                      FULL_SPAN, strm')
-                  end
-            in
-              (case (lex(strm))
-               of (Tok.CARAT, _, strm') => rule_PROD_1_SUBRULE_2_PROD_2(strm)
-                | (Tok.DOT, _, strm') => rule_PROD_1_SUBRULE_2_PROD_1(strm)
-                | (Tok.LP, _, strm') => rule_PROD_1_SUBRULE_2_PROD_1(strm)
-                | (Tok.LSB, _, strm') => rule_PROD_1_SUBRULE_2_PROD_1(strm)
-                | (Tok.LCB, _, strm') => rule_PROD_1_SUBRULE_2_PROD_1(strm)
-                | (Tok.NEG, _, strm') => rule_PROD_1_SUBRULE_2_PROD_1(strm)
-                | (Tok.CHAR(_), _, strm') => rule_PROD_1_SUBRULE_2_PROD_1(strm)
-                | (Tok.UCHAR(_), _, strm') =>
-                    rule_PROD_1_SUBRULE_2_PROD_1(strm)
-                | _ => fail()
-              (* end case *))
-            end
-      in
-        rule_PROD_1_SUBRULE_2_NT(strm')
-      end
-      val (re_RES, re_SPAN, strm') = (re_NT (UserCode.ARGS_27 (SR1_RES, env_RES, addNewlCheck_RES, errs_REFC)))(strm')
-      val (DARROW_RES, DARROW_SPAN, strm') = matchDARROW(strm')
-      val (CODE_RES, CODE_SPAN, strm') = matchCODE(strm')
-      val FULL_SPAN = (#1(SR1_SPAN), #2(CODE_SPAN))
-      in
-        (UserCode.rule_PROD_1_ACT (re_RES, SR1_RES, env_RES, CODE_RES, addNewlCheck_RES, DARROW_RES, re_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), CODE_SPAN : (Lex.pos * Lex.pos), addNewlCheck_SPAN : (Lex.pos * Lex.pos), DARROW_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
-          FULL_SPAN, strm')
-      end
 fun directive_NT (conf_RES, env_RES) (strm) = let
       fun directive_PROD_1 (strm) = let
             val (KW_let_RES, KW_let_SPAN, strm') = matchKW_let(strm)
             val (ID_RES, ID_SPAN, strm') = matchID(strm')
             val (EQ_RES, EQ_SPAN, strm') = matchEQ(strm')
-            val (re_RES, re_SPAN, strm') = (re_NT (UserCode.ARGS_15 (EQ_RES, ID_RES, env_RES, conf_RES, KW_let_RES, errs_REFC)))(strm')
+            val (re_RES, re_SPAN, strm') = (re_NT (UserCode.ARGS_20 (EQ_RES, ID_RES, env_RES, conf_RES, KW_let_RES, errs_REFC)))(strm')
             val FULL_SPAN = (#1(KW_let_SPAN), #2(re_SPAN))
             in
               (UserCode.directive_PROD_1_ACT (EQ_RES, ID_RES, re_RES, env_RES, conf_RES, KW_let_RES, EQ_SPAN : (Lex.pos * Lex.pos), ID_SPAN : (Lex.pos * Lex.pos), re_SPAN : (Lex.pos * Lex.pos), KW_let_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
@@ -1076,10 +1013,131 @@ fun decl_NT (spec_RES, env_RES) (strm) = let
                 FULL_SPAN, strm')
             end
       fun decl_PROD_3 (strm) = let
-            val (rule_RES, rule_SPAN, strm') = (rule_NT (UserCode.ARGS_13 (env_RES, spec_RES, errs_REFC)))(strm)
-            val FULL_SPAN = (#1(rule_SPAN), #2(rule_SPAN))
+            fun decl_PROD_3_SUBRULE_1_NT (strm) = let
+                  val (LT_RES, LT_SPAN, strm') = matchLT(strm)
+                  fun decl_PROD_3_SUBRULE_1_PROD_1_SUBRULE_1_NT (strm) = let
+                        val (ID_RES, ID_SPAN, strm') = matchID(strm)
+                        fun decl_PROD_3_SUBRULE_1_PROD_1_SUBRULE_1_PROD_1_SUBRULE_1_NT (strm) = let
+                              val (COMMA_RES, COMMA_SPAN, strm') = matchCOMMA(strm)
+                              val FULL_SPAN = (#1(COMMA_SPAN), #2(COMMA_SPAN))
+                              in
+                                ((), FULL_SPAN, strm')
+                              end
+                        fun decl_PROD_3_SUBRULE_1_PROD_1_SUBRULE_1_PROD_1_SUBRULE_1_PRED (strm) = (case (lex(strm))
+                               of (Tok.COMMA, _, strm') => true
+                                | _ => false
+                              (* end case *))
+                        val (COMMA_RES, COMMA_SPAN, strm') = EBNF.optional(decl_PROD_3_SUBRULE_1_PROD_1_SUBRULE_1_PROD_1_SUBRULE_1_PRED, decl_PROD_3_SUBRULE_1_PROD_1_SUBRULE_1_PROD_1_SUBRULE_1_NT, strm')
+                        val FULL_SPAN = (#1(ID_SPAN), #2(COMMA_SPAN))
+                        in
+                          (UserCode.decl_PROD_3_SUBRULE_1_PROD_1_SUBRULE_1_PROD_1_ACT (ID_RES, LT_RES, env_RES, spec_RES, COMMA_RES, ID_SPAN : (Lex.pos * Lex.pos), LT_SPAN : (Lex.pos * Lex.pos), COMMA_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
+                            FULL_SPAN, strm')
+                        end
+                  fun decl_PROD_3_SUBRULE_1_PROD_1_SUBRULE_1_PRED (strm) = (case (lex(strm))
+                         of (Tok.ID(_), _, strm') => true
+                          | _ => false
+                        (* end case *))
+                  val (SR_RES, SR_SPAN, strm') = EBNF.posclos(decl_PROD_3_SUBRULE_1_PROD_1_SUBRULE_1_PRED, decl_PROD_3_SUBRULE_1_PROD_1_SUBRULE_1_NT, strm')
+                  val (GT_RES, GT_SPAN, strm') = matchGT(strm')
+                  val FULL_SPAN = (#1(LT_SPAN), #2(GT_SPAN))
+                  in
+                    ((SR_RES), FULL_SPAN, strm')
+                  end
+            fun decl_PROD_3_SUBRULE_1_PRED (strm) = (case (lex(strm))
+                   of (Tok.LT, _, strm') => true
+                    | _ => false
+                  (* end case *))
+            val (SS_RES, SS_SPAN, strm') = EBNF.optional(decl_PROD_3_SUBRULE_1_PRED, decl_PROD_3_SUBRULE_1_NT, strm)
+            val (main_RES, main_SPAN, strm') = let
+            fun decl_PROD_3_SUBRULE_2_NT (strm) = let
+                  fun decl_PROD_3_SUBRULE_2_PROD_1 (strm) = let
+                        val (addNewlCheck_RES, addNewlCheck_SPAN, strm') = let
+                        fun decl_PROD_3_SUBRULE_2_PROD_1_SUBRULE_1_NT (strm) = let
+                              fun decl_PROD_3_SUBRULE_2_PROD_1_SUBRULE_1_PROD_1 (strm) = let
+                                    val FULL_SPAN = (Err.getPos(strm),
+                                      Err.getPos(strm))
+                                    in
+                                      (UserCode.decl_PROD_3_SUBRULE_2_PROD_1_SUBRULE_1_PROD_1_ACT (SS_RES, env_RES, spec_RES, SS_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
+                                        FULL_SPAN, strm)
+                                    end
+                              fun decl_PROD_3_SUBRULE_2_PROD_1_SUBRULE_1_PROD_2 (strm) = let
+                                    val (CARAT_RES, CARAT_SPAN, strm') = matchCARAT(strm)
+                                    val FULL_SPAN = (#1(CARAT_SPAN),
+                                      #2(CARAT_SPAN))
+                                    in
+                                      (UserCode.decl_PROD_3_SUBRULE_2_PROD_1_SUBRULE_1_PROD_2_ACT (SS_RES, env_RES, spec_RES, CARAT_RES, SS_SPAN : (Lex.pos * Lex.pos), CARAT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
+                                        FULL_SPAN, strm')
+                                    end
+                              in
+                                (case (lex(strm))
+                                 of (Tok.CARAT, _, strm') =>
+                                      decl_PROD_3_SUBRULE_2_PROD_1_SUBRULE_1_PROD_2(strm)
+                                  | (Tok.DOT, _, strm') =>
+                                      decl_PROD_3_SUBRULE_2_PROD_1_SUBRULE_1_PROD_1(strm)
+                                  | (Tok.LP, _, strm') =>
+                                      decl_PROD_3_SUBRULE_2_PROD_1_SUBRULE_1_PROD_1(strm)
+                                  | (Tok.LSB, _, strm') =>
+                                      decl_PROD_3_SUBRULE_2_PROD_1_SUBRULE_1_PROD_1(strm)
+                                  | (Tok.LCB, _, strm') =>
+                                      decl_PROD_3_SUBRULE_2_PROD_1_SUBRULE_1_PROD_1(strm)
+                                  | (Tok.NEG, _, strm') =>
+                                      decl_PROD_3_SUBRULE_2_PROD_1_SUBRULE_1_PROD_1(strm)
+                                  | (Tok.CHAR(_), _, strm') =>
+                                      decl_PROD_3_SUBRULE_2_PROD_1_SUBRULE_1_PROD_1(strm)
+                                  | (Tok.UCHAR(_), _, strm') =>
+                                      decl_PROD_3_SUBRULE_2_PROD_1_SUBRULE_1_PROD_1(strm)
+                                  | _ => fail()
+                                (* end case *))
+                              end
+                        in
+                          decl_PROD_3_SUBRULE_2_PROD_1_SUBRULE_1_NT(strm)
+                        end
+                        val (re_RES, re_SPAN, strm') = (re_NT (UserCode.ARGS_17 (SS_RES, env_RES, spec_RES, addNewlCheck_RES, errs_REFC)))(strm')
+                        val (DARROW_RES, DARROW_SPAN, strm') = matchDARROW(strm')
+                        val (CODE_RES, CODE_SPAN, strm') = matchCODE(strm')
+                        val FULL_SPAN = (#1(addNewlCheck_SPAN), #2(CODE_SPAN))
+                        in
+                          (UserCode.decl_PROD_3_SUBRULE_2_PROD_1_ACT (SS_RES, re_RES, env_RES, CODE_RES, spec_RES, addNewlCheck_RES, DARROW_RES, SS_SPAN : (Lex.pos * Lex.pos), re_SPAN : (Lex.pos * Lex.pos), CODE_SPAN : (Lex.pos * Lex.pos), addNewlCheck_SPAN : (Lex.pos * Lex.pos), DARROW_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
+                            FULL_SPAN, strm')
+                        end
+                  fun decl_PROD_3_SUBRULE_2_PROD_2 (strm) = let
+                        val (EOFMARK_RES, EOFMARK_SPAN, strm') = matchEOFMARK(strm)
+                        val (DARROW_RES, DARROW_SPAN, strm') = matchDARROW(strm')
+                        val (CODE_RES, CODE_SPAN, strm') = matchCODE(strm')
+                        val FULL_SPAN = (#1(EOFMARK_SPAN), #2(CODE_SPAN))
+                        in
+                          (UserCode.decl_PROD_3_SUBRULE_2_PROD_2_ACT (SS_RES, env_RES, CODE_RES, spec_RES, EOFMARK_RES, DARROW_RES, SS_SPAN : (Lex.pos * Lex.pos), CODE_SPAN : (Lex.pos * Lex.pos), EOFMARK_SPAN : (Lex.pos * Lex.pos), DARROW_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
+                            FULL_SPAN, strm')
+                        end
+                  in
+                    (case (lex(strm))
+                     of (Tok.EOFMARK, _, strm') =>
+                          decl_PROD_3_SUBRULE_2_PROD_2(strm)
+                      | (Tok.DOT, _, strm') =>
+                          decl_PROD_3_SUBRULE_2_PROD_1(strm)
+                      | (Tok.LP, _, strm') =>
+                          decl_PROD_3_SUBRULE_2_PROD_1(strm)
+                      | (Tok.LSB, _, strm') =>
+                          decl_PROD_3_SUBRULE_2_PROD_1(strm)
+                      | (Tok.LCB, _, strm') =>
+                          decl_PROD_3_SUBRULE_2_PROD_1(strm)
+                      | (Tok.CARAT, _, strm') =>
+                          decl_PROD_3_SUBRULE_2_PROD_1(strm)
+                      | (Tok.NEG, _, strm') =>
+                          decl_PROD_3_SUBRULE_2_PROD_1(strm)
+                      | (Tok.CHAR(_), _, strm') =>
+                          decl_PROD_3_SUBRULE_2_PROD_1(strm)
+                      | (Tok.UCHAR(_), _, strm') =>
+                          decl_PROD_3_SUBRULE_2_PROD_1(strm)
+                      | _ => fail()
+                    (* end case *))
+                  end
             in
-              (UserCode.decl_PROD_3_ACT (env_RES, rule_RES, spec_RES, rule_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
+              decl_PROD_3_SUBRULE_2_NT(strm')
+            end
+            val FULL_SPAN = (#1(SS_SPAN), #2(main_SPAN))
+            in
+              (UserCode.decl_PROD_3_ACT (SS_RES, env_RES, main_RES, spec_RES, SS_SPAN : (Lex.pos * Lex.pos), main_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                 FULL_SPAN, strm')
             end
       in
@@ -1091,6 +1149,7 @@ fun decl_NT (spec_RES, env_RES) (strm) = let
           | (Tok.LT, _, strm') => decl_PROD_3(strm)
           | (Tok.CARAT, _, strm') => decl_PROD_3(strm)
           | (Tok.NEG, _, strm') => decl_PROD_3(strm)
+          | (Tok.EOFMARK, _, strm') => decl_PROD_3(strm)
           | (Tok.CHAR(_), _, strm') => decl_PROD_3(strm)
           | (Tok.UCHAR(_), _, strm') => decl_PROD_3(strm)
           | (Tok.KW_arg, _, strm') => decl_PROD_1(strm)
@@ -1134,6 +1193,7 @@ fun decls_NT (spec_RES, env_RES) (strm) = let
           | (Tok.KW_states, _, strm') => decls_PROD_1(strm)
           | (Tok.KW_let, _, strm') => decls_PROD_1(strm)
           | (Tok.KW_charset, _, strm') => decls_PROD_1(strm)
+          | (Tok.EOFMARK, _, strm') => decls_PROD_1(strm)
           | (Tok.CHAR(_), _, strm') => decls_PROD_1(strm)
           | (Tok.UCHAR(_), _, strm') => decls_PROD_1(strm)
           | _ => fail()

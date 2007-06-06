@@ -11,7 +11,7 @@
 structure ULexBuffer : sig
 
   type stream
-  val mkStream : (unit -> string) -> stream
+  val mkStream : (AntlrStreamPos.pos * (unit -> string)) -> stream
   val getc : stream -> (Char.char * stream) option
   val getpos : stream -> AntlrStreamPos.pos
   val subtract : stream * stream -> Substring.substring
@@ -29,8 +29,8 @@ end = struct
   }
   and more = UNKNOWN | YES of buf | NO
         
-  fun mkStream input = 
-        (S (B {data = "", basePos = 0, 
+  fun mkStream (pos, input) = 
+        (S (B {data = "", basePos = pos, 
 	       more = ref UNKNOWN,
 	       input = input},
 	    0, true))

@@ -1,16 +1,10 @@
-%import "a.grm";
+%import "a.grm" %dropping stmt, exp;
 
 %tokens
-  : ID of string
-  | INT of int
-  | REAL of real
-  | LP ("(")	| RP (")")
-  | PLUS ("+")	| TIMES ("*")
+  : REAL of real
+  | TIMES ("*")
   ;
 
-%drop stmt;
-
-%replace
 exp
   : multExp ("+" multExp)*
   ;
@@ -19,7 +13,6 @@ multExp
   : atomicExp ("*" atomicExp)*
   ;
 
-%extend
 atomicExp
   : REAL
   ;

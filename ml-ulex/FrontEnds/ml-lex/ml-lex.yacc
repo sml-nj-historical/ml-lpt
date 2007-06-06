@@ -95,7 +95,8 @@ Start
 	: Decls LEXMARK Defs LEXMARK Rules
 		(S.Spec {decls = Decls, 
 		         conf = Defs, 
-			 rules = Rules})
+			 rules = Rules,
+			 eofRules = []})
 
 Decls
 	: DECLS	

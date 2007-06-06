@@ -16,7 +16,7 @@ structure ParseFile =
     fun parse filename = let
 	  val _ = Err.status ("parsing " ^ filename) 
 	  val file = TextIO.openIn filename
-          val sm = AntlrStreamPos.mkSourcemap()
+          val sm = AntlrStreamPos.mkSourcemap' filename
 	  val strm = SpecLex.streamifyInstream file
 (*  performance testing 
 fun go 0 = ()

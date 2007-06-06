@@ -16,22 +16,15 @@ structure MLULexInput =
     structure P = MLULexParseFn(L)
 
     fun parseFile fname = let
-          fun parseErr (msg, line, _) = 
-	        (print (Int.toString line);
-		 print ": ";
-		 print msg;
-		 print "\n")
 	  val fstrm = TextIO.openIn fname
 	  val strm = L.streamifyInstream fstrm
-	  val sm = SP.mkSourcemap()
+	  val sm = SP.mkSourcemap' fname
 	  val lex = L.lex sm
 	  val (spec, strm', errors, {errs}) = 
 	        P.parse lex strm
 		before TextIO.closeIn fstrm
 	  fun errMsg ty (pos, err) = print (String.concat [
-		" ", fname, ":",
-		     Int.toString (SP.lineNo sm pos), ".",
-		     Int.toString (SP.colNo sm pos), 
+		" ", SP.toString sm pos, 
 		ty, err, "\n"])
 	  in
             app (errMsg " Syntax error: ") 

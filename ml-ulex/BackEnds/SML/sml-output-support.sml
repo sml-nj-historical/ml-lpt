@@ -142,6 +142,24 @@ structure SMLOutputSupport =
 	      if String.size arg > 0 then "yyarg" else "")
 	  end
 
+    fun mkEOF (eofRules, innerExp) = 
+	  if !Options.lexCompat 
+	  then
+            ML_If (ML_App("yyInput.eof", [ML_RefGet (ML_Var "yystrm")]), 
+		   ML_App("UserDeclarations.eof", [ML_Var "yyarg"]),
+		   innerExp)
+	  else 
+	    ML_If (
+	    ML_App("ULexBuffer.eof", [ML_RefGet (ML_Var "yystrm")]), 
+	    ML_Let("yycolno",  ML_App("ref", [ML_App ("yygetcolNo",  [ML_RefGet (ML_Var "yystrm")])]),
+	    ML_Let("yylineno", ML_App("ref", [ML_App ("yygetlineNo", [ML_RefGet (ML_Var "yystrm")])]), 
+	    ML_Case(ML_RefGet (ML_Var "yyss"),
+	      map (fn ("_", act) => (ML_Wild,		 ML_Raw [ML.Tok ("(" ^ act ^ ")")])
+		    | (ss,  act) => (ML_ConPat (ss, []), ML_Raw [ML.Tok ("(" ^ act ^ ")")]))
+	          eofRules
+	    ))),
+	    innerExp)
+
     val lexTemplate  = ExpandFile.mkTemplate "BackEnds/SML/template-ml-lex.sml" 
     val ulexTemplate = ExpandFile.mkTemplate "BackEnds/SML/template-ml-ulex.sml" 
 

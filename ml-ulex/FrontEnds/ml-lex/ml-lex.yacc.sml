@@ -398,8 +398,9 @@ Decls1left, _)) :: rest671)) => let val  result = MlyValue.Start (fn _
  in (
 S.Spec {decls = Decls, 
 		         conf = Defs, 
-			 rules = Rules})
-
+			 rules = Rules,
+			 eofRules = []}
+)
 end)
  in ( LrTable.NT 0, ( result, Decls1left, Rules1right), rest671)
 end

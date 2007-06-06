@@ -31,7 +31,8 @@ structure LexOutputSpec =
 	arg : string,
 	actions : action vector,
 	dfa : dfa_state list,
-	startStates : (string * dfa_state) list
+	startStates : (string * dfa_state) list,
+	eofRules : (string * action) list
       }
 
   end

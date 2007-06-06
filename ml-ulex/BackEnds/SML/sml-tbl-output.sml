@@ -20,13 +20,14 @@ structure SMLTblOutput : OUTPUT =
 	        if !Options.lexCompat 
 		then "#\"" ^ (Char.toString o Char.chr o Word.toInt) w ^ "\""
 		else "0w" ^ Word.fmt StringCvt.DEC w
-	  val ASCII = SIS.interval (0w0, 0w255)
+(*	  val ASCII = SIS.interval (0w0, 0w255) *)
 	  fun mkTrans (set, state) = 
 	        map (fn (c1, c2) => String.concat [
 			"(", w2s c1, ",",
 			     w2s c2, ",",
 			     Int.toString (idOf state), ")"])
-		    (SIS.intervals (SIS.intersect (set, ASCII)))
+		    (SIS.intervals set)
+(*		    (SIS.intervals (SIS.intersect (set, ASCII))) *)
 	  val allTransitions = List.concat (map mkTrans (!next))
 	  in 
             String.concat [
@@ -45,7 +46,7 @@ structure SMLTblOutput : OUTPUT =
           end
 
     fun lexerHook spec strm = let
-          val LO.Spec {actions, dfa, startStates, arg, ...} = spec
+          val LO.Spec {actions, dfa, startStates, arg, eofRules, ...} = spec
 	  fun matchSS (label, state) =
 	        (ML_ConPat (label, []), 
 		   ML_App ("yygo yyactTable ", 
@@ -54,16 +55,7 @@ structure SMLTblOutput : OUTPUT =
 				 ML_Var "yyNO_MATCH"]))
 	  val innerExp = ML_Case (ML_RefGet (ML_Var "yyss"),
 				  List.map matchSS startStates)
-	  val eofCheckExp = 
-	        if !Options.lexCompat 
-		then
-		  ML_If (ML_App("yyInput.eof", [ML_RefGet (ML_Var "yystrm")]), 
-			 ML_App("UserDeclarations.eof", [ML_Var "yyarg"]),
-			 innerExp)
-		else 
-		  ML_If (ML_App("ULexBuffer.eof", [ML_RefGet (ML_Var "yystrm")]), 
-			 ML_App("UserDeclarations.eof", [ML_Tuple []]),
-			 innerExp)
+	  val eofCheckExp = mkEOF (eofRules, innerExp)
 	  val actList = Vector.foldri 
 			  (fn (i, _, ls) => (ML_Var o actName) i :: ls)
 			  [] actions

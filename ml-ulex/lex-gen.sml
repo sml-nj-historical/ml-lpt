@@ -206,7 +206,7 @@ structure LexGen :
 
     fun gen spec = let
 (* TODO: check for invalid start states on rules *)
-	  val LexSpec.Spec {decls, conf, rules} = spec
+	  val LexSpec.Spec {decls, conf, rules, eofRules} = spec
 	  val LexSpec.Conf {structName, header,
 			    arg, startStates, ...} = conf
 	  val startStates' = AtomSet.add (startStates, Atom.atom "INITIAL")
@@ -268,7 +268,10 @@ structure LexGen :
 	       dfa = states,
 	       startStates = ListPair.zip 
 			       (List.map Atom.toString startStates, 
-				initStates)
+				initStates),
+               eofRules = case eofRules 
+			   of [] => [("_", "UserDeclarations.eof()")]
+			    | _  => eofRules
 	     }
           end
 
