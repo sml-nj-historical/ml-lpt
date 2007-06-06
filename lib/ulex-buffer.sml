@@ -16,10 +16,11 @@ structure ULexBuffer : sig
   val getpos : stream -> AntlrStreamPos.pos
   val subtract : stream * stream -> Substring.substring
   val eof : stream -> bool
+  val lastWasNL : stream -> bool
 
 end = struct
 
-  datatype stream = S of (buf * int) 
+  datatype stream = S of (buf * int * bool) 
   and buf = B of { 
     data : string,
     basePos : AntlrStreamPos.pos,
@@ -32,17 +33,17 @@ end = struct
         (S (B {data = "", basePos = 0, 
 	       more = ref UNKNOWN,
 	       input = input},
-	    0))
+	    0, true))
 
-  fun getc (S (buf as B {data, basePos, more, input}, pos)) = 
+  fun getc (S (buf as B {data, basePos, more, input}, pos, lastWasNL)) = 
         if pos < String.size data then let
 	    val c = String.sub (data, pos)
 	  in
-	    SOME (c, S (buf, pos+1))
+	    SOME (c, S (buf, pos+1, c = #"\n"))
 	  end
 	else (case !more
 	       of NO => NONE
-		| YES buf' => getc (S (buf', 0))
+		| YES buf' => getc (S (buf', 0, lastWasNL))
 		| UNKNOWN => 
 		    (case input()
 		      of "" => (more := NO; NONE)
@@ -55,17 +56,17 @@ end = struct
 			     }
 			   in
 			     more := YES buf';
-			     getc (S (buf', 0))
+			     getc (S (buf', 0, lastWasNL))
 			   end
 		     (* end case *))
               (* end case *))
 
-  fun getpos (S (B {basePos, ...}, pos)) = AntlrStreamPos.forward (basePos, pos)
+  fun getpos (S (B {basePos, ...}, pos, _)) = AntlrStreamPos.forward (basePos, pos)
 
   fun subtract (new, old) = let
-        val (S (B {data = ndata, basePos = nbasePos, ...}, npos)) = new
+        val (S (B {data = ndata, basePos = nbasePos, ...}, npos, _)) = new
 	val (S (B {data = odata, basePos = obasePos, 
-		   more, input}, opos)) = old
+		   more, input}, opos, _)) = old
         in
           if nbasePos = obasePos then
 	    Substring.substring (ndata, opos, npos-opos)
@@ -76,10 +77,12 @@ end = struct
 		     Substring.extract (
 		       Substring.concat [
 			 Substring.extract (odata, opos, NONE),
-			 subtract (new, S (buf, 0))],
+			 subtract (new, S (buf, 0, false))],
 		       0, NONE)
         end
 
   fun eof s = not (isSome (getc s))
+
+  fun lastWasNL (S (_, _, lastWasNL)) = lastWasNL
 
 end
