@@ -20,14 +20,15 @@ structure SMLTblOutput : OUTPUT =
 	        if !Options.lexCompat 
 		then "#\"" ^ (Char.toString o Char.chr o Word.toInt) w ^ "\""
 		else "0w" ^ Word.fmt StringCvt.DEC w
-(*	  val ASCII = SIS.interval (0w0, 0w255) *)
+	  val ASCII = SIS.interval (0w0, 0w255) 
 	  fun mkTrans (set, state) = 
 	        map (fn (c1, c2) => String.concat [
 			"(", w2s c1, ",",
 			     w2s c2, ",",
 			     Int.toString (idOf state), ")"])
-		    (SIS.intervals set)
-(*		    (SIS.intervals (SIS.intersect (set, ASCII))) *)
+		    (if !Options.lexCompat then
+		       SIS.intervals (SIS.intersect (set, ASCII))
+		     else SIS.intervals set)
 	  val allTransitions = List.concat (map mkTrans (!next))
 	  in 
             String.concat [
