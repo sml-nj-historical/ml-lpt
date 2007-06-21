@@ -92,7 +92,7 @@
 		diff 
 	      end
 
-	fun eof (Stream {strm, ...}) = TSIO.endOfStream strm
+	fun eof s = not (isSome (getc s))
 
 	fun lastWasNL (Stream {lastWasNL, ...}) = lastWasNL
 
