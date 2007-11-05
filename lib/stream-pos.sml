@@ -48,10 +48,13 @@ end = struct
 
   fun forward (p, i) = p + (Position.fromInt i)
 
-  fun mkSourcemap() = ref [({fileName = NONE, lineNo = 1, colNo = 0}, ~1)]
-  fun mkSourcemap'(fname) = ref [({fileName = SOME fname, 
-				   lineNo = 1, 
-				   colNo = 0}, ~1)]
+  fun mkSrcMap fileOpt = ref [
+	  ({fileName = fileOpt, lineNo = 1, colNo = 0}, Position.fromInt ~1)
+	]
+
+  fun mkSourcemap () = mkSrcMap NONE
+  fun mkSourcemap' (fname) = mkSrcMap (SOME fname)
+
   fun same (sm1 : sourcemap, sm2) = (sm1 = sm2)
 
   fun markNewLine sm (newPos : pos) = let
