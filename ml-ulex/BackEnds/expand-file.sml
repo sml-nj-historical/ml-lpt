@@ -53,7 +53,7 @@ structure ExpandFile : sig
     val prefixPlaceholder = RE.prefix placeholderRE SS.getc
 
     fun findPlaceholder s = (case prefixPlaceholder(SS.full s)
-	   of SOME(M.Match(_, [M.Match(SOME{pos, len}, _)]), _) =>
+	   of SOME(M.Match(_, [M.Match({pos, len}, _)]), _) =>
 		SOME(SS.string(SS.slice(pos, 0, SOME len)))
 	    | _ => NONE
 	  (* end case *))
