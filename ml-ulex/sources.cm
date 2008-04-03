@@ -15,8 +15,9 @@ is
   $/smlnj-lib.cm
   $/pp-lib.cm
   $/ml-yacc-lib.cm
-  $/regexp-lib.cm
   $/ml-lpt-lib.cm 
+
+  ../common/lpt-common.cm
 
   FrontEnds/lex-spec.sml
 
@@ -57,7 +58,6 @@ is
 
   BackEnds/lex-output-spec.sml
   BackEnds/output-sig.sml
-  BackEnds/expand-file.sml
 
   BackEnds/Dot/dot-output.sml
   BackEnds/Dump/dump-output.sml

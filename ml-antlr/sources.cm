@@ -28,8 +28,9 @@ is
   $/basis.cm
   $/smlnj-lib.cm
   $/pp-lib.cm
-  $/regexp-lib.cm
   $/ml-lpt-lib.cm
+
+  ../common/lpt-common.cm
 
   BackEnds/back-end-sig.sml
 
@@ -66,8 +67,6 @@ is
 #else
   FrontEnds/ml-antlr-based/spec.grm : ml-antlr
 #endif
-
-  BackEnds/expand-file.sml
 
   BackEnds/SML/ml.sml
   BackEnds/SML/abs.sml
