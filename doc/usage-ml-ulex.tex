@@ -1,3 +1,5 @@
+%!TEX root = manual.tex
+%
 \chapter{ML-ULex}
 
 %\section{Overview}
@@ -22,21 +24,21 @@ where {\tt file} is the name of the input \ulex{} specification, and where {\tt 
 
 \vskip 12pt
 \begin{tabular}{lp{0.65\textwidth}}
-  {\tt --dot} & generate DOT output (for graphviz; see \texttt{http://www.graphviz.org}).  The produced file will be named {\tt file.dot}, where {\tt file} is the input file. \\
+  \texttt{--dot} & generate DOT output (for graphviz; see \texttt{http://www.graphviz.org}).  The produced file will be named \texttt{file.dot}, where \texttt{file} is the input file. \\
   \\
-  {\tt --match} & enter interactive matching mode.  This will allow interactive testing of the machine; presently, only the {\tt INITIAL} start state is available for testing (see Section~\ref{sec:start-states} for details on start states).  \\
+  \texttt{--match} & enter interactive matching mode.  This will allow interactive testing of the machine; presently, only the \texttt{INITIAL} start state is available for testing (see Section~\ref{sec:start-states} for details on start states).  \\
   \\
-  {\tt --ml-lex-mode} & operate in {\tt ml-lex} compatibility mode.  See Section~\ref{sec:lex-compat} for details. \\
+  \texttt{--ml-lex-mode} & operate in \texttt{ml-lex} compatibility mode.  See Section~\ref{sec:lex-compat} for details. \\
   \\
-  {\tt --table-based} & generate a table-based lexer.\\
+  \texttt{--table-based} & generate a table-based lexer.\\
   \\
-  {\tt --fn-based} & generate a lexer that represents states as functions and transitions as tail calls.\\
+  \texttt{--fn-based} & generate a lexer that represents states as functions and transitions as tail calls.\\
   \\
-  {\tt --minimize} & generate a minimal machine.  Note that this is slow, and is almost never necessary.
+  \texttt{--minimize} & generate a minimal machine.  Note that this is slow, and is almost never necessary.
 \end{tabular}
 
 \vskip 10pt \noindent
-The output file will be called {\tt file.sml}.
+The output file will be called \texttt{file.sml}.
 
 \section{Specification format}
 
@@ -86,7 +88,7 @@ A \ulex{} specification is a list of semicolon-terminated \emph{declarations}.  
 \GNextC
 	{\T{\{} ID \T{\}}}	{\kw{let}-bound RE}
 \GNextC
-	{\T{.}}			{wildcard (all single charcters except \texttt{{$\backslash$}n})}
+	{\T{.}}			{wildcard (any single character including \texttt{{$\backslash$}n})}
 \GNextC
 	{re \T{*}}		{Kleene-closure (0 or more)}
 \GNextC
