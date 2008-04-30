@@ -26,7 +26,8 @@ where {\tt file} is the name of the input \ulex{} specification, and where {\tt 
 \begin{tabular}{lp{0.65\textwidth}}
   \texttt{--dot} & generate DOT output (for graphviz; see \texttt{http://www.graphviz.org}).  The produced file will be named \texttt{file.dot}, where \texttt{file} is the input file. \\
   \\
-  \texttt{--match} & enter interactive matching mode.  This will allow interactive testing of the machine; presently, only the \texttt{INITIAL} start state is available for testing (see Section~\ref{sec:start-states} for details on start states).  \\
+  \texttt{--match} & enter interactive matching mode.  This will allow interactive testing of the machine; presently, only the \texttt{INITIAL} start state is available for testing
+  (see Section~\ref{sec:start-states} for details on start states).  \\
   \\
   \texttt{--ml-lex-mode} & operate in \texttt{ml-lex} compatibility mode.  See Section~\ref{sec:lex-compat} for details. \\
   \\
@@ -179,6 +180,7 @@ which matches arbitrary-length integers.  Note that scoping of let-bindings foll
 The name to use for the generated lexer module is specified using \kw{name}.
 
 \subsection{The \kw{states} directive}
+\label{sec:start-states}
 
 It is often helpful for a lexer to have multiple \emph{start states}, which influence the regular expressions that the lexer will match.  For instance, after seeing a double-quote, the lexer might switch into a \texttt{STRING} start state, which contains only the rules necessary for matching strings, and which returns to the standard start state after the closing quote.
 
@@ -304,6 +306,6 @@ In this interface, lexer start states are conceptually part of the input stream;
 
 Note that the {\tt AntlrStreamPos} module is part of the {\tt ml-lpt-lib} library described in Chapter~\ref{ch:ml-lpt-lib}.  An {\tt AntlrStreamPos.sourcemap} value, combined with an {\tt AntlrStreamPos.pos} value, compactly represents position information (line number, column number, and so on).  An {\tt AntlrStreamPos.span} is a pair of {\tt pos} values.
 
-\section{{\tt ml-lex} compatibility}\label{sec:lex-compat}
+\section{\texttt{ml-lex} compatibility}\label{sec:lex-compat}
 
-Running \ulex{} with the {\tt --ml-lex-mode} option will cause it to process its input file using the ML-Lex format, and interpret the actions in a ML-Lex-compatible way.  The compatibility extends to the bugs in ML-Lex, so in particular \texttt{yylineno} starts at 2 in {\tt --ml-lex-mode}.
+Running \ulex{} with the {\tt --ml-lex-mode} option will cause it to process its input file using the ML-Lex format, and interpret the actions in a ML-Lex-compatible way.  The compatibility extends to the bugs in ML-Lex, so in particular \texttt{yylineno} starts at 2 in \texttt{--ml-lex-mode}.
