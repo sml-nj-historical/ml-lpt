@@ -125,19 +125,19 @@ or_re(env)
   ;
 
 and_re(env)
-  : not_re@(env) ("&" not_re@(env))*
-      => (foldl (RE.mkAnd o flip) not_re SR)
-  ;
-
-not_re(env)
-  : "~" cat_re@(env)
-      => (RE.mkNot cat_re)
-  | cat_re@(env)
+  : cat_re@(env) ("&" cat_re@(env))*
+      => (foldl (RE.mkAnd o flip) cat_re SR)
   ;
 
 cat_re(env)
-  : post_re@(env) (post_re@(env))*
-      => (foldl (RE.mkConcat o flip) post_re SR)
+  : not_re@(env) (not_re@(env))*
+      => (foldl (RE.mkConcat o flip) not_re SR)
+  ;
+
+not_re(env)
+  : "~" post_re@(env)
+      => (RE.mkNot post_re)
+  | post_re@(env)
   ;
 
 post_re(env)
