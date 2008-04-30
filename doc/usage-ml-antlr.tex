@@ -190,7 +190,7 @@ Finally, the \emph{start} symbol (Section~\ref{sec:start}) is always an entry po
 
 \subsection{The \kw{import} directive}
 
-The \kw{import} directive is used to include one grammar inside another.  The string given in the directive should hold the path to a grammar file, and $\backslash$ characters must be escaped.  By default, all declarations appearing in the specified file are included in the resulting grammar, except for \kw{start}, \kw{entry}, and \kw{name} declarations.  However, individual tokens or nonterminals can be dropped by listing them in the \kw{dropping} clause of an \kw{import} declaration.  Since nonterminal definitions are cumulative (Section~\ref{sec:antlr-spec}), the imported nonterminals can be extended with new productions simply by listing them.
+The \kw{import} directive is used to include one grammar inside another.  The string given in the directive should hold the path to a grammar file, and $\backslash$ characters must be escaped.  By default, all declarations appearing in the specified file are included in the resulting grammar, except for \kw{start}, \kw{entry}, and \kw{name} declarations.  However, individual tokens or nonterminals can be dropped by listing them in the \kw{dropping} clause of an \kw{import} declaration.  Since nonterminal definitions are cumulative (Section~\ref{sec:antlr-nt}), the imported nonterminals can be extended with new productions simply by listing them.
 The final grammar must, of course, ensure that all used tokens and nonterminals are defined.
 
 \subsection{The \kw{keywords} directive}
@@ -251,6 +251,15 @@ The syntax of nontermal definitions is given in Figure~\ref{fig:antlr-syntax}.  
       ;
 \end{verbatim}
 Note that actions are only allowed at the end of a production, and that they are optional.
+
+As with most directives, the non-terminal definitions are cumulative.
+For example, the definition of \texttt{atomicExp} above could also be
+written as three separate rules.
+\begin{verbatim}
+    atomicExp(env) : ID => ( valOf(AtomMap.find (env, Atom.atom ID)) );
+    atomicExp(env) : NUM;
+    atomicExp(env) : "(" exp@(env) ")";
+\end{verbatim}
 
 \subsection{Extended BNF constructions}
 
