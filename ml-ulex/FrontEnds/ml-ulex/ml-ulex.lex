@@ -62,9 +62,10 @@
 %name MLULexLex;
 (* %charset utf8; *)
 
-<INITIAL,DIRECTIVE,CHARSET,CHARCLASS>{ws}+	
+<INITIAL,DIRECTIVE,CHARSET>{ws}+	
 	=> (skip());
-
+<CHARCLASS>{eol}
+	=> (skip());
 
 <<EOF>>	=> (Tok.EOF);
 <RESTRING, STRING><<EOF>> => 
