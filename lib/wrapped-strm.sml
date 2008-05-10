@@ -9,7 +9,10 @@
  * and allow "prepending" a sequence of tokens.
  *)
 
-functor AntlrWrappedStream (Tok : ANTLR_TOKENS) (Lex : ANTLR_LEXER) :> sig
+functor AntlrWrappedStream (
+    structure Tok : ANTLR_TOKENS
+    structure Lex : ANTLR_LEXER
+  ) :> sig
 
   type tok_pos = Int.int	(* position in terms of number of tokens *)
   type lexer = Lex.strm -> Tok.token * AntlrStreamPos.span * Lex.strm

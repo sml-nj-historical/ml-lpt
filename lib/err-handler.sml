@@ -8,7 +8,10 @@
  * Error repair for ml-antlr
  *)
 
-functor AntlrErrHandler (Tok : ANTLR_TOKENS) (Lex : ANTLR_LEXER) : sig
+functor AntlrErrHandler (
+    structure Tok : ANTLR_TOKENS
+    structure Lex : ANTLR_LEXER
+  ) : sig
 
   exception ParseError
 
@@ -40,7 +43,10 @@ end = struct
 
   structure AR = AntlrRepair
 
-  structure WS = AntlrWrappedStream(Tok)(Lex)
+  structure WS = AntlrWrappedStream(
+    structure Tok = Tok
+    structure Lex = Lex)
+
   type wstream = WS.wstream
   val getPos = WS.getPos
   val getSpan = WS.getSpan
