@@ -10,7 +10,7 @@ CMD=$0
 
 ROOT="ml-ulex"
 HEAP_IMAGE=""
-SMLNJROOT=$HOME/smlnj
+SMLNJROOT=`pwd`/../..
 BIN=${INSTALLDIR:-$SMLNJROOT}/bin
 LIB=${INSTALLDIR:-$SMLNJROOT}/lib
 BUILD=$BIN/ml-build
