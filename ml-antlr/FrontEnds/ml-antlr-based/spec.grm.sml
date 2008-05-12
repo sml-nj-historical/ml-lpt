@@ -278,7 +278,9 @@ fun mkliftSpan_REFC() : (AntlrStreamPos.span -> GrammarSyntax.span) ref = ref ( 
 
     end
 
-    structure Err = AntlrErrHandler(Tok)(Lex)
+    structure Err = AntlrErrHandler(
+      structure Tok = Tok
+      structure Lex = Lex)
     structure EBNF = AntlrEBNF(struct
 			         type strm = Err.wstream
 			         val getSpan = Err.getSpan

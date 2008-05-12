@@ -15,8 +15,8 @@ is
   $/smlnj-lib.cm
   $/pp-lib.cm
   $/ml-yacc-lib.cm
-  $/ml-lpt-lib.cm 
 
+  ../lib/ml-lpt-lib.cm 
   ../common/lpt-common.cm
 
   FrontEnds/lex-spec.sml
