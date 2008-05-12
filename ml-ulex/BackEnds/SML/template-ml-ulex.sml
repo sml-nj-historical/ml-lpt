@@ -19,9 +19,7 @@
     withtype action = ULexBuffer.stream * yymatch -> UserDeclarations.lex_result
 
     val yytable : ((UTF8.wchar * UTF8.wchar * int) list * int list) Vector.vector = 
-#[
 @table@
-]
 
     fun yystreamify' p input = ULexBuffer.mkStream (p, input)
 

@@ -197,6 +197,8 @@ structure SMLFunOutput : OUTPUT =
             ML.ppML (ppStrm, lexerExp)
           end
 
+    fun tableHook _ strm = TextIO.output (strm, "Vector.fromList []");
+
     fun output (spec, fname) = 
           ExpandFile.expand' {
 	      src = if !Options.lexCompat 
@@ -208,7 +210,7 @@ structure SMLFunOutput : OUTPUT =
 		       ("header", headerHook spec),
 		       ("args", argsHook spec),
 		       ("pargs", pargsHook spec),
-		       ("table", fn _ => ())]
+		       ("table", tableHook spec)]
 	    }
 
   end

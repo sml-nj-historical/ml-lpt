@@ -42,8 +42,10 @@ structure SMLTblOutput : OUTPUT =
     fun tableHook spec strm = let
           val LO.Spec {actions, dfa, startStates, ...} = spec
           in
+            TextIO.output (strm, "#[");
             TextIO.output (strm,
-	      String.concatWith ", " (map (mkState actions) dfa))
+	      String.concatWith ", " (map (mkState actions) dfa));
+	    TextIO.output (strm, "]")
           end
 
     fun lexerHook spec strm = let
