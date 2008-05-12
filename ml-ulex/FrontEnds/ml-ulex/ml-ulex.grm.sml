@@ -213,12 +213,12 @@ fun directive_PROD_5_ACT (ID, env, conf, KW_name, ID_SPAN : (Lex.pos * Lex.pos),
   ( LS.updStructName (conf, ID), env)
 fun or_re_PROD_1_ACT (SR, env, and_re, SR_SPAN : (Lex.pos * Lex.pos), and_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( foldl (RE.mkOr o flip) and_re SR)
-fun and_re_PROD_1_ACT (SR, env, not_re, SR_SPAN : (Lex.pos * Lex.pos), not_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( foldl (RE.mkAnd o flip) not_re SR)
-fun not_re_PROD_1_ACT (NEG, env, cat_re, NEG_SPAN : (Lex.pos * Lex.pos), cat_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( RE.mkNot cat_re)
-fun cat_re_PROD_1_ACT (SR, env, post_re, SR_SPAN : (Lex.pos * Lex.pos), post_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( foldl (RE.mkConcat o flip) post_re SR)
+fun and_re_PROD_1_ACT (SR, env, cat_re, SR_SPAN : (Lex.pos * Lex.pos), cat_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
+  ( foldl (RE.mkAnd o flip) cat_re SR)
+fun cat_re_PROD_1_ACT (SR, env, not_re, SR_SPAN : (Lex.pos * Lex.pos), not_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
+  ( foldl (RE.mkConcat o flip) not_re SR)
+fun not_re_PROD_1_ACT (NEG, env, post_re, NEG_SPAN : (Lex.pos * Lex.pos), post_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
+  ( RE.mkNot post_re)
 fun post_re_PROD_1_SUBRULE_1_PROD_1_ACT (env, prim_re, QUERY, prim_re_SPAN : (Lex.pos * Lex.pos), QUERY_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
   ( RE.mkOpt)
 fun post_re_PROD_1_SUBRULE_1_PROD_2_ACT (env, STAR, prim_re, STAR_SPAN : (Lex.pos * Lex.pos), prim_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
@@ -287,17 +287,17 @@ fun ARGS_31 (BAR, env, and_re, errs) =
   (env)
 fun ARGS_30 (env, errs) = 
   (env)
-fun ARGS_34 (AMP, env, not_re, errs) = 
+fun ARGS_34 (AMP, env, cat_re, errs) = 
   (env)
 fun ARGS_33 (env, errs) = 
   (env)
-fun ARGS_36 (NEG, env, errs) = 
+fun ARGS_37 (env, not_re, errs) = 
   (env)
-fun ARGS_37 (env, errs) = 
+fun ARGS_36 (env, errs) = 
   (env)
-fun ARGS_40 (env, post_re, errs) = 
+fun ARGS_39 (NEG, env, errs) = 
   (env)
-fun ARGS_39 (env, errs) = 
+fun ARGS_40 (env, errs) = 
   (env)
 fun ARGS_42 (env, errs) = 
   (env)
@@ -536,38 +536,62 @@ and or_re_NT (env_RES) (strm) = let
           FULL_SPAN, strm')
       end
 and and_re_NT (env_RES) (strm) = let
-      val (not_re_RES, not_re_SPAN, strm') = (not_re_NT (UserCode.ARGS_33 (env_RES, errs_REFC)))(strm)
+      val (cat_re_RES, cat_re_SPAN, strm') = (cat_re_NT (UserCode.ARGS_33 (env_RES, errs_REFC)))(strm)
       fun and_re_PROD_1_SUBRULE_1_NT (strm) = let
             val (AMP_RES, AMP_SPAN, strm') = matchAMP(strm)
-            val (not_re_RES, not_re_SPAN, strm') = (not_re_NT (UserCode.ARGS_34 (AMP_RES, env_RES, not_re_RES, errs_REFC)))(strm')
-            val FULL_SPAN = (#1(AMP_SPAN), #2(not_re_SPAN))
+            val (cat_re_RES, cat_re_SPAN, strm') = (cat_re_NT (UserCode.ARGS_34 (AMP_RES, env_RES, cat_re_RES, errs_REFC)))(strm')
+            val FULL_SPAN = (#1(AMP_SPAN), #2(cat_re_SPAN))
             in
-              ((not_re_RES), FULL_SPAN, strm')
+              ((cat_re_RES), FULL_SPAN, strm')
             end
       fun and_re_PROD_1_SUBRULE_1_PRED (strm) = (case (lex(strm))
              of (Tok.AMP, _, strm') => true
               | _ => false
             (* end case *))
       val (SR_RES, SR_SPAN, strm') = EBNF.closure(and_re_PROD_1_SUBRULE_1_PRED, and_re_PROD_1_SUBRULE_1_NT, strm')
+      val FULL_SPAN = (#1(cat_re_SPAN), #2(SR_SPAN))
+      in
+        (UserCode.and_re_PROD_1_ACT (SR_RES, env_RES, cat_re_RES, SR_SPAN : (Lex.pos * Lex.pos), cat_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
+          FULL_SPAN, strm')
+      end
+and cat_re_NT (env_RES) (strm) = let
+      val (not_re_RES, not_re_SPAN, strm') = (not_re_NT (UserCode.ARGS_36 (env_RES, errs_REFC)))(strm)
+      fun cat_re_PROD_1_SUBRULE_1_NT (strm) = let
+            val (not_re_RES, not_re_SPAN, strm') = (not_re_NT (UserCode.ARGS_37 (env_RES, not_re_RES, errs_REFC)))(strm)
+            val FULL_SPAN = (#1(not_re_SPAN), #2(not_re_SPAN))
+            in
+              ((not_re_RES), FULL_SPAN, strm')
+            end
+      fun cat_re_PROD_1_SUBRULE_1_PRED (strm) = (case (lex(strm))
+             of (Tok.DOT, _, strm') => true
+              | (Tok.LP, _, strm') => true
+              | (Tok.LSB, _, strm') => true
+              | (Tok.LCB, _, strm') => true
+              | (Tok.NEG, _, strm') => true
+              | (Tok.CHAR(_), _, strm') => true
+              | (Tok.UCHAR(_), _, strm') => true
+              | _ => false
+            (* end case *))
+      val (SR_RES, SR_SPAN, strm') = EBNF.closure(cat_re_PROD_1_SUBRULE_1_PRED, cat_re_PROD_1_SUBRULE_1_NT, strm')
       val FULL_SPAN = (#1(not_re_SPAN), #2(SR_SPAN))
       in
-        (UserCode.and_re_PROD_1_ACT (SR_RES, env_RES, not_re_RES, SR_SPAN : (Lex.pos * Lex.pos), not_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
+        (UserCode.cat_re_PROD_1_ACT (SR_RES, env_RES, not_re_RES, SR_SPAN : (Lex.pos * Lex.pos), not_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
           FULL_SPAN, strm')
       end
 and not_re_NT (env_RES) (strm) = let
       fun not_re_PROD_1 (strm) = let
             val (NEG_RES, NEG_SPAN, strm') = matchNEG(strm)
-            val (cat_re_RES, cat_re_SPAN, strm') = (cat_re_NT (UserCode.ARGS_36 (NEG_RES, env_RES, errs_REFC)))(strm')
-            val FULL_SPAN = (#1(NEG_SPAN), #2(cat_re_SPAN))
+            val (post_re_RES, post_re_SPAN, strm') = (post_re_NT (UserCode.ARGS_39 (NEG_RES, env_RES, errs_REFC)))(strm')
+            val FULL_SPAN = (#1(NEG_SPAN), #2(post_re_SPAN))
             in
-              (UserCode.not_re_PROD_1_ACT (NEG_RES, env_RES, cat_re_RES, NEG_SPAN : (Lex.pos * Lex.pos), cat_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
+              (UserCode.not_re_PROD_1_ACT (NEG_RES, env_RES, post_re_RES, NEG_SPAN : (Lex.pos * Lex.pos), post_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
                 FULL_SPAN, strm')
             end
       fun not_re_PROD_2 (strm) = let
-            val (cat_re_RES, cat_re_SPAN, strm') = (cat_re_NT (UserCode.ARGS_37 (env_RES, errs_REFC)))(strm)
-            val FULL_SPAN = (#1(cat_re_SPAN), #2(cat_re_SPAN))
+            val (post_re_RES, post_re_SPAN, strm') = (post_re_NT (UserCode.ARGS_40 (env_RES, errs_REFC)))(strm)
+            val FULL_SPAN = (#1(post_re_SPAN), #2(post_re_SPAN))
             in
-              ((cat_re_RES), FULL_SPAN, strm')
+              ((post_re_RES), FULL_SPAN, strm')
             end
       in
         (case (lex(strm))
@@ -580,29 +604,6 @@ and not_re_NT (env_RES) (strm) = let
           | (Tok.NEG, _, strm') => not_re_PROD_1(strm)
           | _ => fail()
         (* end case *))
-      end
-and cat_re_NT (env_RES) (strm) = let
-      val (post_re_RES, post_re_SPAN, strm') = (post_re_NT (UserCode.ARGS_39 (env_RES, errs_REFC)))(strm)
-      fun cat_re_PROD_1_SUBRULE_1_NT (strm) = let
-            val (post_re_RES, post_re_SPAN, strm') = (post_re_NT (UserCode.ARGS_40 (env_RES, post_re_RES, errs_REFC)))(strm)
-            val FULL_SPAN = (#1(post_re_SPAN), #2(post_re_SPAN))
-            in
-              ((post_re_RES), FULL_SPAN, strm')
-            end
-      fun cat_re_PROD_1_SUBRULE_1_PRED (strm) = (case (lex(strm))
-             of (Tok.DOT, _, strm') => true
-              | (Tok.LP, _, strm') => true
-              | (Tok.LSB, _, strm') => true
-              | (Tok.LCB, _, strm') => true
-              | (Tok.CHAR(_), _, strm') => true
-              | (Tok.UCHAR(_), _, strm') => true
-              | _ => false
-            (* end case *))
-      val (SR_RES, SR_SPAN, strm') = EBNF.closure(cat_re_PROD_1_SUBRULE_1_PRED, cat_re_PROD_1_SUBRULE_1_NT, strm')
-      val FULL_SPAN = (#1(post_re_SPAN), #2(SR_SPAN))
-      in
-        (UserCode.cat_re_PROD_1_ACT (SR_RES, env_RES, post_re_RES, SR_SPAN : (Lex.pos * Lex.pos), post_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs_REFC),
-          FULL_SPAN, strm')
       end
 and post_re_NT (env_RES) (strm) = let
       val (prim_re_RES, prim_re_SPAN, strm') = (prim_re_NT (UserCode.ARGS_42 (env_RES, errs_REFC)))(strm)
@@ -664,6 +665,7 @@ and post_re_NT (env_RES) (strm) = let
                 | (Tok.LP, _, strm') => post_re_PROD_1_SUBRULE_1_PROD_6(strm)
                 | (Tok.RP, _, strm') => post_re_PROD_1_SUBRULE_1_PROD_6(strm)
                 | (Tok.LSB, _, strm') => post_re_PROD_1_SUBRULE_1_PROD_6(strm)
+                | (Tok.NEG, _, strm') => post_re_PROD_1_SUBRULE_1_PROD_6(strm)
                 | (Tok.DARROW, _, strm') =>
                     post_re_PROD_1_SUBRULE_1_PROD_6(strm)
                 | (Tok.CHAR(_), _, strm') =>
