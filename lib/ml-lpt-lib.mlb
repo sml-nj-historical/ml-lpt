@@ -11,6 +11,7 @@
 local
 
   $(SML_LIB)/basis/basis.mlb
+  $(SML_LIB)/basis/sml-nj.mlb
   $(SML_LIB)/smlnj-lib/Util/smlnj-lib.mlb
 
   stream-pos.sml
@@ -19,11 +20,7 @@ local
   antlr-tokens-sig.sml
   repair.sml
   wrapped-strm.sml
-
-(* this file uses SML/NJ's continuations
   err-handler.sml
-*)
-
   ulex-buffer.sml
 
 in
@@ -36,8 +33,6 @@ in
   structure ULexBuffer
 
   functor AntlrEBNF
-(* this module use SML/NJ's continuations
   functor AntlrErrHandler
-*)
 
 end
