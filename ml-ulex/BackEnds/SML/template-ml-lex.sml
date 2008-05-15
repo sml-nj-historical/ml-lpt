@@ -117,9 +117,7 @@
     local
 
     val yytable = 
-#[
 @table@
-]
 
     fun mk yyins = let
         (* current start state *)
