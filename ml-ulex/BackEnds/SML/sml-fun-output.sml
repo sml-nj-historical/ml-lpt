@@ -140,22 +140,14 @@ structure SMLFunOutput : OUTPUT =
 		else
 		  t1::(merge (t2::ts))
 	  val merged = merge sorted
-        (* create the transition code *)
+        (* create the transition code, which at least has an error transition *)
 	  val trans = mkTrans(merged, List.length merged)
         (* create the input code *)
 	  val getInp = 
-             (* trans has at least the error action.  if length(merged)
-	      * is 1 then we can avoid getting any input and simply
-	      * take the error transition in all cases.  note that
-	      * the "error" transition may actually be a match
-	      *)
-	        (case merged
-		  of [_] => errAct
-		   | _ => ML_Case (ML_App ("yygetc", [ML_Var "strm"]),
-			      [(ML_ConPat ("NONE", []), errAct),
-			       (ML_ConPat ("SOME", [ML_VarPat (inp ^ ", strm'")]), 
-				  trans)])
-		 (* end case *))
+	        ML_Case (ML_App ("yygetc", [ML_Var "strm"]),
+			 [(ML_ConPat ("NONE", []), errAct),
+			  (ML_ConPat ("SOME", [ML_VarPat (inp ^ ", strm'")]), 
+			   trans)])
 	  in
             ML_Fun (nameOf s, ["strm", "lastMatch : yymatch"], getInp, k)
           end
