@@ -148,6 +148,7 @@ fun dec (ri as ref i) = (ri := i-1)
 <CONSTR>"|"	=> (Tok.BAR); 
 <CONSTR>"*"	=> (Tok.STAR);
 <CONSTR>":"	=> (Tok.COLON);
+<CONSTR>","	=> (Tok.COMMA);
 <CONSTR>";"	=> (YYBEGIN INITIAL; Tok.SEMI);
 <CONSTR>"("	=> (Tok.LP);
 <CONSTR>")"	=> (Tok.RP);

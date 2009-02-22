@@ -246,28 +246,28 @@ fun Constr_PROD_1_ACT (ID, SR, Abbrev, ID_SPAN : (Lex.pos * Lex.pos), SR_SPAN : 
   ( FULL_SPAN, (Atom.atom ID, SR, Abbrev))
 fun ConstrList_PROD_1_ACT (SR, Constr, SR_SPAN : (Lex.pos * Lex.pos), Constr_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ( Constr::SR)
-fun Ty_PROD_1_ACT (LCB, RCB, RowList, LCB_SPAN : (Lex.pos * Lex.pos), RCB_SPAN : (Lex.pos * Lex.pos), RowList_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
+fun TyFun_PROD_1_ACT (SR, TyProd, SR_SPAN : (Lex.pos * Lex.pos), TyProd_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
+  ( String.concatWith " -> " (TyProd::SR))
+fun TyProd_PROD_1_ACT (SR, TyApp, SR_SPAN : (Lex.pos * Lex.pos), TyApp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
+  ( String.concatWith " * " (TyApp::SR))
+fun TyApp_PROD_1_ACT (LP, RP, SR, Ty, QualID, LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), SR_SPAN : (Lex.pos * Lex.pos), Ty_SPAN : (Lex.pos * Lex.pos), QualID_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
+  ( "(" ^ String.concatWith "," (Ty::SR) ^ ") " ^ QualID)
+fun TyApp_PROD_2_SUBRULE_1_PROD_1_ACT (QualID, TyAtom, QualID_SPAN : (Lex.pos * Lex.pos), TyAtom_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
+  ( TyAtom ^ " " ^ QualID)
+fun TyApp_PROD_2_SUBRULE_1_PROD_2_ACT (TyAtom, TyAtom_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
+  ( TyAtom)
+fun TyApp_PROD_2_ACT (SR, TyAtom, SR_SPAN : (Lex.pos * Lex.pos), TyAtom_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
+  ( SR)
+fun TyAtom_PROD_2_ACT (LP, RP, Ty, LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), Ty_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
+  ( "(" ^ Ty ^ ")")
+fun TyAtom_PROD_3_ACT (LCB, RCB, RowList, LCB_SPAN : (Lex.pos * Lex.pos), RCB_SPAN : (Lex.pos * Lex.pos), RowList_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ( "{ " ^ RowList ^" } ")
-fun Ty_PROD_2_ACT (LCB, RCB, LCB_SPAN : (Lex.pos * Lex.pos), RCB_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
+fun TyAtom_PROD_4_ACT (LCB, RCB, LCB_SPAN : (Lex.pos * Lex.pos), RCB_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ( "{}")
 fun Row_PROD_1_ACT (Ty, COLON, Label, Ty_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), Label_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ( Label ^ " : " ^ Ty)
 fun RowList_PROD_1_ACT (SR, Row, SR_SPAN : (Lex.pos * Lex.pos), Row_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ( String.concatWith "," (Row::SR))
-fun TyApp_PROD_1_ACT (LP, RP, SR, Ty, QualID, LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), SR_SPAN : (Lex.pos * Lex.pos), Ty_SPAN : (Lex.pos * Lex.pos), QualID_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( "(" ^ String.concatWith "," (Ty::SR) ^ ") " ^ QualID)
-fun TyApp_PROD_2_SUBRULE_1_PROD_1_ACT (QualID, TyProd, QualID_SPAN : (Lex.pos * Lex.pos), TyProd_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( TyProd ^ " " ^ QualID)
-fun TyApp_PROD_2_SUBRULE_1_PROD_2_ACT (TyProd, TyProd_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( TyProd)
-fun TyApp_PROD_2_ACT (SR, TyProd, SR_SPAN : (Lex.pos * Lex.pos), TyProd_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( SR)
-fun TyProd_PROD_1_ACT (SR, TyFun, SR_SPAN : (Lex.pos * Lex.pos), TyFun_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( String.concatWith " * " (TyFun::SR))
-fun TyFun_PROD_1_ACT (SR, TyAtom, SR_SPAN : (Lex.pos * Lex.pos), TyAtom_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( String.concatWith " -> " (TyAtom::SR))
-fun TyAtom_PROD_2_ACT (LP, RP, Ty, LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), Ty_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( "(" ^ Ty ^ ")")
 fun QualID_PROD_2_ACT (QualID, IDDOT, QualID_SPAN : (Lex.pos * Lex.pos), IDDOT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ( IDDOT ^ QualID)
 fun Abbrev_PROD_1_ACT (LP, RP, STRING, LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), STRING_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
@@ -749,44 +749,48 @@ fun Label_NT (strm) = let
         (* end case *))
       end
 fun Ty_NT (strm) = let
-      fun Ty_PROD_1 (strm) = let
-            val (LCB_RES, LCB_SPAN, strm') = matchLCB(strm)
-            val (RowList_RES, RowList_SPAN, strm') = RowList_NT(strm')
-            val (RCB_RES, RCB_SPAN, strm') = matchRCB(strm')
-            val FULL_SPAN = (#1(LCB_SPAN), #2(RCB_SPAN))
+      val (TyFun_RES, TyFun_SPAN, strm') = TyFun_NT(strm)
+      val FULL_SPAN = (#1(TyFun_SPAN), #2(TyFun_SPAN))
+      in
+        ((TyFun_RES), FULL_SPAN, strm')
+      end
+and TyFun_NT (strm) = let
+      val (TyProd_RES, TyProd_SPAN, strm') = TyProd_NT(strm)
+      fun TyFun_PROD_1_SUBRULE_1_NT (strm) = let
+            val (ARROW_RES, ARROW_SPAN, strm') = matchARROW(strm)
+            val (TyProd_RES, TyProd_SPAN, strm') = TyProd_NT(strm')
+            val FULL_SPAN = (#1(ARROW_SPAN), #2(TyProd_SPAN))
             in
-              (UserCode.Ty_PROD_1_ACT (LCB_RES, RCB_RES, RowList_RES, LCB_SPAN : (Lex.pos * Lex.pos), RCB_SPAN : (Lex.pos * Lex.pos), RowList_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
-                FULL_SPAN, strm')
+              ((TyProd_RES), FULL_SPAN, strm')
             end
-      fun Ty_PROD_2 (strm) = let
-            val (LCB_RES, LCB_SPAN, strm') = matchLCB(strm)
-            val (RCB_RES, RCB_SPAN, strm') = matchRCB(strm')
-            val FULL_SPAN = (#1(LCB_SPAN), #2(RCB_SPAN))
-            in
-              (UserCode.Ty_PROD_2_ACT (LCB_RES, RCB_RES, LCB_SPAN : (Lex.pos * Lex.pos), RCB_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
-                FULL_SPAN, strm')
-            end
-      fun Ty_PROD_3 (strm) = let
-            val (TyApp_RES, TyApp_SPAN, strm') = TyApp_NT(strm)
-            val FULL_SPAN = (#1(TyApp_SPAN), #2(TyApp_SPAN))
+      fun TyFun_PROD_1_SUBRULE_1_PRED (strm) = (case (lex(strm))
+             of (Tok.ARROW, _, strm') => true
+              | _ => false
+            (* end case *))
+      val (SR_RES, SR_SPAN, strm') = EBNF.closure(TyFun_PROD_1_SUBRULE_1_PRED, TyFun_PROD_1_SUBRULE_1_NT, strm')
+      val FULL_SPAN = (#1(TyProd_SPAN), #2(SR_SPAN))
+      in
+        (UserCode.TyFun_PROD_1_ACT (SR_RES, TyProd_RES, SR_SPAN : (Lex.pos * Lex.pos), TyProd_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
+          FULL_SPAN, strm')
+      end
+and TyProd_NT (strm) = let
+      val (TyApp_RES, TyApp_SPAN, strm') = TyApp_NT(strm)
+      fun TyProd_PROD_1_SUBRULE_1_NT (strm) = let
+            val (STAR_RES, STAR_SPAN, strm') = matchSTAR(strm)
+            val (TyApp_RES, TyApp_SPAN, strm') = TyApp_NT(strm')
+            val FULL_SPAN = (#1(STAR_SPAN), #2(TyApp_SPAN))
             in
               ((TyApp_RES), FULL_SPAN, strm')
             end
+      fun TyProd_PROD_1_SUBRULE_1_PRED (strm) = (case (lex(strm))
+             of (Tok.STAR, _, strm') => true
+              | _ => false
+            (* end case *))
+      val (SR_RES, SR_SPAN, strm') = EBNF.closure(TyProd_PROD_1_SUBRULE_1_PRED, TyProd_PROD_1_SUBRULE_1_NT, strm')
+      val FULL_SPAN = (#1(TyApp_SPAN), #2(SR_SPAN))
       in
-        (case (lex(strm))
-         of (Tok.LP, _, strm') => Ty_PROD_3(strm)
-          | (Tok.ID(_), _, strm') => Ty_PROD_3(strm)
-          | (Tok.IDDOT(_), _, strm') => Ty_PROD_3(strm)
-          | (Tok.TYVAR(_), _, strm') => Ty_PROD_3(strm)
-          | (Tok.LCB, _, strm') =>
-              (case (lex(strm'))
-               of (Tok.ID(_), _, strm') => Ty_PROD_1(strm)
-                | (Tok.INT(_), _, strm') => Ty_PROD_1(strm)
-                | (Tok.RCB, _, strm') => Ty_PROD_2(strm)
-                | _ => fail()
-              (* end case *))
-          | _ => fail()
-        (* end case *))
+        (UserCode.TyProd_PROD_1_ACT (SR_RES, TyApp_RES, SR_SPAN : (Lex.pos * Lex.pos), TyApp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
+          FULL_SPAN, strm')
       end
 and TyApp_NT (strm) = let
       fun TyApp_PROD_1 (strm) = let
@@ -803,7 +807,7 @@ and TyApp_NT (strm) = let
                    of (Tok.COMMA, _, strm') => true
                     | _ => false
                   (* end case *))
-            val (SR_RES, SR_SPAN, strm') = EBNF.closure(TyApp_PROD_1_SUBRULE_1_PRED, TyApp_PROD_1_SUBRULE_1_NT, strm')
+            val (SR_RES, SR_SPAN, strm') = EBNF.posclos(TyApp_PROD_1_SUBRULE_1_PRED, TyApp_PROD_1_SUBRULE_1_NT, strm')
             val (RP_RES, RP_SPAN, strm') = matchRP(strm')
             val (QualID_RES, QualID_SPAN, strm') = QualID_NT(strm')
             val FULL_SPAN = (#1(LP_SPAN), #2(QualID_SPAN))
@@ -812,20 +816,20 @@ and TyApp_NT (strm) = let
                 FULL_SPAN, strm')
             end
       fun TyApp_PROD_2 (strm) = let
-            val (TyProd_RES, TyProd_SPAN, strm') = TyProd_NT(strm)
+            val (TyAtom_RES, TyAtom_SPAN, strm') = TyAtom_NT(strm)
             val (SR_RES, SR_SPAN, strm') = let
             fun TyApp_PROD_2_SUBRULE_1_NT (strm) = let
                   fun TyApp_PROD_2_SUBRULE_1_PROD_1 (strm) = let
                         val (QualID_RES, QualID_SPAN, strm') = QualID_NT(strm)
                         val FULL_SPAN = (#1(QualID_SPAN), #2(QualID_SPAN))
                         in
-                          (UserCode.TyApp_PROD_2_SUBRULE_1_PROD_1_ACT (QualID_RES, TyProd_RES, QualID_SPAN : (Lex.pos * Lex.pos), TyProd_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
+                          (UserCode.TyApp_PROD_2_SUBRULE_1_PROD_1_ACT (QualID_RES, TyAtom_RES, QualID_SPAN : (Lex.pos * Lex.pos), TyAtom_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
                             FULL_SPAN, strm')
                         end
                   fun TyApp_PROD_2_SUBRULE_1_PROD_2 (strm) = let
                         val FULL_SPAN = (Err.getPos(strm), Err.getPos(strm))
                         in
-                          (UserCode.TyApp_PROD_2_SUBRULE_1_PROD_2_ACT (TyProd_RES, TyProd_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
+                          (UserCode.TyApp_PROD_2_SUBRULE_1_PROD_2_ACT (TyAtom_RES, TyAtom_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
                             FULL_SPAN, strm)
                         end
                   in
@@ -842,7 +846,11 @@ and TyApp_NT (strm) = let
                           TyApp_PROD_2_SUBRULE_1_PROD_2(strm)
                       | (Tok.BAR, _, strm') =>
                           TyApp_PROD_2_SUBRULE_1_PROD_2(strm)
+                      | (Tok.STAR, _, strm') =>
+                          TyApp_PROD_2_SUBRULE_1_PROD_2(strm)
                       | (Tok.EQ, _, strm') =>
+                          TyApp_PROD_2_SUBRULE_1_PROD_2(strm)
+                      | (Tok.ARROW, _, strm') =>
                           TyApp_PROD_2_SUBRULE_1_PROD_2(strm)
                       | (Tok.ID(_), _, strm') =>
                           TyApp_PROD_2_SUBRULE_1_PROD_1(strm)
@@ -854,57 +862,20 @@ and TyApp_NT (strm) = let
             in
               TyApp_PROD_2_SUBRULE_1_NT(strm')
             end
-            val FULL_SPAN = (#1(TyProd_SPAN), #2(SR_SPAN))
+            val FULL_SPAN = (#1(TyAtom_SPAN), #2(SR_SPAN))
             in
-              (UserCode.TyApp_PROD_2_ACT (SR_RES, TyProd_RES, SR_SPAN : (Lex.pos * Lex.pos), TyProd_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
+              (UserCode.TyApp_PROD_2_ACT (SR_RES, TyAtom_RES, SR_SPAN : (Lex.pos * Lex.pos), TyAtom_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
                 FULL_SPAN, strm')
             end
       in
         (case (lex(strm))
-         of (Tok.ID(_), _, strm') => TyApp_PROD_2(strm)
+         of (Tok.LCB, _, strm') => TyApp_PROD_2(strm)
+          | (Tok.ID(_), _, strm') => TyApp_PROD_2(strm)
           | (Tok.IDDOT(_), _, strm') => TyApp_PROD_2(strm)
           | (Tok.TYVAR(_), _, strm') => TyApp_PROD_2(strm)
           | (Tok.LP, _, strm') => tryProds(strm, [TyApp_PROD_1, TyApp_PROD_2])
           | _ => fail()
         (* end case *))
-      end
-and TyProd_NT (strm) = let
-      val (TyFun_RES, TyFun_SPAN, strm') = TyFun_NT(strm)
-      fun TyProd_PROD_1_SUBRULE_1_NT (strm) = let
-            val (STAR_RES, STAR_SPAN, strm') = matchSTAR(strm)
-            val (TyFun_RES, TyFun_SPAN, strm') = TyFun_NT(strm')
-            val FULL_SPAN = (#1(STAR_SPAN), #2(TyFun_SPAN))
-            in
-              ((TyFun_RES), FULL_SPAN, strm')
-            end
-      fun TyProd_PROD_1_SUBRULE_1_PRED (strm) = (case (lex(strm))
-             of (Tok.STAR, _, strm') => true
-              | _ => false
-            (* end case *))
-      val (SR_RES, SR_SPAN, strm') = EBNF.closure(TyProd_PROD_1_SUBRULE_1_PRED, TyProd_PROD_1_SUBRULE_1_NT, strm')
-      val FULL_SPAN = (#1(TyFun_SPAN), #2(SR_SPAN))
-      in
-        (UserCode.TyProd_PROD_1_ACT (SR_RES, TyFun_RES, SR_SPAN : (Lex.pos * Lex.pos), TyFun_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
-          FULL_SPAN, strm')
-      end
-and TyFun_NT (strm) = let
-      val (TyAtom_RES, TyAtom_SPAN, strm') = TyAtom_NT(strm)
-      fun TyFun_PROD_1_SUBRULE_1_NT (strm) = let
-            val (ARROW_RES, ARROW_SPAN, strm') = matchARROW(strm)
-            val (TyAtom_RES, TyAtom_SPAN, strm') = TyAtom_NT(strm')
-            val FULL_SPAN = (#1(ARROW_SPAN), #2(TyAtom_SPAN))
-            in
-              ((TyAtom_RES), FULL_SPAN, strm')
-            end
-      fun TyFun_PROD_1_SUBRULE_1_PRED (strm) = (case (lex(strm))
-             of (Tok.ARROW, _, strm') => true
-              | _ => false
-            (* end case *))
-      val (SR_RES, SR_SPAN, strm') = EBNF.closure(TyFun_PROD_1_SUBRULE_1_PRED, TyFun_PROD_1_SUBRULE_1_NT, strm')
-      val FULL_SPAN = (#1(TyAtom_SPAN), #2(SR_SPAN))
-      in
-        (UserCode.TyFun_PROD_1_ACT (SR_RES, TyAtom_RES, SR_SPAN : (Lex.pos * Lex.pos), TyAtom_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
-          FULL_SPAN, strm')
       end
 and TyAtom_NT (strm) = let
       fun TyAtom_PROD_1 (strm) = let
@@ -923,6 +894,23 @@ and TyAtom_NT (strm) = let
                 FULL_SPAN, strm')
             end
       fun TyAtom_PROD_3 (strm) = let
+            val (LCB_RES, LCB_SPAN, strm') = matchLCB(strm)
+            val (RowList_RES, RowList_SPAN, strm') = RowList_NT(strm')
+            val (RCB_RES, RCB_SPAN, strm') = matchRCB(strm')
+            val FULL_SPAN = (#1(LCB_SPAN), #2(RCB_SPAN))
+            in
+              (UserCode.TyAtom_PROD_3_ACT (LCB_RES, RCB_RES, RowList_RES, LCB_SPAN : (Lex.pos * Lex.pos), RCB_SPAN : (Lex.pos * Lex.pos), RowList_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
+                FULL_SPAN, strm')
+            end
+      fun TyAtom_PROD_4 (strm) = let
+            val (LCB_RES, LCB_SPAN, strm') = matchLCB(strm)
+            val (RCB_RES, RCB_SPAN, strm') = matchRCB(strm')
+            val FULL_SPAN = (#1(LCB_SPAN), #2(RCB_SPAN))
+            in
+              (UserCode.TyAtom_PROD_4_ACT (LCB_RES, RCB_RES, LCB_SPAN : (Lex.pos * Lex.pos), RCB_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
+                FULL_SPAN, strm')
+            end
+      fun TyAtom_PROD_5 (strm) = let
             val (QualID_RES, QualID_SPAN, strm') = QualID_NT(strm)
             val FULL_SPAN = (#1(QualID_SPAN), #2(QualID_SPAN))
             in
@@ -930,8 +918,15 @@ and TyAtom_NT (strm) = let
             end
       in
         (case (lex(strm))
-         of (Tok.ID(_), _, strm') => TyAtom_PROD_3(strm)
-          | (Tok.IDDOT(_), _, strm') => TyAtom_PROD_3(strm)
+         of (Tok.ID(_), _, strm') => TyAtom_PROD_5(strm)
+          | (Tok.IDDOT(_), _, strm') => TyAtom_PROD_5(strm)
+          | (Tok.LCB, _, strm') =>
+              (case (lex(strm'))
+               of (Tok.ID(_), _, strm') => TyAtom_PROD_3(strm)
+                | (Tok.INT(_), _, strm') => TyAtom_PROD_3(strm)
+                | (Tok.RCB, _, strm') => TyAtom_PROD_4(strm)
+                | _ => fail()
+              (* end case *))
           | (Tok.TYVAR(_), _, strm') => TyAtom_PROD_1(strm)
           | (Tok.LP, _, strm') => TyAtom_PROD_2(strm)
           | _ => fail()

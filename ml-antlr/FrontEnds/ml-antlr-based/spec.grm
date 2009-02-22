@@ -146,32 +146,32 @@ Constr : ID ("of" Ty)? Abbrev? => (FULL_SPAN, (Atom.atom ID, SR, Abbrev)) ;
 ConstrList : Constr ("|" Constr)* => (Constr::SR) ;
 
 Ty 
-  : "{" RowList "}"	=> ("{ " ^ RowList ^" } ")
-  | "{" "}"		=> ("{}")
-  | TyApp
+  : TyFun
   ;
-Row : Label ":" Ty => (Label ^ " : " ^ Ty) ;
-RowList : Row ("," Row)* => (String.concatWith "," (Row::SR)) ;
-
-TyApp
-  : %try "(" Ty ("," Ty)* ")" QualID		
-      => ("(" ^ String.concatWith "," (Ty::SR) ^ ") " ^ QualID)
-  | %try TyProd ( QualID => (TyProd ^ " " ^ QualID)
-                | => (TyProd))
-      => (SR)
-  ;
-
-TyProd
-  : TyFun ("*" TyFun)* => (String.concatWith " * " (TyFun::SR)) ;
 
 TyFun
-  : TyAtom ("->" TyAtom)* => (String.concatWith " -> " (TyAtom::SR)) ;
+  : TyProd ("->" TyProd)* => (String.concatWith " -> " (TyProd::SR)) ;
+
+TyProd
+  : TyApp ("*" TyApp)* => (String.concatWith " * " (TyApp::SR)) ;
+
+TyApp
+  : %try "(" Ty ("," Ty)+ ")" QualID		
+      => ("(" ^ String.concatWith "," (Ty::SR) ^ ") " ^ QualID)
+  | %try TyAtom ( QualID => (TyAtom ^ " " ^ QualID)
+                | => (TyAtom))
+      => (SR)
+  ;
 
 TyAtom
   : TYVAR
   | "(" Ty ")" => ("(" ^ Ty ^ ")")
+  | "{" RowList "}"	=> ("{ " ^ RowList ^" } ")
+  | "{" "}"		=> ("{}")
   | QualID
   ;
+Row : Label ":" Ty => (Label ^ " : " ^ Ty) ;
+RowList : Row ("," Row)* => (String.concatWith "," (Row::SR)) ;
 
 Label : ID | INT ;
 QualID
