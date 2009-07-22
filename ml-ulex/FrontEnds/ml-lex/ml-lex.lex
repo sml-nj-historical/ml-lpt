@@ -11,14 +11,6 @@ val error = (* fn (e,l : int,_) =>
 	     ": " ^ e ^ "\n") *)
      fn _ => ()
 
-local
-val text = ref ([] : string list)
-in
-fun clrAction () = (text := ["("])
-fun updAction (str) = (text := str :: (!text))
-fun getAction () = (concat (rev (!text)))
-end
-
 (* what to do (i.e. switch start states) after recognizing an action *)
 val afterAction = ref (fn () => ())
 
@@ -27,6 +19,17 @@ val pcount = ref 0
 val inquote = ref false
 fun inc r = if !inquote then () else r := !r + 1
 fun dec r = if !inquote then () else r := !r - 1
+
+(* buffer for accumulating test across the rules for actions *)
+local
+val text = ref ([] : string list)
+in
+fun clrAction () = (text := ["("])
+fun updAction str = if !pcount > 0
+      then (text := str :: !text)
+      else ()
+fun getAction () = String.concat (rev (!text))
+end
 
 structure SIS = RegExp.SymSet
 fun uniChar s = let
