@@ -132,100 +132,101 @@ fun dec (ri as ref i) = (ri := i-1)
 (0w91,0w91,74),
 (0w93,0w93,75),
 (0w111,0w111,76),
-(0w124,0w124,77)], []), ([], [38, 67]), ([(0w10,0w10,11)], [38, 67]), ([(0w42,0w42,10)], [38, 67]), ([(0w41,0w41,9)], [38, 67]), ([], [37]), ([], [36]), ([], [38]), ([(0w0,0w33,17),
+(0w124,0w124,77)], []), ([], [39, 68]), ([(0w10,0w10,11)], [39, 68]), ([(0w42,0w42,10)], [39, 68]), ([(0w41,0w41,9)], [39, 68]), ([], [38]), ([], [37]), ([], [39]), ([(0w0,0w33,17),
 (0w35,0w39,17),
-(0w42,0w2147483647,17)], [42, 67]), ([], [41, 67]), ([(0w42,0w42,16)], [39, 67]), ([], [40, 67]), ([], [35]), ([(0w0,0w33,17),
+(0w42,0w2147483647,17)], [43, 68]), ([], [42, 68]), ([(0w42,0w42,16)], [40, 68]), ([], [41, 68]), ([], [36]), ([(0w0,0w33,17),
 (0w35,0w39,17),
-(0w42,0w2147483647,17)], [42]), ([(0w0,0w9,26),
+(0w42,0w2147483647,17)], [43]), ([(0w0,0w9,26),
 (0w11,0w12,26),
 (0w14,0w33,26),
 (0w35,0w91,26),
-(0w93,0w2147483647,26)], [47, 67]), ([], [44, 67]), ([(0w10,0w10,25)], [44, 67]), ([], [43, 67]), ([(0w34,0w34,23),
-(0w92,0w92,24)], [45, 67]), ([], [48]), ([], [46]), ([], [44]), ([(0w0,0w9,26),
+(0w93,0w2147483647,26)], [48, 68]), ([], [45, 68]), ([(0w10,0w10,25)], [45, 68]), ([], [44, 68]), ([(0w34,0w34,23),
+(0w92,0w92,24)], [46, 68]), ([], [49]), ([], [47]), ([], [45]), ([(0w0,0w9,26),
 (0w11,0w12,26),
 (0w14,0w33,26),
 (0w35,0w91,26),
-(0w93,0w2147483647,26)], [47]), ([], [67]), ([], [49, 67]), ([(0w10,0w10,55)], [49, 67]), ([], [65, 67]), ([(0w39,0w39,54),
+(0w93,0w2147483647,26)], [48]), ([], [68]), ([], [50, 68]), ([(0w10,0w10,55)], [50, 68]), ([], [66, 68]), ([(0w39,0w39,54),
 (0w48,0w57,54),
 (0w65,0w90,54),
 (0w95,0w95,54),
-(0w97,0w122,54)], [52, 67]), ([(0w42,0w42,53)], [60, 67]), ([], [61, 67]), ([], [56, 67]), ([], [58, 67]), ([(0w62,0w62,52)], [67]), ([], [57, 67]), ([], [59, 67]), ([], [66, 67]), ([(0w39,0w39,46),
+(0w97,0w122,54)], [53, 68]), ([(0w42,0w42,53)], [61, 68]), ([], [62, 68]), ([], [57, 68]), ([], [59, 68]), ([(0w62,0w62,52)], [68]), ([], [58, 68]), ([], [60, 68]), ([], [67, 68]), ([(0w39,0w39,46),
 (0w48,0w57,46),
 (0w65,0w90,46),
 (0w95,0w95,46),
 (0w97,0w122,46),
-(0w46,0w46,47)], [51, 67]), ([(0w39,0w39,46),
+(0w46,0w46,47)], [52, 68]), ([(0w39,0w39,46),
 (0w48,0w57,46),
 (0w65,0w90,46),
 (0w95,0w95,46),
 (0w97,0w104,46),
 (0w106,0w122,46),
 (0w46,0w46,47),
-(0w105,0w105,49)], [51, 67]), ([(0w39,0w39,46),
+(0w105,0w105,49)], [52, 68]), ([(0w39,0w39,46),
 (0w48,0w57,46),
 (0w65,0w90,46),
 (0w95,0w95,46),
 (0w97,0w101,46),
 (0w103,0w122,46),
 (0w46,0w46,47),
-(0w102,0w102,48)], [51, 67]), ([], [62, 67]), ([], [55, 67]), ([], [63, 67]), ([(0w39,0w39,46),
+(0w102,0w102,48)], [52, 68]), ([], [63, 68]), ([], [56, 68]), ([], [64, 68]), ([(0w39,0w39,46),
 (0w48,0w57,46),
 (0w65,0w90,46),
 (0w95,0w95,46),
 (0w97,0w122,46),
-(0w46,0w46,47)], [51]), ([], [53]), ([(0w39,0w39,46),
+(0w46,0w46,47)], [52]), ([], [54]), ([(0w39,0w39,46),
 (0w48,0w57,46),
 (0w65,0w90,46),
 (0w95,0w95,46),
 (0w97,0w122,46),
-(0w46,0w46,47)], [50, 51]), ([(0w39,0w39,46),
+(0w46,0w46,47)], [51, 52]), ([(0w39,0w39,46),
 (0w48,0w57,46),
 (0w65,0w90,46),
 (0w95,0w95,46),
 (0w97,0w102,46),
 (0w104,0w122,46),
 (0w46,0w46,47),
-(0w103,0w103,50)], [51]), ([(0w39,0w39,46),
+(0w103,0w103,50)], [52]), ([(0w39,0w39,46),
 (0w48,0w57,46),
 (0w65,0w90,46),
 (0w95,0w95,46),
 (0w97,0w104,46),
 (0w106,0w122,46),
 (0w46,0w46,47),
-(0w105,0w105,51)], [51]), ([(0w39,0w39,46),
+(0w105,0w105,51)], [52]), ([(0w39,0w39,46),
 (0w48,0w57,46),
 (0w65,0w90,46),
 (0w95,0w95,46),
 (0w97,0w115,46),
 (0w117,0w122,46),
 (0w46,0w46,47),
-(0w116,0w116,51)], [51, 54]), ([], [64]), ([], [34]), ([(0w39,0w39,54),
+(0w116,0w116,51)], [52, 55]), ([], [65]), ([], [35]), ([(0w39,0w39,54),
 (0w48,0w57,54),
 (0w65,0w90,54),
 (0w95,0w95,54),
-(0w97,0w122,54)], [52]), ([], [49]), ([(0w9,0w12,149),
-(0w32,0w32,149),
-(0w13,0w13,150)], [1, 67]), ([(0w9,0w12,149),
-(0w32,0w32,149),
-(0w13,0w13,150)], [1, 67]), ([], [32, 67]), ([], [17, 67]), ([(0w100,0w100,83),
+(0w97,0w122,54)], [53]), ([], [50]), ([(0w9,0w12,155),
+(0w32,0w32,155),
+(0w13,0w13,156)], [1, 68]), ([(0w9,0w12,155),
+(0w32,0w32,155),
+(0w13,0w13,156)], [1, 68]), ([], [33, 68]), ([], [18, 68]), ([(0w100,0w100,83),
 (0w101,0w101,84),
-(0w105,0w105,85),
-(0w107,0w107,86),
-(0w110,0w110,87),
-(0w114,0w114,88),
-(0w115,0w115,89),
-(0w116,0w116,90),
-(0w119,0w119,91)], [67]), ([(0w42,0w42,82)], [24, 67]), ([], [25, 67]), ([], [19, 67]), ([], [18, 67]), ([], [23, 67]), ([(0w62,0w62,81)], [67]), ([], [28, 67]), ([], [21, 67]), ([], [22, 67]), ([(0w62,0w62,80)], [29, 67]), ([], [20, 67]), ([], [16, 67]), ([(0w39,0w39,78),
+(0w104,0w104,85),
+(0w105,0w105,86),
+(0w107,0w107,87),
+(0w110,0w110,88),
+(0w114,0w114,89),
+(0w115,0w115,90),
+(0w116,0w116,91),
+(0w119,0w119,92)], [68]), ([(0w42,0w42,82)], [25, 68]), ([], [26, 68]), ([], [20, 68]), ([], [19, 68]), ([], [24, 68]), ([(0w62,0w62,81)], [68]), ([], [29, 68]), ([], [22, 68]), ([], [23, 68]), ([(0w62,0w62,80)], [30, 68]), ([], [21, 68]), ([], [17, 68]), ([(0w39,0w39,78),
 (0w48,0w57,78),
 (0w65,0w90,78),
 (0w95,0w95,78),
-(0w97,0w122,78)], [2, 67]), ([], [26, 67]), ([], [27, 67]), ([(0w39,0w39,78),
+(0w97,0w122,78)], [2, 68]), ([], [27, 68]), ([], [28, 68]), ([(0w39,0w39,78),
 (0w48,0w57,78),
 (0w65,0w90,78),
 (0w95,0w95,78),
 (0w97,0w101,78),
 (0w103,0w122,78),
-(0w102,0w102,79)], [2, 67]), ([], [15, 67]), ([(0w39,0w39,78),
+(0w102,0w102,79)], [2, 68]), ([], [16, 68]), ([(0w39,0w39,78),
 (0w48,0w57,78),
 (0w65,0w90,78),
 (0w95,0w95,78),
@@ -233,14 +234,14 @@ fun dec (ri as ref i) = (ri := i-1)
 (0w48,0w57,78),
 (0w65,0w90,78),
 (0w95,0w95,78),
-(0w97,0w122,78)], [0, 2]), ([], [31]), ([], [30]), ([], [33]), ([(0w101,0w101,139),
-(0w114,0w114,140)], []), ([(0w110,0w110,135)], []), ([(0w109,0w109,130)], []), ([(0w101,0w101,123)], []), ([(0w97,0w97,113),
-(0w111,0w111,114)], []), ([(0w101,0w101,107)], []), ([(0w116,0w116,103)], []), ([(0w111,0w111,96),
-(0w114,0w114,97)], []), ([(0w104,0w104,92)], []), ([(0w101,0w101,93)], []), ([(0w114,0w114,94)], []), ([(0w101,0w101,95)], []), ([], [12]), ([(0w107,0w107,99)], []), ([(0w121,0w121,98)], []), ([], [11]), ([(0w101,0w101,100)], []), ([(0w110,0w110,101)], []), ([(0w115,0w115,102)], [3]), ([], [3]), ([(0w97,0w97,104)], []), ([(0w114,0w114,105)], []), ([(0w116,0w116,106)], []), ([], [9]), ([(0w102,0w102,108)], []), ([(0w99,0w99,109)], []), ([(0w101,0w101,110)], []), ([(0w108,0w108,111)], []), ([(0w108,0w108,112)], []), ([], [14]), ([(0w109,0w109,121)], []), ([(0w110,0w110,115)], []), ([(0w116,0w116,116)], []), ([(0w101,0w101,117)], []), ([(0w114,0w114,118)], []), ([(0w109,0w109,119)], []), ([(0w115,0w115,120)], [6]), ([], [6]), ([(0w101,0w101,122)], []), ([], [8]), ([(0w121,0w121,124)], []), ([(0w119,0w119,125)], []), ([(0w111,0w111,126)], []), ([(0w114,0w114,127)], []), ([(0w100,0w100,128)], []), ([(0w115,0w115,129)], [5]), ([], [5]), ([(0w112,0w112,131)], []), ([(0w111,0w111,132)], []), ([(0w114,0w114,133)], []), ([(0w116,0w116,134)], []), ([], [7]), ([(0w116,0w116,136)], []), ([(0w114,0w114,137)], []), ([(0w121,0w121,138)], []), ([], [10]), ([(0w102,0w102,147)], []), ([(0w111,0w111,141)], []), ([(0w112,0w112,142)], []), ([(0w112,0w112,143)], []), ([(0w105,0w105,144)], []), ([(0w110,0w110,145)], []), ([(0w103,0w103,146)], []), ([], [13]), ([(0w115,0w115,148)], []), ([], [4]), ([(0w9,0w12,149),
-(0w32,0w32,149),
-(0w13,0w13,150)], [1]), ([(0w9,0w12,149),
-(0w32,0w32,149),
-(0w13,0w13,150)], [1])]
+(0w97,0w122,78)], [0, 2]), ([], [32]), ([], [31]), ([], [34]), ([(0w101,0w101,145),
+(0w114,0w114,146)], []), ([(0w110,0w110,141)], []), ([(0w101,0w101,136)], []), ([(0w109,0w109,131)], []), ([(0w101,0w101,124)], []), ([(0w97,0w97,114),
+(0w111,0w111,115)], []), ([(0w101,0w101,108)], []), ([(0w116,0w116,104)], []), ([(0w111,0w111,97),
+(0w114,0w114,98)], []), ([(0w104,0w104,93)], []), ([(0w101,0w101,94)], []), ([(0w114,0w114,95)], []), ([(0w101,0w101,96)], []), ([], [12]), ([(0w107,0w107,100)], []), ([(0w121,0w121,99)], []), ([], [11]), ([(0w101,0w101,101)], []), ([(0w110,0w110,102)], []), ([(0w115,0w115,103)], [3]), ([], [3]), ([(0w97,0w97,105)], []), ([(0w114,0w114,106)], []), ([(0w116,0w116,107)], []), ([], [9]), ([(0w102,0w102,109)], []), ([(0w99,0w99,110)], []), ([(0w101,0w101,111)], []), ([(0w108,0w108,112)], []), ([(0w108,0w108,113)], []), ([], [14]), ([(0w109,0w109,122)], []), ([(0w110,0w110,116)], []), ([(0w116,0w116,117)], []), ([(0w101,0w101,118)], []), ([(0w114,0w114,119)], []), ([(0w109,0w109,120)], []), ([(0w115,0w115,121)], [6]), ([], [6]), ([(0w101,0w101,123)], []), ([], [8]), ([(0w121,0w121,125)], []), ([(0w119,0w119,126)], []), ([(0w111,0w111,127)], []), ([(0w114,0w114,128)], []), ([(0w100,0w100,129)], []), ([(0w115,0w115,130)], [5]), ([], [5]), ([(0w112,0w112,132)], []), ([(0w111,0w111,133)], []), ([(0w114,0w114,134)], []), ([(0w116,0w116,135)], []), ([], [7]), ([(0w97,0w97,137)], []), ([(0w100,0w100,138)], []), ([(0w101,0w101,139)], []), ([(0w114,0w114,140)], []), ([], [15]), ([(0w116,0w116,142)], []), ([(0w114,0w114,143)], []), ([(0w121,0w121,144)], []), ([], [10]), ([(0w102,0w102,153)], []), ([(0w111,0w111,147)], []), ([(0w112,0w112,148)], []), ([(0w112,0w112,149)], []), ([(0w105,0w105,150)], []), ([(0w110,0w110,151)], []), ([(0w103,0w103,152)], []), ([], [13]), ([(0w115,0w115,154)], []), ([], [4]), ([(0w9,0w12,155),
+(0w32,0w32,155),
+(0w13,0w13,156)], [1]), ([(0w9,0w12,155),
+(0w32,0w32,155),
+(0w13,0w13,156)], [1])]
     fun yystreamify' p input = ULexBuffer.mkStream (p, input)
 
     fun yystreamifyReader' p readFn strm = let
@@ -355,26 +356,28 @@ fun yyAction12 (strm, lastMatch : yymatch) = (yystrm := strm;
 fun yyAction13 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.KW_dropping)
 fun yyAction14 (strm, lastMatch : yymatch) = (yystrm := strm;
        YYBEGIN CONSTR; Tok.KW_refcell)
-fun yyAction15 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.BAR)
-fun yyAction16 (strm, lastMatch : yymatch) = (yystrm := strm;
+fun yyAction15 (strm, lastMatch : yymatch) = (yystrm := strm;
+       YYBEGIN CODE; clrText(); Tok.KW_header)
+fun yyAction16 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.BAR)
+fun yyAction17 (strm, lastMatch : yymatch) = (yystrm := strm;
        YYBEGIN CODE; clrText(); Tok.AT)
-fun yyAction17 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.DOLLAR)
-fun yyAction18 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.PLUS)
-fun yyAction19 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.STAR)
-fun yyAction20 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.QUERY)
-fun yyAction21 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.COLON)
-fun yyAction22 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.SEMI)
-fun yyAction23 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.COMMA)
-fun yyAction24 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.LP)
-fun yyAction25 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.RP)
-fun yyAction26 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.LSB)
-fun yyAction27 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.RSB)
-fun yyAction28 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.SLASH)
-fun yyAction29 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.EQ)
-fun yyAction30 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.ARROW)
-fun yyAction31 (strm, lastMatch : yymatch) = (yystrm := strm;
+fun yyAction18 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.DOLLAR)
+fun yyAction19 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.PLUS)
+fun yyAction20 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.STAR)
+fun yyAction21 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.QUERY)
+fun yyAction22 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.COLON)
+fun yyAction23 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.SEMI)
+fun yyAction24 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.COMMA)
+fun yyAction25 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.LP)
+fun yyAction26 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.RP)
+fun yyAction27 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.LSB)
+fun yyAction28 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.RSB)
+fun yyAction29 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.SLASH)
+fun yyAction30 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.EQ)
+fun yyAction31 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.ARROW)
+fun yyAction32 (strm, lastMatch : yymatch) = (yystrm := strm;
        YYBEGIN CODE; clrText(); Tok.DARROW)
-fun yyAction32 (strm, lastMatch : yymatch) = let
+fun yyAction33 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;
@@ -382,7 +385,7 @@ fun yyAction32 (strm, lastMatch : yymatch) = let
 		    ignore(continue() before YYBEGIN INITIAL);
 		    Tok.STRING (getText())
       end
-fun yyAction33 (strm, lastMatch : yymatch) = let
+fun yyAction34 (strm, lastMatch : yymatch) = let
       val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm;
@@ -390,7 +393,7 @@ fun yyAction33 (strm, lastMatch : yymatch) = let
 	    ignore(continue() before YYBEGIN INITIAL);
 	    continue()
       end
-fun yyAction34 (strm, lastMatch : yymatch) = let
+fun yyAction35 (strm, lastMatch : yymatch) = let
       val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm;
@@ -398,7 +401,7 @@ fun yyAction34 (strm, lastMatch : yymatch) = let
 	    ignore(continue() before YYBEGIN CONSTR);
 	    continue()
       end
-fun yyAction35 (strm, lastMatch : yymatch) = let
+fun yyAction36 (strm, lastMatch : yymatch) = let
       val yylineno = ref(yygetlineNo(!(yystrm)))
       in
         yystrm := strm;
@@ -406,22 +409,22 @@ fun yyAction35 (strm, lastMatch : yymatch) = let
 	    ignore(continue() before YYBEGIN CODE);
 	    continue()
       end
-fun yyAction36 (strm, lastMatch : yymatch) = (yystrm := strm;
-       comLvl := !comLvl+1; continue())
 fun yyAction37 (strm, lastMatch : yymatch) = (yystrm := strm;
+       comLvl := !comLvl+1; continue())
+fun yyAction38 (strm, lastMatch : yymatch) = (yystrm := strm;
        comLvl := !comLvl-1; 
 	    if (!comLvl = 0) 
 	      then (Tok.BOGUS) 
 	      else continue())
-fun yyAction38 (strm, lastMatch : yymatch) = (yystrm := strm;  continue())
-fun yyAction39 (strm, lastMatch : yymatch) = let
+fun yyAction39 (strm, lastMatch : yymatch) = (yystrm := strm;  continue())
+fun yyAction40 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;
          if !pcount = 0 then () else addText yytext;
 		    inc pcount; continue()
       end
-fun yyAction40 (strm, lastMatch : yymatch) = let
+fun yyAction41 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;
@@ -431,7 +434,7 @@ fun yyAction40 (strm, lastMatch : yymatch) = let
 		       Tok.CODE (getText()))
 		    else (addText yytext; continue())
       end
-fun yyAction41 (strm, lastMatch : yymatch) = let
+fun yyAction42 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;
@@ -439,17 +442,17 @@ fun yyAction41 (strm, lastMatch : yymatch) = let
 		    ignore(continue() before YYBEGIN CODE);
 		    continue()
       end
-fun yyAction42 (strm, lastMatch : yymatch) = let
+fun yyAction43 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;  addText yytext; continue()
       end
-fun yyAction43 (strm, lastMatch : yymatch) = let
+fun yyAction44 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;  addText yytext; Tok.BOGUS
       end
-fun yyAction44 (strm, lastMatch : yymatch) = let
+fun yyAction45 (strm, lastMatch : yymatch) = let
       val yycolno = ref(yygetcolNo(!(yystrm)))
       val yylineno = ref(yygetlineNo(!(yystrm)))
       val yytext = yymktext(strm)
@@ -457,11 +460,6 @@ fun yyAction44 (strm, lastMatch : yymatch) = let
         yystrm := strm;
          addText yytext; err (!yylineno, !yycolno, "unclosed string");
  	            Tok.BOGUS
-      end
-fun yyAction45 (strm, lastMatch : yymatch) = let
-      val yytext = yymktext(strm)
-      in
-        yystrm := strm;  addText yytext; continue()
       end
 fun yyAction46 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
@@ -478,40 +476,45 @@ fun yyAction48 (strm, lastMatch : yymatch) = let
       in
         yystrm := strm;  addText yytext; continue()
       end
-fun yyAction49 (strm, lastMatch : yymatch) = (yystrm := strm;  continue())
-fun yyAction50 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.OF)
-fun yyAction51 (strm, lastMatch : yymatch) = let
+fun yyAction49 (strm, lastMatch : yymatch) = let
+      val yytext = yymktext(strm)
+      in
+        yystrm := strm;  addText yytext; continue()
+      end
+fun yyAction50 (strm, lastMatch : yymatch) = (yystrm := strm;  continue())
+fun yyAction51 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.OF)
+fun yyAction52 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;  Tok.ID yytext
       end
-fun yyAction52 (strm, lastMatch : yymatch) = let
+fun yyAction53 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;  Tok.TYVAR yytext
       end
-fun yyAction53 (strm, lastMatch : yymatch) = let
+fun yyAction54 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;  Tok.IDDOT yytext
       end
-fun yyAction54 (strm, lastMatch : yymatch) = let
+fun yyAction55 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;  Tok.INT yytext
       end
-fun yyAction55 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.BAR)
-fun yyAction56 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.STAR)
-fun yyAction57 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.COLON)
-fun yyAction58 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.COMMA)
-fun yyAction59 (strm, lastMatch : yymatch) = (yystrm := strm;
+fun yyAction56 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.BAR)
+fun yyAction57 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.STAR)
+fun yyAction58 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.COLON)
+fun yyAction59 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.COMMA)
+fun yyAction60 (strm, lastMatch : yymatch) = (yystrm := strm;
        YYBEGIN INITIAL; Tok.SEMI)
-fun yyAction60 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.LP)
-fun yyAction61 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.RP)
-fun yyAction62 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.LCB)
-fun yyAction63 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.RCB)
-fun yyAction64 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.ARROW)
-fun yyAction65 (strm, lastMatch : yymatch) = let
+fun yyAction61 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.LP)
+fun yyAction62 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.RP)
+fun yyAction63 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.LCB)
+fun yyAction64 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.RCB)
+fun yyAction65 (strm, lastMatch : yymatch) = (yystrm := strm;  Tok.ARROW)
+fun yyAction66 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;
@@ -519,9 +522,9 @@ fun yyAction65 (strm, lastMatch : yymatch) = let
 		    ignore(continue() before YYBEGIN CONSTR);
 		    Tok.STRING (getText())
       end
-fun yyAction66 (strm, lastMatch : yymatch) = (yystrm := strm;
+fun yyAction67 (strm, lastMatch : yymatch) = (yystrm := strm;
        YYBEGIN CODE; clrText(); Tok.EQ)
-fun yyAction67 (strm, lastMatch : yymatch) = let
+fun yyAction68 (strm, lastMatch : yymatch) = let
       val yycolno = ref(yygetcolNo(!(yystrm)))
       val yylineno = ref(yygetlineNo(!(yystrm)))
       val yytext = yymktext(strm)
@@ -543,7 +546,7 @@ val yyactTable = Vector.fromList([yyAction0, yyAction1, yyAction2, yyAction3,
   yyAction47, yyAction48, yyAction49, yyAction50, yyAction51, yyAction52,
   yyAction53, yyAction54, yyAction55, yyAction56, yyAction57, yyAction58,
   yyAction59, yyAction60, yyAction61, yyAction62, yyAction63, yyAction64,
-  yyAction65, yyAction66, yyAction67])
+  yyAction65, yyAction66, yyAction67, yyAction68])
 in
   if ULexBuffer.eof(!(yystrm))
     then let

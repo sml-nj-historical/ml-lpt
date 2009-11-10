@@ -83,6 +83,7 @@ structure LLKSpec =
 
     datatype grammar = Grammar of {
         name : string,
+	header : string option,
 	defs : Action.action,		(* user definitions (code) *)
         toks : token list,
         nterms : nonterm list,

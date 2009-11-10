@@ -342,11 +342,13 @@ structure SMLOutput =
           end
 
   (* output header *)
-    fun headerHook spec strm = let
-          val (S.Grammar {name, ...}, _) = spec
-          in
-            TextIO.output (strm, String.concat ["functor ", name, "ParseFn(Lex : ANTLR_LEXER)"])
-          end
+    fun headerHook (grm, _) strm = (case grm
+	   of S.Grammar{header = SOME h, ...} => TextIO.output (strm, h)
+	    | S.Grammar{name, ...} =>
+		TextIO.output (strm, String.concat [
+		    "functor ", name, "ParseFn(Lex : ANTLR_LEXER)"
+		  ])
+	  (* end case *))
 
   (* output tokens module name *)
     fun tokmodHook spec strm = let

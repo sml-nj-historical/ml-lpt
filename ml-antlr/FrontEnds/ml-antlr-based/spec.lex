@@ -1,8 +1,6 @@
 (* spec.lex
  *
- * COPYRIGHT (c) 2006 
- * John Reppy (http://www.cs.uchicago.edu/~jhr)
- * Aaron Turon (http://www.cs.uchicago.edu/~adrassi)
+ * COPYRIGHT (c) 2009 The Manticore Project (http://manticore.cs.uchicago.edu)
  * All rights reserved.
  *
  * (With some code borrowed from ml-yacc)
@@ -60,18 +58,19 @@ fun dec (ri as ref i) = (ri := i-1)
 <INITIAL>{ws}+	=> (skip());
 <INITIAL>{id}		=> (Tok.ID yytext);
 
-<INITIAL>"%token"("s")?	=> (YYBEGIN CONSTR; Tok.KW_tokens);
-<INITIAL>"%defs"	=> (YYBEGIN CODE; clrText(); Tok.KW_defs);
+<INITIAL>"%token"("s")?		=> (YYBEGIN CONSTR; Tok.KW_tokens);
+<INITIAL>"%defs"		=> (YYBEGIN CODE; clrText(); Tok.KW_defs);
 <INITIAL>"%keyword"("s")?	=> (Tok.KW_keywords);
 <INITIAL>"%nonterm"("s")?	=> (Tok.KW_nonterms);
-<INITIAL>"%import"	=> (Tok.KW_import);
-<INITIAL>"%name"	=> (Tok.KW_name);
-<INITIAL>"%start"	=> (Tok.KW_start);
-<INITIAL>"%entry"	=> (Tok.KW_entry);
-<INITIAL>"%try"		=> (Tok.KW_try);
-<INITIAL>"%where"       => (YYBEGIN CODE; clrText(); Tok.KW_where);
-<INITIAL>"%dropping"	=> (Tok.KW_dropping);
-<INITIAL>"%refcell"	=> (YYBEGIN CONSTR; Tok.KW_refcell);
+<INITIAL>"%import"		=> (Tok.KW_import);
+<INITIAL>"%name"		=> (Tok.KW_name);
+<INITIAL>"%start"		=> (Tok.KW_start);
+<INITIAL>"%entry"		=> (Tok.KW_entry);
+<INITIAL>"%try"			=> (Tok.KW_try);
+<INITIAL>"%where"       	=> (YYBEGIN CODE; clrText(); Tok.KW_where);
+<INITIAL>"%dropping"		=> (Tok.KW_dropping);
+<INITIAL>"%refcell"		=> (YYBEGIN CONSTR; Tok.KW_refcell);
+<INITIAL>"%header"		=> (YYBEGIN CODE; clrText(); Tok.KW_header);
 
 <INITIAL>"|"	=> (Tok.BAR); 
 <INITIAL>"@"	=> (YYBEGIN CODE; clrText(); Tok.AT); 

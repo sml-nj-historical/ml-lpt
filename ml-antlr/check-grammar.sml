@@ -92,7 +92,8 @@ structure CheckGrammar : sig
 	  val tokList	: S.token list ref = ref []
 	  val keywords	: Err.span ATbl.hash_table = ATbl.mkTable (32, Fail "keywords table")
 	  val entryPts	: Err.span ATbl.hash_table = ATbl.mkTable (4, Fail "entryPts table")
-	  val name	: (string * Err.span)    option ref = ref NONE
+	  val name	: (string * Err.span) option ref = ref NONE
+	  val header    : Syn.code option ref = ref NONE
 	  val startSym	: (Atom.atom * Err.span) option ref = ref NONE
 	  val defs	: Action.action ref = ref Action.empty
 	  val refCells	: S.refcell ATbl.hash_table = ATbl.mkTable (4, Fail "refCells table")
@@ -102,68 +103,78 @@ structure CheckGrammar : sig
 	  val prodList	: S.prod list ref = ref []
 	(* error message for duplicate declarations *)
 	  fun dupeErr (origSpan, newSpan, whatDupe) = 
-	        Err.spanErr (newSpan, [
-		  "duplicate ", whatDupe, ", originally declared at ",
-		  Err.span2str origSpan
-		])
+	        Err.spanErr (newSpan,
+		  "duplicate " :: whatDupe
+		  @ [", originally declared at ", Err.span2str origSpan])
 	(* PHASE 1: record basic directives, checking for duplicates *)
-	  fun doDecl1 (span, Syn.NAME n) = 
-	        (case !name
-		  of SOME (_, span') => dupeErr (span', span, "%name declaration")
-		   | NONE => name := SOME (n, span))
-	    | doDecl1 (span, Syn.START sym) = 
-	        (case !startSym
-		  of SOME (_, span') => dupeErr (span', span, "%start declaration")
-		   | NONE => startSym := SOME (sym, span))
-	    | doDecl1 (span, Syn.ENTRY sym) = 
-	        (case ATbl.find entryPts sym
+	  fun doDecl1 (span, Syn.NAME n) = (case !name
+		  of SOME (_, span') => dupeErr (span', span, ["%name declaration"])
+		   | NONE => name := SOME (n, span)
+		(* end case *))
+	    | doDecl1 (span, Syn.HEADER h) = (case !header
+		  of SOME(span', _) => dupeErr (span', span, ["%header declaration"])
+		   | NONE => header := SOME h
+		(* end case *))
+	    | doDecl1 (span, Syn.START sym) = (case !startSym
+		  of SOME (_, span') => dupeErr (span', span, ["%start declaration"])
+		   | NONE => startSym := SOME (sym, span)
+		(* end case *))
+	    | doDecl1 (span, Syn.ENTRY sym) = (case ATbl.find entryPts sym
 		  of NONE => ATbl.insert entryPts (sym, span)
-		   | SOME span' => dupeErr (span', span, 
-				    "%entry declaration for '" ^ Atom.toString sym ^ "'"))
-	    | doDecl1 (span, Syn.KEYWORD sym) = 
-	        (case ATbl.find keywords sym
-		  of NONE => ATbl.insert keywords (sym, span)
-		   | SOME span' => dupeErr (span', span,
-				    "%keywords declaration for '" ^ Atom.toString sym ^ "'"))
-	    | doDecl1 (span, Syn.REFCELL (name, ty, code)) = 
-	        (case ATbl.find refCells (Atom.atom name)
-		  of NONE => ATbl.insert refCells 
-			       (Atom.atom name, 
-				S.REFCELL {
-				  name = name, ty = ty, 
-				  initCode = Action.action code, loc = span})
-		   | SOME (S.REFCELL {loc, ...}) => 
-		       dupeErr (loc, span, "%refcell declaration for '" ^ name ^ "'"))
+		   | SOME span' => dupeErr (span', span, [
+			"%entry declaration for '", Atom.toString sym, "'"
+		      ])
+		(* end case *))
+	    | doDecl1 (span, Syn.KEYWORD sym) = (case ATbl.find keywords sym
+		 of NONE => ATbl.insert keywords (sym, span)
+		  | SOME span' => dupeErr (span', span, [
+			"%keywords declaration for '", Atom.toString sym, "'"
+		      ])
+		(* end case *))
+	    | doDecl1 (span, Syn.REFCELL (name, ty, code)) = (
+		case ATbl.find refCells (Atom.atom name)
+		 of NONE => ATbl.insert refCells 
+			      (Atom.atom name, 
+			       S.REFCELL {
+				 name = name, ty = ty, 
+				 initCode = Action.action code, loc = span})
+		  | SOME (S.REFCELL {loc, ...}) => 
+		      dupeErr (loc, span, ["%refcell declaration for '", name, "'"])
+		(* end case *))
 	    | doDecl1 (span, Syn.DEFS code) = 
 	        defs := Action.concat (!defs, Action.action code)
 	    | doDecl1 _ = ()
 	  val _ = app doDecl1 ds
-	(* PHASE 2: record %tokens delcarations *)
+	(* PHASE 2: record %tokens declarations *)
 	  val kwSet = ASet.addList (ASet.empty, 
 			map (fn (x, _) => x) (ATbl.listItemsi keywords))
 	  fun isKW s = ASet.member (kwSet, s)
-	  fun doDecl2 (span, Syn.TOKEN (sym, tyOpt, abbrevOpt)) = 
-	        (case ATbl.find tokTbl sym
-		  of NONE => let
-		       val _ = case abbrevOpt
-				of SOME a => 
-				   (case ATbl.find tokTbl a
-				     of SOME (S.T{loc, ...}) =>
-					dupeErr (loc, span, "%tokens declaration with abbreviation " ^ Atom.toString a)
-				      | NONE => ())
-				 | NONE => ()
-		       val tok = S.T {
-			     name = sym, id = nextGlobalID(), abbrev = abbrevOpt, 
-			     keyword = isKW sym orelse 
-			               getOpt(Option.map isKW abbrevOpt, false),
-			     ty = tyOpt, loc = span}
-		       in 
-		         ATbl.insert tokTbl (sym, tok);
-			 Option.app (fn a => ATbl.insert tokTbl (a, tok)) abbrevOpt;
-			 tokList := tok :: !tokList
-		       end
-		   | SOME (S.T{loc, ...}) => 
-		       dupeErr (loc, span, "%tokens declaration for '" ^ Atom.toString sym ^ "'"))
+	  fun doDecl2 (span, Syn.TOKEN (sym, tyOpt, abbrevOpt)) = (
+	        case ATbl.find tokTbl sym
+		 of NONE => let
+		      val _ = case abbrevOpt
+			       of SOME a => 
+				  (case ATbl.find tokTbl a
+				    of SOME (S.T{loc, ...}) =>
+				       dupeErr (loc, span, [
+					   "%tokens declaration with abbreviation ",
+					   Atom.toString a
+					 ])
+				     | NONE => ())
+				| NONE => ()
+		      val tok = S.T {
+			    name = sym, id = nextGlobalID(), abbrev = abbrevOpt, 
+			    keyword = isKW sym orelse 
+				      getOpt(Option.map isKW abbrevOpt, false),
+			    ty = tyOpt, loc = span}
+		      in 
+			ATbl.insert tokTbl (sym, tok);
+			Option.app (fn a => ATbl.insert tokTbl (a, tok)) abbrevOpt;
+			tokList := tok :: !tokList
+		      end
+		  | SOME (S.T{loc, ...}) => 
+		      dupeErr (loc, span, ["%tokens declaration for '", Atom.toString sym, "'"])
+		(* end case *))
 	    | doDecl2 _ = ()
 	  val _ = app doDecl2 ds
 	  val _ = if List.length (!tokList) = 0 then
@@ -314,6 +325,7 @@ structure CheckGrammar : sig
 	  val _ = Err.abortIfErr()
 	  in S.Grammar {
 	    name = getOpt (Option.map #1 (!name), ""),
+	    header = Option.map #2 (!header),
 	    defs = !defs,
 	    toks = !tokList,
 	    nterms = nterms,

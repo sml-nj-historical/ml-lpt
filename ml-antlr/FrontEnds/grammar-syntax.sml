@@ -1,8 +1,6 @@
 (* grammar-syntax.sml
  *
- * COPYRIGHT (c) 2005
- * John Reppy (http://www.cs.uchicago.edu/~jhr)
- * Aaron Turon (http://www.cs.uchicago.edu/~adrassi)
+ * COPYRIGHT (c) 2009 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
  * Parse tree for grammar input.
@@ -20,6 +18,7 @@ structure GrammarSyntax =
 
     datatype decl
       = NAME of name
+      | HEADER of code
       | START of symbol
       | ENTRY of symbol
       | KEYWORD of symbol
@@ -56,6 +55,7 @@ structure GrammarSyntax =
 
     local
       fun ppDecl (_, NAME n) = "%name"
+	| ppDecl (_, HEADER _) = "%code"
 	| ppDecl (_, START s) = "%start"
 	| ppDecl (_, ENTRY s) = "%entry"
 	| ppDecl (_, KEYWORD s) = "%keywords"

@@ -81,6 +81,8 @@ A \antlr{} specification is a list of semicolon-terminated \emph{declarations}. 
 \GNextB
 	{\kw{name} ID}
 \GNextB
+	{\kw{header} code}
+\GNextB
 	{\kw{refcell} ID \T{:} monotype \T{=} code}
 \GNextB
 	{\kw{start} ID}
@@ -199,11 +201,27 @@ When a syntax error is discovered, \antlr{} attempts to find a single-token repa
 
 \subsection{The \kw{name} directive}
 
-The prefix to use for the name of the generated parser functor is specified using \kw{name}.  In addition to the functor, \antlr{} will generate a module to define the {\tt token} datatype.  If the declaration
+The prefix to use for the name of the generated parser functor is specified using \kw{name}.
+In addition to the functor, \antlr{} will generate a module to define the {\tt token} datatype.
+If the declaration
 \begin{verbatim}
     %name Example;
 \end{verbatim}
-appears in the specification, then the parser functor will be named {\tt ExampleParseFn} and the tokens module will be called {\tt ExampleTokens}.
+appears in the specification, then the parser functor will be named
+{\tt ExampleParseFn} and the tokens module will be called {\tt ExampleTokens}.
+
+\subsection{The \kw{header} directive}
+The \kw{header} directive allows one to specify the parser's functor.
+This directive is useful when you want to add additional parameters to the functor,
+but the declaration must include the \texttt{Lex} structure with signature
+\texttt{ANTLR\char`\_LEXER}.
+For example,
+\begin{verbatim}
+    %header (
+      functor ExampleParsFn (
+          structure Lex : ANTLR_LEXER
+          structure Extras : EXTRA_SIG));
+\end{verbatim}%
 
 \subsection{The \kw{refcell} directive}
 

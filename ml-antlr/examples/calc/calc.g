@@ -1,4 +1,10 @@
 %name CalcParse;
+
+(* an example of using the header declaration, although it
+ * just describes the default behavior.
+ *)
+%header (functor CalcParseFn (Lex : ANTLR_LEXER));
+
 %entry exp;
 
 %tokens
@@ -11,8 +17,8 @@
   | DummyExp of int
   ;
 
-%refcell vars : string list :== ([]);
-%refcell nums : int list :== ([]);
+%refcell vars : string list = ([]);
+%refcell nums : int list = ([]);
 
 prog
   : (exp@(AtomMap.empty) ";")*
@@ -20,7 +26,7 @@ prog
 exp(env)
   : "let" ID "=" exp@(env)
     "in" exp@(AtomMap.insert(env, Atom.atom ID, exp1))
-      => ( vars :== ID::(!!vars); exp2 )
+      => ( vars := ID::(!!vars); exp2 )
   | addExp@(env)
   ;
 addExp(env)
@@ -41,7 +47,7 @@ atomicExp(env)
       %where ( AtomMap.inDomain (env, Atom.atom ID) )
       => ( valOf(AtomMap.find (env, Atom.atom ID)) )
   | NUM
-      => ( nums :== NUM::(!!nums); NUM )
+      => ( nums := NUM::(!!nums); NUM )
   | "(" exp@(env) ")"
   | DummyExp
   ;

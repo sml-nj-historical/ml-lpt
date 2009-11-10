@@ -1,9 +1,9 @@
 (* spec.grm
  *
- * COPYRIGHT (c) 2006 
- * John Reppy (http://www.cs.uchicago.edu/~jhr)
- * Aaron Turon (http://www.cs.uchicago.edu/~adrassi)
+ * COPYRIGHT (c) 2009 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
+ *
+ * ML-Antlr grammar for ML-Antlr.
  *)
 
 %defs (
@@ -24,19 +24,19 @@
 %name Spec;
 
 %tokens 
-  : KW_tokens	("%tokens")
-  | KW_defs	("%defs")
-  | KW_keywords	("%keywords")
-  | KW_import	("%import")
-  | KW_name	("%name")
-  | KW_start	("%start")
+  : KW_defs	("%defs")
+  | KW_dropping	("%dropping")		
   | KW_entry	("%entry")
+  | KW_header	("%header")
+  | KW_import	("%import")
+  | KW_keywords	("%keywords")
+  | KW_name	("%name")
+  | KW_nonterms	("%nonterms")
   | KW_refcell	("%refcell")
+  | KW_start	("%start")
+  | KW_tokens	("%tokens")
   | KW_try	("%try")
   | KW_where	("%where")
-(*    | KW_header *)
-  | KW_dropping	("%dropping")		
-  | KW_nonterms	("%nonterms")
   | LP  ("(")	| RP  (")")
   | LSB ("[")	| RSB ("]")
   | LCB ("{")	| RCB ("}")
@@ -79,6 +79,7 @@ File(fileName, sm) :
 %nonterm Decl of (StreamPos.span * GS.decl) list ;
 Decl
   : "%name" ID		=> ([ (FULL_SPAN, GS.NAME ID) ])
+  | "%header" Code	=> ([ (FULL_SPAN, GS.HEADER Code) ])
   | "%start" ID		=> ([ (FULL_SPAN, GS.START (Atom.atom ID)) ])
   | "%entry" IDList	=> (map (lift (GS.ENTRY o Atom.atom)) IDList)
   | "%keywords" SymList	=> (map (lift GS.KEYWORD) SymList)
