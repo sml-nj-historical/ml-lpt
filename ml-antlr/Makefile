@@ -1,22 +1,16 @@
+# Makefile
 #
-# COPYRIGHT (c) 2006
-# John Reppy (http://www.cs.uchicago.edu/~jhr)
-# Aaron Turon (http://www.cs.uchicago.edu/~adrassi)
+# COPYRIGHT (c) 2009 The Fellowship of SML/NJ (http://www.smlnj.org)
 # All rights reserved.
 #
-
-OS =		$(shell uname -s)
-
-ifeq ($(shell uname -s),Darwin)
-HEAP_SUFFIX =		ppc-darwin
-else
-HEAP_SUFFIX =		x86-linux
-endif
 
 SHELL =			/bin/sh
 SML =			sml
 ML_BUILD =		ml-build
 ML_MAKEDEPEND =		ml-makedepend
+
+# NOTE: the @SMLsuffix option is new with SML/NJ 110.72
+HEAP_SUFFIX = $(shell sml @SMLsuffix)
 
 PROGRAM =	ml-antlr
 HEAP_IMAGE =	$(PROGRAM).$(HEAP_SUFFIX)
