@@ -20,22 +20,25 @@ structure Options =
     val beTest    : bool ref   = ref false
     val minimize  : bool ref   = ref false
     val beMode	  : be_mode ref = ref BySize
+    val strictSML : bool ref	= ref false
 
-    fun procArg arg = 
-	  (case arg
-	    of "--dot"    => dot := true
-	     | "--dump"	  => dump := true
-	     | "--match"  => match := true
-	     | "--testbe" => beTest := true
-	     | "--ml-lex-mode"	=> lexCompat := true
-	     | "--minimize"	=> minimize := true
-	     | "--table-based"	=> beMode := TableBased
-	     | "--fn-based"	=> beMode := FnBased
-	     | file	  => 
-	         if String.size (!fname) > 0 
-		 then 
-		   raise Fail "Only one input file may be specified\n"
-		 else fname := file
-	   (* end case *))
+    fun procArg arg =(case arg
+	   of "--dot"    	=> dot := true
+	    | "--dump"	  	=> dump := true
+	    | "--match"		=> match := true
+	    | "--testbe"	=> beTest := true
+	    | "--ml-lex-mode"	=> lexCompat := true
+	    | "--minimize"	=> minimize := true
+	    | "--table-based"	=> beMode := TableBased
+	    | "--fn-based"	=> beMode := FnBased
+	    | "--strict-sml"	=> strictSML := true
+	    | file => 
+		if String.size (!fname) > 0 
+		  then raise Fail "Only one input file may be specified\n"
+		  else fname := file
+	  (* end case *))
+
+  (* the arguments *)
+    val args = "[--dot] [--dump] [--match] [--ml-lex-mode] [--minimize] [--strict-sml]"
 
   end
