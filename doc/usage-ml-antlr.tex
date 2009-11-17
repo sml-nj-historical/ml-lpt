@@ -208,7 +208,7 @@ If the declaration
     %name Example;
 \end{verbatim}
 appears in the specification, then the parser functor will be named
-{\tt ExampleParseFn} and the tokens module will be called {\tt ExampleTokens}.
+\texttt{ExampleParseFn} and the tokens module will be called \texttt{ExampleTokens}.
 
 \subsection{The \kw{header} directive}
 The \kw{header} directive allows one to specify the parser's functor.
@@ -218,7 +218,7 @@ but the declaration must include the \texttt{Lex} structure with signature
 For example,
 \begin{verbatim}
     %header (
-      functor ExampleParsFn (
+      functor ExampleParseFn (
           structure Lex : ANTLR_LEXER
           structure Extras : EXTRA_SIG));
 \end{verbatim}%

@@ -257,12 +257,11 @@ structure LexGen :
 		else (initStates, states, numStates)
           in LO.Spec {
                decls = decls,
-	       header = (if String.size header = 0
-			 then "structure " ^ 
-			        (if String.size structName = 0
-				 then "Mlex"
-				 else structName)
-			 else header),
+	       header = (case (header, structName)
+		   of ("", "")  => "structure Mlex"
+		    | (hdr, "") => hdr
+		    | ("", name) => "structure "^name
+		  (* end case *)),
 	       arg = arg,
 	       actions = actionsVec,
 	       dfa = states,

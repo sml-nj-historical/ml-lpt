@@ -69,6 +69,8 @@ A \ulex{} specification is a list of semicolon-terminated \emph{declarations}.  
 \GNextB
 	{\kw{name} ID}
 \GNextB
+	{\kw{header} code}
+\GNextB
 	{\kw{states} ID$^+$}
 	
 \GFirstB{code}
@@ -181,6 +183,17 @@ which matches arbitrary-length integers.  Note that scoping of let-bindings foll
 \subsection{The \kw{name} directive}
 
 The name to use for the generated lexer module is specified using \kw{name}.
+
+\subsection{The \kw{header} directive}
+The \kw{header} directive allows one to specify the lexer's header.
+This directive is useful when you want to use a functor for the lexer.
+For example,
+\begin{verbatim}
+    %header (
+      functor ExampleLexFn (Extras : EXTRA_SIG));
+\end{verbatim}%
+Note that it is an error to include both the \kw{header} and \kw{name} directive in the
+same lexer specification.
 
 \subsection{The \kw{states} directive}
 \label{sec:start-states}

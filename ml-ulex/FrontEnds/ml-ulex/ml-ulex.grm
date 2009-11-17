@@ -40,6 +40,7 @@
   | EQ		("=")
   | KW_defs	("%defs")
   | KW_arg	("%arg")
+  | KW_header	("%header")
   | KW_name	("%name")
   | KW_states	("%states")
   | KW_let	("%let")
@@ -57,7 +58,7 @@
   ;
 
 %keywords
-  "%defs", "%name", "%states", "%let", "%charset", "%arg" ;
+  "%defs", "%name", "%states", "%let", "%charset", "%arg", "%header" ;
 
 %refcell errs : (AntlrStreamPos.span * string) list = ([]);
 
@@ -113,6 +114,8 @@ directive(conf, env)
       | "ascii8" =>  (LS.updClamp (conf, LS.CLAMP255), env))
   | "%name" ID
       => (LS.updStructName (conf, ID), env)
+  | "%header" CODE
+      => (LS.updHeader (conf, CODE), env)
   ;
 
 re(env)
