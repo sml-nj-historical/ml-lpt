@@ -35,7 +35,10 @@ where {\tt file} is the name of the input \ulex{} specification, and where {\tt 
   \\
   \texttt{--fn-based} & generate a lexer that represents states as functions and transitions as tail calls.\\
   \\
-  \texttt{--minimize} & generate a minimal machine.  Note that this is slow, and is almost never necessary.
+  \texttt{--minimize} & generate a minimal machine.  Note that this is slow, and is almost never necessary. \\
+  \\
+  \texttt{--strict-sml} & generate strict SML (\ie{}, do not use SML/NJ extensions).  This flag
+    is useful if you want to use the output with a different SML system.
 \end{tabular}
 
 \vskip 10pt \noindent
