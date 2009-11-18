@@ -10,7 +10,8 @@ ML_BUILD =		ml-build
 ML_MAKEDEPEND =		ml-makedepend
 
 # NOTE: the @SMLsuffix option is new with SML/NJ 110.72
-HEAP_SUFFIX = $(shell sml @SMLsuffix)
+#HEAP_SUFFIX = $(shell sml @SMLsuffix)
+HEAP_SUFFIX = $(shell echo 'TextIO.output (TextIO.stdErr, SMLofNJ.SysInfo.getHeapSuffix ());' | sml 2>&1 1> /dev/null)
 
 PROGRAM =	ml-ulex
 HEAP_IMAGE =	$(PROGRAM).$(HEAP_SUFFIX)

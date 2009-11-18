@@ -1,0 +1,45 @@
+# Makefile
+#
+# COPYRIGHT (c) 2009 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# Makefile for building ml-ulex using MLton
+#
+
+SHELL =		/bin/sh
+
+MLTON =		mlton
+MLTON_FLAGS =
+
+TARGET =	mlulex
+
+SML_BE =	BackEnds/SML
+SML_FILES =	$(SML_BE)/string-template-ml-lex.sml \
+		$(SML_BE)/string-template-ml-ulex.sml
+
+MLB_FILES =	../common/lpt-common.mlb \
+		../lib/ml-lpt-lib.mlb \
+		ml-ulex.mlb
+
+$(TARGET) :	$(SML_FILES) $(MLB_FILES)
+	$(MLTON) -output $(TARGET) $(MLTON_FLAGS) ml-ulex.mlb
+
+# a generator for the template string files
+#
+GEN =		../gen/gen-template-struct
+
+$(GEN):
+	(cd ../gen; make gen-template-struct)
+
+$(SML_BE)/string-template-ml-lex.sml:	$(GEN) $(SML_BE)/template-ml-lex.sml
+	$(GEN) LexTemplate $(SML_BE)/template-ml-lex.sml $(SML_BE)/string-template-ml-lex.sml
+
+$(SML_BE)/string-template-ml-ulex.sml:	$(GEN) $(SML_BE)/template-ml-ulex.sml
+	$(GEN) ULexTemplate $(SML_BE)/template-ml-ulex.sml $(SML_BE)/string-template-ml-ulex.sml
+
+.PHONEY:	clean
+clean:
+	rm -f $(TARGET)
+	rm -f $(SML_BE)/string-template-ml-lex.sml
+	rm -f $(SML_BE)/string-template-ml-ulex.sml
+	(cd ../gen; make clean)

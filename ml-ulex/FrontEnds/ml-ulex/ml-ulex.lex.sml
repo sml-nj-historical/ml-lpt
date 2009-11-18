@@ -47,7 +47,7 @@ COM | CODE | STRING | CHARSET | CHARCLASS | CURLY | RESTRING | INITIAL | DIRECTI
     withtype action = ULexBuffer.stream * yymatch -> UserDeclarations.lex_result
 
     val yytable : ((UTF8.wchar * UTF8.wchar * int) list * int list) Vector.vector = 
-#[([(0w0,0w12,9),
+Vector.fromList[([(0w0,0w12,9),
 (0w14,0w39,9),
 (0w41,0w41,9),
 (0w43,0w2147483647,9),

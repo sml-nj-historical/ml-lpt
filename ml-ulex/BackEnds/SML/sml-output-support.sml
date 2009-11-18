@@ -160,7 +160,7 @@ structure SMLOutputSupport =
 	    ))),
 	    innerExp)
 
-    val lexTemplate  = ExpandFile.mkTemplate "BackEnds/SML/template-ml-lex.sml" 
-    val ulexTemplate = ExpandFile.mkTemplate "BackEnds/SML/template-ml-ulex.sml" 
+  (* include the templates, which are defined in a compiler-specific way *)
+    open Templates
 
   end

@@ -74,7 +74,7 @@ structure SMLTblOutput : OUTPUT =
           end
 
     fun output (spec, fname) = 
-          ExpandFile.expand' {
+          ExpandFile.expandTemplate {
 	      src = if !Options.lexCompat 
 		    then lexTemplate else ulexTemplate,
 	      dst = fname ^ ".sml",

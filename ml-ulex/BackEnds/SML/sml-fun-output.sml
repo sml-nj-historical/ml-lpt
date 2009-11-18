@@ -192,7 +192,7 @@ structure SMLFunOutput : OUTPUT =
     fun tableHook _ strm = TextIO.output (strm, "Vector.fromList []");
 
     fun output (spec, fname) = 
-          ExpandFile.expand' {
+          ExpandFile.expandTemplate {
 	      src = if !Options.lexCompat 
 		    then lexTemplate else ulexTemplate,
 	      dst = fname ^ ".sml",
