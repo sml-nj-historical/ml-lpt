@@ -67,6 +67,7 @@ is
   BackEnds/SML/sml-output-support.sml
   BackEnds/SML/sml-fun-output.sml
   BackEnds/SML/sml-tbl-output.sml
+  BackEnds/SML/smlnj-templates.sml
 
   lex-gen.sml
   reg-exp-sig.sml
