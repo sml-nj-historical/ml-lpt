@@ -1,25 +1,22 @@
 (* expand-file.sml
  *
- * COPYRIGHT (c) 1999 Bell Labs, Lucent Technologies.
- * (Used with permission)
+ * COPYRIGHT (c) 2009 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
  *
  * Copy a template file to an output file while expanding placeholders.
  * Placeholders are denoted by @id@ on a line by themselves.
  *)
 
-structure ExpandFile : sig
+structure ExpandFile :> sig
 
     type hook = TextIO.outstream -> unit
+
     type template
 
-    val expand : {
-	  src : string, (* file name *)
-	  dst : string, (* file name *)
-	  hooks : (string * hook) list
-        } -> unit
+    val mkTemplateFromFile : string -> template
+    val mkTemplateFromList : string list -> template
 
-    val mkTemplate : string -> template (* file name -> template *)
-    val expand' : {
+    val expandTemplate : {
 	  src : template, 
 	  dst : string, (* file name *)
 	  hooks : (string * hook) list
@@ -37,17 +34,19 @@ structure ExpandFile : sig
     type hook = TextIO.outstream -> unit
     type template = string list
 
-    fun mkTemplate fname = let
+    fun mkTemplateFromFile fname = let
           val file = TIO.openIn fname
 	  fun done () = TIO.closeIn file
 	  fun read () = (case TIO.inputLine file
-			  of NONE => []
-			   | SOME line => line::read()
-			 (* end case *))
+		 of NONE => []
+		  | SOME line => line::read()
+		(* end case *))
 	  in 
             read() handle ex => (done(); raise ex)
 	    before done()
 	  end
+
+    fun mkTemplateFromList l = l
 
     val placeholderRE = RE.compileString "[\\t ]*@([a-zA-Z][-a-zA-Z0-9_]*)@[\\t ]*"
     val prefixPlaceholder = RE.prefix placeholderRE SS.getc
@@ -78,11 +77,11 @@ structure ExpandFile : sig
 
     exception OpenOut
 
-    fun expand' {src, dst, hooks} = (let
+    fun expandTemplate {src, dst, hooks} = (let
 	  val dstStrm = TIO.openOut dst
 		handle ex => (
 		  TIO.output(TIO.stdOut, concat[
-		      "Warning: unable to open output file \"",
+		      "Error: unable to open output file \"",
 		      dst, "\"\n"
 		    ]);
 		  raise OpenOut)
@@ -92,10 +91,5 @@ structure ExpandFile : sig
 	    done()
 	  end
 	    handle OpenOut => ())
-
-    fun expand {src, dst, hooks} = 
-	  expand' {src = mkTemplate src, 
-		   dst = dst, 
-		   hooks = hooks}
 
   end
