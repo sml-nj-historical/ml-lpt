@@ -14,15 +14,18 @@ MLTON_FLAGS =
 TARGET =	mlulex
 
 SML_BE =	BackEnds/SML
-SML_FILES =	$(SML_BE)/string-template-ml-lex.sml \
+
+TEMPLATES =	$(SML_BE)/string-template-ml-lex.sml \
 		$(SML_BE)/string-template-ml-ulex.sml
+
+SML_FILES =
 
 MLB_FILES =	../common/lpt-common.mlb \
 		../lib/ml-lpt-lib.mlb \
-		ml-ulex.mlb
+		$(TARGET).mlb
 
-$(TARGET) :	$(SML_FILES) $(MLB_FILES)
-	$(MLTON) -output $(TARGET) $(MLTON_FLAGS) ml-ulex.mlb
+$(TARGET) :	$(MLB_FILES) $(SML_FILES) $(TEMPLATES)
+	$(MLTON) -output $(TARGET) $(MLTON_FLAGS) $(TARGET).mlb
 
 # a generator for the template string files
 #
@@ -40,6 +43,5 @@ $(SML_BE)/string-template-ml-ulex.sml:	$(GEN) $(SML_BE)/template-ml-ulex.sml
 .PHONEY:	clean
 clean:
 	rm -f $(TARGET)
-	rm -f $(SML_BE)/string-template-ml-lex.sml
-	rm -f $(SML_BE)/string-template-ml-ulex.sml
+	rm -f $(TEMPLATES)
 	(cd ../gen; make clean)
