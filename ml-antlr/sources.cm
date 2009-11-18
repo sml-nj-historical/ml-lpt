@@ -1,3 +1,9 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2009 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
 Library
 
   signature BACK_END
@@ -72,5 +78,7 @@ is
   BackEnds/SML/abs.sml
   BackEnds/SML/pp.sml
   BackEnds/SML/sml-output.sml
+  BackEnds/SML/smlnj-template.sml
 
   BackEnds/LaTeX/latex-output.sml
+  BackEnds/LaTeX/smlnj-template.sml

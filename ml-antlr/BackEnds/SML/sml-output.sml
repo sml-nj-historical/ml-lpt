@@ -421,11 +421,9 @@ structure SMLOutput =
 		   ")"])
           end
 
-    val template = ExpandFile.mkTemplate "BackEnds/SML/template.sml"
-
     fun output (grm, pm, fname) = 
-          ExpandFile.expand' {
-	      src = template,
+          ExpandFile.expandTemplate {
+	      src = SMLTemplate.template,
 	      dst = fname ^ ".sml",
 	      hooks = [("parser",   parserHook (grm, pm)),
 		       ("tokens",   tokensHook (grm, pm)),

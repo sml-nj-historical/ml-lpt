@@ -45,7 +45,7 @@ fun dec (ri as ref i) = (ri := i-1)
     withtype action = ULexBuffer.stream * yymatch -> UserDeclarations.lex_result
 
     val yytable : ((UTF8.wchar * UTF8.wchar * int) list * int list) Vector.vector = 
-#[([(0w0,0w12,5),
+Vector.fromList[([(0w0,0w12,5),
 (0w14,0w39,5),
 (0w41,0w41,5),
 (0w43,0w2147483647,5),

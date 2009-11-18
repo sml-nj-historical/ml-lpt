@@ -204,11 +204,9 @@ structure LaTeXOutput (* : BACK_END *) =
             TextIO.output (strm, g)
           end
 
-    val template = ExpandFile.mkTemplate "BackEnds/LaTeX/template.tex"
-
     fun output (grm, pm, fname) = (print (" writing " ^ fname ^ ".tex\n");
-          ExpandFile.expand' {
-	      src = template,
+          ExpandFile.expandTemplate {
+	      src = LaTeXTemplate.template,
 	      dst = fname ^ ".tex",
 	      hooks = [("grammar", grammarHook (grm, pm))]
 	    })
