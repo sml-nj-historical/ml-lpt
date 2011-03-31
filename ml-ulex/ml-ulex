@@ -7,7 +7,11 @@ mlulexdir=$0
 scripthome=${mlulexdir%ml-ulex}
 
 case `uname -s` in
-  Darwin) heap=${scripthome}ml-ulex.ppc-darwin ;;
+  Darwin)
+    case `uname -p` in
+      i386) heap=${scripthome}ml-ulex.x86-darwin ;;
+      powerpc) heap=${scripthome}ml-ulex.ppc-darwin ;;
+    esac ;;
   *) heap=${scripthome}ml-ulex.x86-linux ;;
 esac
 
