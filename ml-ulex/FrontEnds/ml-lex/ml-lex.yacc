@@ -208,6 +208,8 @@ CharClass
 		(CharClass')
 	| DASH CharClass' RB
 		(SIS.add (CharClass', charToSym #"-"))
+	| RBD
+		(SIS.singleton (charToSym #"-"))
 	| CharClass' RBD
 		(SIS.add (CharClass', charToSym #"-"))
 
