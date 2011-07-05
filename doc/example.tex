@@ -12,8 +12,8 @@ Figure~\ref{fig:calc-sources} gives the CM file for the project.
 
 Library
 
-  structure CalcLex
-  functor CalcParse
+  structure CalcLexer
+  functor CalcParseFn
   structure CalcTest
 
 is
@@ -41,7 +41,7 @@ is
 %let id = {alpha}({alpha} | {digit})*;
 
 %defs (
-  open CalcTokens
+  structure T = CalcTokens
   type lex_result = token
   fun eof() = EOF
 );

@@ -6,9 +6,10 @@
 
 Lexers analyze the lexical structure of an input string, and are usually specified using regular expressions.  \textsc{ml-ulex} is a lexer generator for Standard ML.  The module it generates will contain a type {\tt strm} and a function
 \begin{verbatim}
-    val lex : strm -> lex_result * AntlrStreamPos.span * strm
+    val lex : AntlrStreamPos.sourcemap -> strm -> lex_result * AntlrStreamPos.span * strm
 \end{verbatim}
-where {\tt lex\_result} is a type that must be defined by the user of \ulex{}.  Note that the lexer always returns a token: we assume that end-of-file will be explicitly represented by a token.  Compared to ML-Lex, \ulex{} offers the following improvements:
+where {\tt lex\char`\_result} is a type that must be defined by the user of \ulex{}.
+Note that the lexer always returns a token: we assume that end-of-file will be explicitly represented by a token.  Compared to ML-Lex, \ulex{} offers the following improvements:
 \begin{itemize}
  \item Unicode is supported under the UTF8 encoding.
  \item Intersection and negation of REs are supported.
@@ -155,8 +156,8 @@ Specifies an additional curried parameter, appearing after the sourcemap paramet
 The \kw{defs} directive is used to include a segment of code in the generated lexer module, as in the following example:
 \begin{verbatim}
     %defs (
-      type lex_result = CalcParserToks.token
-      fun eof() = CalcParserToks.EOF
+      type lex_result = CalcParseToks.token
+      fun eof() = CalcParseTokens.EOF
       fun helperFn x = (* ... *)
     )
 \end{verbatim}
