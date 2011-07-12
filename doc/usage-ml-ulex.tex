@@ -6,7 +6,8 @@
 
 Lexers analyze the lexical structure of an input string, and are usually specified using regular expressions.  \textsc{ml-ulex} is a lexer generator for Standard ML.  The module it generates will contain a type {\tt strm} and a function
 \begin{verbatim}
-    val lex : AntlrStreamPos.sourcemap -> strm -> lex_result * AntlrStreamPos.span * strm
+    val lex : AntlrStreamPos.sourcemap -> strm
+          -> lex_result * AntlrStreamPos.span * strm
 \end{verbatim}
 where {\tt lex\char`\_result} is a type that must be defined by the user of \ulex{}.
 Note that the lexer always returns a token: we assume that end-of-file will be explicitly represented by a token.  Compared to ML-Lex, \ulex{} offers the following improvements:

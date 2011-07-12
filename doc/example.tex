@@ -42,8 +42,8 @@ is
 
 %defs (
   structure T = CalcTokens
-  type lex_result = token
-  fun eof() = EOF
+  type lex_result = T.token
+  fun eof() = T.EOF
 );
 
 let     => ( T.KW_let );
@@ -60,9 +60,9 @@ in      => ( T.KW_in );
         => ( continue() );
 .       => ( (* handle error *) );
 \end{verbatim}
-\caption{The ml-ulex specification: {\tt calc.lex}}
+\caption{The ml-ulex specification: \texttt{calc.lex}}
 \label{fig:calc-lex}
-\end{figure}
+\end{figure}%
 
 \begin{figure}[p]
 \begin{verbatim}
@@ -85,12 +85,12 @@ exp(env)
   
 addExp(env)
   : multExp@(env) ("+" multExp@(env))*
-      => ( List.foldr op+ 0 multExp::SR )
+      => ( List.foldr op+ 0 (multExp::SR) )
   ;
   
 multExp(env)
   : prefixExp@(env) ("*" prefixExp@(env))*
-      => ( List.foldr op* 1 prefixExp::SR )
+      => ( List.foldr op* 1 (prefixExp::SR) )
   ;
   
 prefixExp(env)
@@ -106,9 +106,9 @@ atomicExp(env)
   | "(" exp@(env) ")"
   ;
 \end{verbatim}
-\caption{The ml-antlr specification: {\tt calc.grm}}
+\caption{The ml-antlr specification: \texttt{calc.grm}}
 \label{fig:calc-grm}
-\end{figure}
+\end{figure}%
 
 \begin{figure}
 \begin{verbatim}
@@ -123,16 +123,16 @@ structure CalcTest =
       val lex = CalcLexer.lex sm
       val strm = CalcLexer.streamifyInstream instrm
       val (r, strm', errs) = CP.parse lex AtomMap.empty strm
-    in
-      print (String.concatWith "\n" 
+      in
+        print (String.concatWith "\n" 
             (map (AntlrRepair.repairToString 
                     CalcTokens.toString sm) 
                  errs));
-      r
-    end
+        r
+      end
 
   end
 \end{verbatim}
 \caption{The driver: {\tt calc-test.sml}}
 \label{fig:calc-test}
-\end{figure}
+\end{figure}%

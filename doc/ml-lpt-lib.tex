@@ -43,21 +43,25 @@
 \begin{verbatim}
     structure AntlrRepair : sig
 
-      datatype 'token repair_action
-        = Insert of 'token list
-        | Delete of 'token list
+      datatype 'tok repair_action
+        = Insert of 'tok list
+        | Delete of 'tok list
         | Subst of {
-            old : 'token list,
-            new : 'token list
+            old : 'tok list,
+            new : 'tok list
           }
-        | FailureAt of 'token
+        | FailureAt of 'tok
       
-      type 'a repair = AntlrStreamPos.pos * 'token repair_action
+      type 'a repair = AntlrStreamPos.pos * 'tok repair_action
       
+      val actionToString : 
+            ('tok -> string)
+              -> 'tok repair_action -> string
+        
       val repairToString : 
-            ('token -> string) -> 
-            AntlrStreamPos.sourcemap -> 
-            'token repair -> string
+            ('tok -> string)
+              -> AntlrStreamPos.sourcemap
+                -> 'tok repair -> string
         
     end
 \end{verbatim}
