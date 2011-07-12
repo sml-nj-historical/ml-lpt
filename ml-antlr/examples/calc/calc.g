@@ -1,3 +1,9 @@
+(* calc.g
+ *
+ * COPYRIGHT (c) 2011 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
 %name CalcParse;
 
 (* an example of using the header declaration, although it
@@ -26,7 +32,7 @@ prog
 exp(env)
   : "let" ID "=" exp@(env)
     "in" exp@(AtomMap.insert(env, Atom.atom ID, exp1))
-      => ( vars := ID::(!!vars); exp2 )
+      => ( vars := ID::(!vars); exp2 )
   | addExp@(env)
   ;
 addExp(env)
@@ -47,7 +53,7 @@ atomicExp(env)
       %where ( AtomMap.inDomain (env, Atom.atom ID) )
       => ( valOf(AtomMap.find (env, Atom.atom ID)) )
   | NUM
-      => ( nums := NUM::(!!nums); NUM )
+      => ( nums := NUM::(!nums); NUM )
   | "(" exp@(env) ")"
   | DummyExp
   ;

@@ -68,7 +68,7 @@ CalcParseTokens
 
 
 fun exp_PROD_1_ACT (EQ, ID, env, exp1, exp2, KW_in, KW_let, EQ_SPAN : (Lex.pos * Lex.pos), ID_SPAN : (Lex.pos * Lex.pos), exp1_SPAN : (Lex.pos * Lex.pos), exp2_SPAN : (Lex.pos * Lex.pos), KW_in_SPAN : (Lex.pos * Lex.pos), KW_let_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), nums, vars) = 
-  (  vars := ID::(!!vars); exp2 )
+  (  vars := ID::(!vars); exp2 )
 fun addExp_PROD_1_ACT (SR, env, multExp, SR_SPAN : (Lex.pos * Lex.pos), multExp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), nums, vars) = 
   (  List.foldl op+ multExp SR )
 fun multExp_PROD_1_ACT (SR, env, prefixExp, SR_SPAN : (Lex.pos * Lex.pos), prefixExp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), nums, vars) = 
@@ -78,7 +78,7 @@ fun prefixExp_PROD_2_ACT (env, MINUS, prefixExp, MINUS_SPAN : (Lex.pos * Lex.pos
 fun atomicExp_PROD_1_ACT (ID, env, ID_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), nums, vars) = 
   (  valOf(AtomMap.find (env, Atom.atom ID)) )
 fun atomicExp_PROD_2_ACT (NUM, env, NUM_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), nums, vars) = 
-  (  nums := NUM::(!!nums); NUM )
+  (  nums := NUM::(!nums); NUM )
 fun atomicExp_PROD_1_PRED (ID, env, nums, vars) = 
   (  AtomMap.inDomain (env, Atom.atom ID) )
 fun ARGS_4 (nums, vars) = 
