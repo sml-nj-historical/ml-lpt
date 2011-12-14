@@ -28,16 +28,24 @@ structure ComputePredict :
     fun debug s = if debugPredict then print (s ^ "\n") else ()
     fun debugs ss = debug (concat ss)
 
+    fun mapi f l = let
+          fun mapf (_, [], l) = List.rev l
+            | mapf (i, x::r, l) = mapf (i+1, r, f(i, x)::l)
+          in
+            mapf (0, l, [])
+          end
+
   (* error handling, for lookahead computation failure *)
-    fun mapi f l = ListPair.map f (List.tabulate (length l, fn i => i), l)
-    fun doErr (prePath, nt, msg) = (Err.errMsg [
-          "Error: lookahead computation failed for ",
-	  "'", Nonterm.qualName nt, "',\n", msg, "\n",
-	  "The conflicting token sets are:\n  ",
-	  String.concatWith "\n  " 
-	    (mapi (fn (k, s) => "k = " ^ (Int.toString (k+1)) ^ ": " 
-			       ^ (Token.setToString s))
-		 prePath), "\n"])
+    fun doErr (prePath, nt, msg) = Err.errMsg [
+            "Error: lookahead computation failed for ",
+            "'", Nonterm.qualName nt, "',\n", msg, "\n",
+            "The conflicting token sets are:\n  ",
+            String.concatWith "\n  " 
+              (mapi (fn (k, s) => concat[
+                  "k = ", Int.toString (k+1), ": ", Token.setToString s
+                ]) prePath),
+            "\n"
+          ]
 
   (* compute a decision tree for predicting a production for a nonterminal *)
     fun compute(gla, nt) = let
