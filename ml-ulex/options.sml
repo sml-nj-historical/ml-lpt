@@ -39,6 +39,6 @@ structure Options =
 	  (* end case *))
 
   (* the arguments *)
-    val args = "[--dot] [--dump] [--match] [--ml-lex-mode] [--minimize] [--strict-sml]"
+    val args = "[--dot] [--dump] [--match] [--ml-lex-mode] [--minimize] [--table-based] [--fn-based] [--strict-sml]"
 
   end
