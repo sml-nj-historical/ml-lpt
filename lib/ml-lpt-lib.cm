@@ -16,6 +16,7 @@ Library
   structure AntlrRepair
   structure AntlrStreamPos
   structure ULexBuffer
+  structure UTF8 (* from smlnj-lib.cm; used in generated scanners *)
 
   functor AntlrEBNF
   functor AntlrErrHandler
