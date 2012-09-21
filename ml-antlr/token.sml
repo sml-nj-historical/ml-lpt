@@ -23,13 +23,12 @@ structure Token =
       | toString tok = name tok
 
     fun quoted (T{abbrev = SOME a, ...}) = Atom.toString a
-      | quoted tok = "\"" ^ name tok ^ "\""
+      | quoted tok = String.concat["\"", name tok, "\""]
 
-    fun def tok = name tok
-	  ^ (case ty tok
-	      of NONE => ""
-	       | SOME ty => " of " ^ ty
-	     (* end case *))
+    fun def tok = (case ty tok
+           of NONE => name tok
+            | SOME ty => String.concat[name tok, " of ", ty]
+          (* end case *))
 
     fun compare (T{id=a, ...}, T{id=b, ...}) = Int.compare(a, b)
     fun lexCompare (T{name=a, ...}, T{name=b, ...}) =

@@ -134,8 +134,11 @@ fun dec (ri as ref i) = (ri := i-1)
  	            Tok.BOGUS);
 <STRING>\\	=> (addText yytext; continue());
 <STRING>\\\\	=> (addText yytext; continue());
-<STRING>[^"\\\n\013]+ 
-		=> (addText yytext; continue());
+(* we apply toString to yytext below to ensure that UTF8 characters are
+ * printed in a format that is legal SML.
+ *)
+<STRING>[^"\\\n\013]+
+		=> (addText(String.toString yytext); continue());
 <STRING>\\\"	=> (addText yytext; continue());
 
 <CONSTR>{ws}	=> (continue());
