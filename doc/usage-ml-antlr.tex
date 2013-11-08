@@ -231,7 +231,7 @@ Because semantic actions must be pure (for backtracking and error repair), they 
 Nonterminals may inherit attributes (Section~\ref{sec:inh-attr}), which allows information to flow downward, but in some cases flowing information this way can become extremely tedious.
 For example, a data structure may only need to be updated at a single point in the grammar, but in order to properly thread this state through the grammar, an inherited attribute would have to be added and propagated through every nonterminal.
 
-The \kw{refcell} directive is used to declare a backtracking-safe reference cell and make it available to all semantic actions.  Reference cells are declared by giving the name, type, and initial value for the cell.  Each cell is bound in the semantic actions as a standard SML {\tt ref} value.  Thus, for example, we might have the following specification fragment:
+The \kw{refcell} directive is used to declare a backtracking-safe reference cell and make it available to all semantic actions.  Reference cells are declared by giving the name, type, and initial value for the cell.  Each cell is bound in the semantic actions as a standard SML \texttt{ref} value.  Thus, for example, we might have the following specification fragment:
 \begin{verbatim}
     %refcell symbols : StringSet.set = ( StringSet.empty );
     
@@ -241,7 +241,12 @@ The \kw{refcell} directive is used to declare a backtracking-safe reference cell
       | ID => ( symbols := StringSet.add(!symbols, ID); ID )
       ;
 \end{verbatim}
-The result of this fragment is that all symbol uses are tracked, in any use of the {\tt exp} nonterminal, but without having to manually thread the data structure state through the grammar.
+The result of this fragment is that all symbol uses are tracked, in any use of
+the \texttt{exp} nonterminal, but without having to manually thread the data
+structure state through the grammar.
+
+The final contents of a reference cell is returned as an extra result from the parse
+following the repair list.
 
 \subsection{The \kw{start} directive}\label{sec:start}
 
