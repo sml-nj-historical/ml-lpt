@@ -31,10 +31,9 @@ fun addText s = (text := s::(!text))
 fun clrText () = (text := [])
 fun getText () = concat (rev (!text))
 
-val pcount = ref 0
+val pcount = ref 0			(* nesting depth of parentheses in CODE *)
 fun inc (ri as ref i) = (ri := i+1)
 fun dec (ri as ref i) = (ri := i-1)
-
 );
 
 %let eol=("\n"|"\013\n"|"\013");
@@ -49,48 +48,51 @@ fun dec (ri as ref i) = (ri := i-1)
 %let qualid ={id}".";
 %let tyvar="'"{idchars}*;
 
-%states STRING COM CODE CONSTR;
+(* the PRECODE state is used for scanning the whitespace between the precursor
+ * of a parenthesized SML code fragment and the opening "(".  On most tokens it
+ * behaves like INITIAL so that the parser's error correction can respond.
+ *)
+%states STRING COM PRECODE CODE CONSTR;
 
 %name SpecLex;
 
-<INITIAL>"of"	=> (YYBEGIN CONSTR; Tok.OF);
+<INITIAL,PRECODE>"of"	=> (YYBEGIN CONSTR; Tok.OF);
 
-<INITIAL>{ws}+	=> (skip());
-<INITIAL>{id}		=> (Tok.ID yytext);
+<INITIAL,PRECODE>{ws}+		=> (skip());
+<INITIAL,PRECODE>{id}		=> (Tok.ID yytext);
 
-<INITIAL>"%token"("s")?		=> (YYBEGIN CONSTR; Tok.KW_tokens);
-<INITIAL>"%defs"		=> (YYBEGIN CODE; clrText(); Tok.KW_defs);
-<INITIAL>"%keyword"("s")?	=> (Tok.KW_keywords);
-<INITIAL>"%nonterm"("s")?	=> (Tok.KW_nonterms);
-<INITIAL>"%import"		=> (Tok.KW_import);
-<INITIAL>"%name"		=> (Tok.KW_name);
-<INITIAL>"%start"		=> (Tok.KW_start);
-<INITIAL>"%entry"		=> (Tok.KW_entry);
-<INITIAL>"%try"			=> (Tok.KW_try);
-<INITIAL>"%where"       	=> (YYBEGIN CODE; clrText(); Tok.KW_where);
-<INITIAL>"%dropping"		=> (Tok.KW_dropping);
-<INITIAL>"%refcell"		=> (YYBEGIN CONSTR; Tok.KW_refcell);
-<INITIAL>"%header"		=> (YYBEGIN CODE; clrText(); Tok.KW_header);
+<INITIAL,PRECODE>"%token"("s")?		=> (YYBEGIN CONSTR; Tok.KW_tokens);
+<INITIAL,PRECODE>"%defs"		=> (YYBEGIN PRECODE; Tok.KW_defs);
+<INITIAL,PRECODE>"%keyword"("s")?	=> (Tok.KW_keywords);
+<INITIAL,PRECODE>"%nonterm"("s")?	=> (Tok.KW_nonterms);
+<INITIAL,PRECODE>"%import"		=> (Tok.KW_import);
+<INITIAL,PRECODE>"%name"		=> (Tok.KW_name);
+<INITIAL,PRECODE>"%start"		=> (Tok.KW_start);
+<INITIAL,PRECODE>"%entry"		=> (Tok.KW_entry);
+<INITIAL,PRECODE>"%try"			=> (Tok.KW_try);
+<INITIAL,PRECODE>"%where"       	=> (YYBEGIN PRECODE; Tok.KW_where);
+<INITIAL,PRECODE>"%dropping"		=> (Tok.KW_dropping);
+<INITIAL,PRECODE>"%refcell"		=> (YYBEGIN CONSTR; Tok.KW_refcell);
+<INITIAL,PRECODE>"%header"		=> (YYBEGIN PRECODE; Tok.KW_header);
 
-<INITIAL>"|"	=> (Tok.BAR); 
-<INITIAL>"@"	=> (YYBEGIN CODE; clrText(); Tok.AT); 
-<INITIAL>"$"	=> (Tok.DOLLAR); 
-<INITIAL>"+"	=> (Tok.PLUS);
-<INITIAL>"*"	=> (Tok.STAR);
-<INITIAL>"?"	=> (Tok.QUERY);
-<INITIAL>":"	=> (Tok.COLON);
-<INITIAL>";"	=> (Tok.SEMI);
-<INITIAL>","	=> (Tok.COMMA);
-<INITIAL>"("	=> (Tok.LP);
-<INITIAL>")"	=> (Tok.RP);
-<INITIAL>"["	=> (Tok.LSB);
-<INITIAL>"]"	=> (Tok.RSB);
-<INITIAL>"/"	=> (Tok.SLASH);
-<INITIAL>"="	=> (Tok.EQ);
-<INITIAL>"->"	=> (Tok.ARROW);
-<INITIAL>"=>"	=> (YYBEGIN CODE; clrText(); Tok.DARROW);
-<INITIAL>"\""	
-	        => (YYBEGIN STRING; clrText(); addText yytext;
+<INITIAL,PRECODE>"|"	=> (Tok.BAR); 
+<INITIAL,PRECODE>"@"	=> (YYBEGIN PRECODE; Tok.AT); 
+<INITIAL,PRECODE>"$"	=> (Tok.DOLLAR); 
+<INITIAL,PRECODE>"+"	=> (Tok.PLUS);
+<INITIAL,PRECODE>"*"	=> (Tok.STAR);
+<INITIAL,PRECODE>"?"	=> (Tok.QUERY);
+<INITIAL,PRECODE>":"	=> (Tok.COLON);
+<INITIAL,PRECODE>";"	=> (Tok.SEMI);
+<INITIAL,PRECODE>","	=> (Tok.COMMA);
+<INITIAL>"("		=> (Tok.LP);
+<INITIAL>")"		=> (Tok.RP);
+<INITIAL,PRECODE>"["	=> (Tok.LSB);
+<INITIAL,PRECODE>"]"	=> (Tok.RSB);
+<INITIAL,PRECODE>"/"	=> (Tok.SLASH);
+<INITIAL,PRECODE>"="	=> (Tok.EQ);
+<INITIAL,PRECODE>"->"	=> (Tok.ARROW);
+<INITIAL,PRECODE>"=>"	=> (YYBEGIN PRECODE; Tok.DARROW);
+<INITIAL>"\""	=> (YYBEGIN STRING; clrText(); addText yytext;
 		    ignore(continue() before YYBEGIN INITIAL);
 		    Tok.STRING (getText()));
 
@@ -101,6 +103,10 @@ fun dec (ri as ref i) = (ri := i-1)
 <CONSTR>"(*"
 	=> (comLvl := 1; comStart := !yylineno; YYBEGIN COM; 
 	    ignore(continue() before YYBEGIN CONSTR);
+	    continue());
+<PRECODE>"(*" 
+	=> (comLvl := 1; comStart := !yylineno; YYBEGIN COM; 
+	    ignore(continue() before YYBEGIN PRECODE);
 	    continue());
 <CODE>"(*"
 	=> (comLvl := 1; comStart := !yylineno; YYBEGIN COM; 
@@ -117,13 +123,17 @@ fun dec (ri as ref i) = (ri := i-1)
 <COM>.|{eol}
 	=> (continue());
 
-<CODE>"("	=> (if !pcount = 0 then () else addText yytext;
+<PRECODE>"("	=> (pcount := 1; YYBEGIN CODE; clrText(); continue());
+<PRECODE>"\""	=> (YYBEGIN STRING; clrText(); addText yytext;
+		    ignore(continue() before YYBEGIN PRECODE);
+		    Tok.STRING (getText()));
+
+<CODE>"("	=> (addText yytext;  (* NOTE: the initial "(" is consumed in the PRECODE state *)
 		    inc pcount; continue());
 <CODE>")"	=> (dec pcount; 
-		    if !pcount = 0 then
-		      (YYBEGIN INITIAL;
-		       Tok.CODE (getText()))
-		    else (addText yytext; continue()));
+		    if !pcount = 0
+		      then (YYBEGIN INITIAL; Tok.CODE (getText()))
+		      else (addText yytext; continue()));
 <CODE>"\""	=> (addText yytext; YYBEGIN STRING; 
 		    ignore(continue() before YYBEGIN CODE);
 		    continue());
@@ -160,7 +170,7 @@ fun dec (ri as ref i) = (ri := i-1)
 <CONSTR>"\""	=> (YYBEGIN STRING; clrText(); addText yytext;
 		    ignore(continue() before YYBEGIN CONSTR);
 		    Tok.STRING (getText()));
-<CONSTR>"="	=> (YYBEGIN CODE; clrText(); Tok.EQ);
+<CONSTR>"="	=> (YYBEGIN PRECODE; Tok.EQ);
 
 .	=> (err (!yylineno, !yycolno,
 		 concat["illegal character '", 

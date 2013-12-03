@@ -152,7 +152,7 @@ functor SpecParseFn(Lex : ANTLR_LEXER) = struct
 SpecTokens
     structure UserCode = struct
 
- 
+
   structure GS = GrammarSyntax
   structure StreamPos = AntlrStreamPos
 
@@ -168,57 +168,57 @@ SpecTokens
 
 
 fun File_PROD_1_SUBRULE_1_PROD_1_ACT (sm, fileName, FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( liftSpan := (fn (p1, p2) => ((fileName, StreamPos.lineNo sm p1,
+  (liftSpan := (fn (p1, p2) => ((fileName, StreamPos.lineNo sm p1,
 				                StreamPos.colNo  sm p1), 
 				     (fileName, StreamPos.lineNo sm p2,
 				                StreamPos.colNo  sm p2)))
        )
 fun File_PROD_1_ACT (sm, SR1, SR2, fileName, SR1_SPAN : (Lex.pos * Lex.pos), SR2_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( map (mapFst (!liftSpan)) (List.concat SR2)) : GS.grammar
+  (map (mapFst (!liftSpan)) (List.concat SR2)) : GS.grammar
 fun Decl_PROD_1_ACT (ID, KW_name, ID_SPAN : (Lex.pos * Lex.pos), KW_name_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( [ (FULL_SPAN, GS.NAME ID) ]) : (StreamPos.span * GS.decl) list
+  ([ (FULL_SPAN, GS.NAME ID) ]) : (StreamPos.span * GS.decl) list
 fun Decl_PROD_2_ACT (Code, KW_header, Code_SPAN : (Lex.pos * Lex.pos), KW_header_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( [ (FULL_SPAN, GS.HEADER Code) ]) : (StreamPos.span * GS.decl) list
+  ([ (FULL_SPAN, GS.HEADER Code) ]) : (StreamPos.span * GS.decl) list
 fun Decl_PROD_3_ACT (ID, KW_start, ID_SPAN : (Lex.pos * Lex.pos), KW_start_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( [ (FULL_SPAN, GS.START (Atom.atom ID)) ]) : (StreamPos.span * GS.decl) list
+  ([ (FULL_SPAN, GS.START (Atom.atom ID)) ]) : (StreamPos.span * GS.decl) list
 fun Decl_PROD_4_ACT (KW_entry, IDList, KW_entry_SPAN : (Lex.pos * Lex.pos), IDList_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( map (lift (GS.ENTRY o Atom.atom)) IDList) : (StreamPos.span * GS.decl) list
+  (map (lift (GS.ENTRY o Atom.atom)) IDList) : (StreamPos.span * GS.decl) list
 fun Decl_PROD_5_ACT (KW_keywords, SymList, KW_keywords_SPAN : (Lex.pos * Lex.pos), SymList_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( map (lift GS.KEYWORD) SymList) : (StreamPos.span * GS.decl) list
+  (map (lift GS.KEYWORD) SymList) : (StreamPos.span * GS.decl) list
 fun Decl_PROD_6_ACT (Code, KW_defs, Code_SPAN : (Lex.pos * Lex.pos), KW_defs_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( [ (FULL_SPAN, GS.DEFS Code) ]) : (StreamPos.span * GS.decl) list
+  ([ (FULL_SPAN, GS.DEFS Code) ]) : (StreamPos.span * GS.decl) list
 fun Decl_PROD_7_ACT (COLON, KW_tokens, ConstrList, COLON_SPAN : (Lex.pos * Lex.pos), KW_tokens_SPAN : (Lex.pos * Lex.pos), ConstrList_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( map (lift GS.TOKEN) ConstrList) : (StreamPos.span * GS.decl) list
+  (map (lift GS.TOKEN) ConstrList) : (StreamPos.span * GS.decl) list
 fun Decl_PROD_8_ACT (SR, STRING, KW_import, SR_SPAN : (Lex.pos * Lex.pos), STRING_SPAN : (Lex.pos * Lex.pos), KW_import_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( [ (FULL_SPAN, GS.IMPORT {
+  ([ (FULL_SPAN, GS.IMPORT {
 	      filename = trimQuotes STRING,
 	      dropping = map (mapFst (!liftSpan)) (getOpt (SR, []))
 	    }) ]) : (StreamPos.span * GS.decl) list
 fun Decl_PROD_9_ACT (EQ, ID, Ty, Code, COLON, KW_refcell, EQ_SPAN : (Lex.pos * Lex.pos), ID_SPAN : (Lex.pos * Lex.pos), Ty_SPAN : (Lex.pos * Lex.pos), Code_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), KW_refcell_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( [ (FULL_SPAN, GS.REFCELL (ID, Ty, Code)) ]) : (StreamPos.span * GS.decl) list
+  ([ (FULL_SPAN, GS.REFCELL (ID, Ty, Code)) ]) : (StreamPos.span * GS.decl) list
 fun Decl_PROD_10_ACT (SR, COLON, TyAnn, KW_nonterms, SR_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), TyAnn_SPAN : (Lex.pos * Lex.pos), KW_nonterms_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( map (lift GS.NONTERM) (TyAnn::SR)) : (StreamPos.span * GS.decl) list
+  (map (lift GS.NONTERM) (TyAnn::SR)) : (StreamPos.span * GS.decl) list
 fun Decl_PROD_11_ACT (ID, COLON, AltList, Formals, ID_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), AltList_SPAN : (Lex.pos * Lex.pos), Formals_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( map (fn (span, alt) => 
+  (map (fn (span, alt) => 
 	    (span, GS.RULE {
 	      lhs = Atom.atom ID,
 	      formals = getOpt(Formals, []),
 	      rhs = alt
 	    })) AltList) : (StreamPos.span * GS.decl) list
 fun Formals_PROD_1_ACT (ID, LP, RP, SR, ID_SPAN : (Lex.pos * Lex.pos), LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), SR_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( ID::SR)
+  (ID::SR)
 fun IDList_PROD_1_ACT (SR, ID', SR_SPAN : (Lex.pos * Lex.pos), ID'_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( ID'::SR)
+  (ID'::SR)
 fun SymList_PROD_1_ACT (SR, Symbol, SR_SPAN : (Lex.pos * Lex.pos), Symbol_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( Symbol::SR)
+  (Symbol::SR)
 fun AltList_PROD_1_ACT (SR, Alt, SR_SPAN : (Lex.pos * Lex.pos), Alt_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( Alt::SR)
+  (Alt::SR)
 fun TyAnn_PROD_1_SUBRULE_1_PROD_2_ACT (ID, ID_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( "unit")
+  ("unit")
 fun TyAnn_PROD_1_ACT (ID, SR, ID_SPAN : (Lex.pos * Lex.pos), SR_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( FULL_SPAN, (Atom.atom ID, SR))
+  (FULL_SPAN, (Atom.atom ID, SR))
 fun Alt_PROD_1_ACT (SR1, SR2, NamedItem, KW_try, SR1_SPAN : (Lex.pos * Lex.pos), SR2_SPAN : (Lex.pos * Lex.pos), NamedItem_SPAN : (Lex.pos * Lex.pos), KW_try_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( FULL_SPAN, GS.RHS {
+  (FULL_SPAN, GS.RHS {
         items = NamedItem,
 	try = isSome KW_try,
 	predicate = SR1,
@@ -226,60 +226,60 @@ fun Alt_PROD_1_ACT (SR1, SR2, NamedItem, KW_try, SR1_SPAN : (Lex.pos * Lex.pos),
 	loc = (!liftSpan) FULL_SPAN
       })
 fun NamedItem_PROD_1_ACT (SR, Item, SR_SPAN : (Lex.pos * Lex.pos), Item_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( SR, Item)
+  (SR, Item)
 fun Item_PROD_1_SUBRULE_1_PROD_1_ACT (STAR, PrimItem, STAR_SPAN : (Lex.pos * Lex.pos), PrimItem_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( (!liftSpan) PrimItem_SPAN, GS.CLOS PrimItem)
+  ((!liftSpan) PrimItem_SPAN, GS.CLOS PrimItem)
 fun Item_PROD_1_SUBRULE_1_PROD_2_ACT (PLUS, PrimItem, PLUS_SPAN : (Lex.pos * Lex.pos), PrimItem_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( (!liftSpan) PrimItem_SPAN, GS.POSCLOS PrimItem)
+  ((!liftSpan) PrimItem_SPAN, GS.POSCLOS PrimItem)
 fun Item_PROD_1_SUBRULE_1_PROD_3_ACT (QUERY, PrimItem, QUERY_SPAN : (Lex.pos * Lex.pos), PrimItem_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( (!liftSpan) PrimItem_SPAN, GS.OPT PrimItem)
+  ((!liftSpan) PrimItem_SPAN, GS.OPT PrimItem)
 fun Item_PROD_1_SUBRULE_1_PROD_4_ACT (PrimItem, PrimItem_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( PrimItem)
+  (PrimItem)
 fun Item_PROD_1_ACT (SR, PrimItem, SR_SPAN : (Lex.pos * Lex.pos), PrimItem_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( SR)
+  (SR)
 fun PrimItem_PROD_1_ACT (SR, Symbol, SR_SPAN : (Lex.pos * Lex.pos), Symbol_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( (!liftSpan) FULL_SPAN, GS.SYMBOL ((fn (_, s) => s) Symbol, SR))
+  ((!liftSpan) FULL_SPAN, GS.SYMBOL ((fn (_, s) => s) Symbol, SR))
 fun PrimItem_PROD_2_ACT (LP, RP, AltList, LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), AltList_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( (!liftSpan) FULL_SPAN, GS.SUBRULE (map (fn (_, alt) => alt) AltList))
+  ((!liftSpan) FULL_SPAN, GS.SUBRULE (map (fn (_, alt) => alt) AltList))
 fun ID'_PROD_1_ACT (ID, ID_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( ID_SPAN, ID)
+  (ID_SPAN, ID)
 fun Symbol_PROD_1_ACT (ID, ID_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( ID_SPAN, Atom.atom ID)
+  (ID_SPAN, Atom.atom ID)
 fun Symbol_PROD_2_ACT (STRING, STRING_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( STRING_SPAN, Atom.atom STRING)
+  (STRING_SPAN, Atom.atom STRING)
 fun Constr_PROD_1_ACT (ID, SR, Abbrev, ID_SPAN : (Lex.pos * Lex.pos), SR_SPAN : (Lex.pos * Lex.pos), Abbrev_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( FULL_SPAN, (Atom.atom ID, SR, Abbrev))
+  (FULL_SPAN, (Atom.atom ID, SR, Abbrev))
 fun ConstrList_PROD_1_ACT (SR, Constr, SR_SPAN : (Lex.pos * Lex.pos), Constr_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( Constr::SR)
+  (Constr::SR)
 fun TyFun_PROD_1_ACT (SR, TyProd, SR_SPAN : (Lex.pos * Lex.pos), TyProd_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( String.concatWith " -> " (TyProd::SR))
+  (String.concatWith " -> " (TyProd::SR))
 fun TyProd_PROD_1_ACT (SR, TyApp, SR_SPAN : (Lex.pos * Lex.pos), TyApp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( String.concatWith " * " (TyApp::SR))
+  (String.concatWith " * " (TyApp::SR))
 fun TyApp_PROD_1_ACT (LP, RP, SR, Ty, QualID, LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), SR_SPAN : (Lex.pos * Lex.pos), Ty_SPAN : (Lex.pos * Lex.pos), QualID_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( "(" ^ String.concatWith "," (Ty::SR) ^ ") " ^ QualID)
+  ("(" ^ String.concatWith "," (Ty::SR) ^ ") " ^ QualID)
 fun TyApp_PROD_2_SUBRULE_1_PROD_1_ACT (QualID, TyAtom, QualID_SPAN : (Lex.pos * Lex.pos), TyAtom_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( TyAtom ^ " " ^ QualID)
+  (TyAtom ^ " " ^ QualID)
 fun TyApp_PROD_2_SUBRULE_1_PROD_2_ACT (TyAtom, TyAtom_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( TyAtom)
+  (TyAtom)
 fun TyApp_PROD_2_ACT (SR, TyAtom, SR_SPAN : (Lex.pos * Lex.pos), TyAtom_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( SR)
+  (SR)
 fun TyAtom_PROD_2_ACT (LP, RP, Ty, LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), Ty_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( "(" ^ Ty ^ ")")
+  ("(" ^ Ty ^ ")")
 fun TyAtom_PROD_3_ACT (LCB, RCB, RowList, LCB_SPAN : (Lex.pos * Lex.pos), RCB_SPAN : (Lex.pos * Lex.pos), RowList_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( "{ " ^ RowList ^" } ")
+  ("{ " ^ RowList ^" } ")
 fun TyAtom_PROD_4_ACT (LCB, RCB, LCB_SPAN : (Lex.pos * Lex.pos), RCB_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( "{}")
+  ("{}")
 fun Row_PROD_1_ACT (Ty, COLON, Label, Ty_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), Label_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( Label ^ " : " ^ Ty)
+  (Label ^ " : " ^ Ty)
 fun RowList_PROD_1_ACT (SR, Row, SR_SPAN : (Lex.pos * Lex.pos), Row_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( String.concatWith "," (Row::SR))
+  (String.concatWith "," (Row::SR))
 fun QualID_PROD_2_ACT (QualID, IDDOT, QualID_SPAN : (Lex.pos * Lex.pos), IDDOT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( IDDOT ^ QualID)
+  (IDDOT ^ QualID)
 fun Abbrev_PROD_1_ACT (LP, RP, STRING, LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), STRING_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( Atom.atom STRING)
+  (Atom.atom STRING)
 fun Code_PROD_1_ACT (CODE, CODE_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ( (!liftSpan) FULL_SPAN, CODE) : GrammarSyntax.code
-fun mkliftSpan_REFC() : (AntlrStreamPos.span -> GrammarSyntax.span) ref = ref ( fn _ => let val z = ("", 0, 0) in (z, z) end)
+  ((!liftSpan) FULL_SPAN, CODE) : GrammarSyntax.code
+fun mkliftSpan_REFC() : (AntlrStreamPos.span -> GrammarSyntax.span) ref = ref (fn _ => let val z = ("", 0, 0) in (z, z) end)
 
     end
 
