@@ -4,12 +4,12 @@
 
 %\section{Overview}
 
-Lexers analyze the lexical structure of an input string, and are usually specified using regular expressions.  \textsc{ml-ulex} is a lexer generator for Standard ML.  The module it generates will contain a type {\tt strm} and a function
+Lexers analyze the lexical structure of an input string, and are usually specified using regular expressions.  \textsc{ml-ulex} is a lexer generator for Standard ML.  The module it generates will contain a type \texttt{strm} and a function
 \begin{verbatim}
     val lex : AntlrStreamPos.sourcemap -> strm
           -> lex_result * AntlrStreamPos.span * strm
 \end{verbatim}
-where {\tt lex\char`\_result} is a type that must be defined by the user of \ulex{}.
+where \texttt{lex\char`\_result} is a type that must be defined by the user of \ulex{}.
 Note that the lexer always returns a token: we assume that end-of-file will be explicitly represented by a token.  Compared to ML-Lex, \ulex{} offers the following improvements:
 \begin{itemize}
  \item Unicode is supported under the UTF8 encoding.
@@ -22,7 +22,7 @@ The tool is invoked from the command-line as follows:
 \begin{verbatim}
     ml-ulex [options] file
 \end{verbatim}
-where {\tt file} is the name of the input \ulex{} specification, and where {\tt options} may be any combination of:
+where \texttt{file} is the name of the input \ulex{} specification, and where \texttt{options} may be any combination of:
 
 \vskip 12pt
 \begin{tabular}{lp{0.65\textwidth}}
@@ -167,8 +167,8 @@ The definitions must at least fulfill the following signature:
     type lex_result
     val eof : unit -> lex_result
 \end{verbatim}
-unless EOF rules are specified, in which case only the {\tt lex\_result} type is needed~(see Section~\ref{sec:eof-rules}).
-All semantic actions must yield values of type {\tt lex\_result}.  The {\tt eof} function is called by \ulex{} when the end of file is reached -- it acts as the semantic action for the empty input string.  All definitions given will be in scope for the rule actions (see Section~\ref{sec:ulex-rules}).
+unless EOF rules are specified, in which case only the \texttt{lex\char`\_result} type is needed~(see Section~\ref{sec:eof-rules}).
+All semantic actions must yield values of type \texttt{lex\char`\_result}.  The \texttt{eof} function is called by \ulex{} when the end of file is reached -- it acts as the semantic action for the empty input string.  All definitions given will be in scope for the rule actions (see Section~\ref{sec:ulex-rules}).
 
 \subsection{The \kw{let} directive}
 
@@ -206,18 +206,18 @@ Start states are introduced via \kw{states}, and are named using standard identi
 
 \section{Rules}\label{sec:ulex-rules}
 
-In general, when \texttt{lex} is applied to an input stream, it will attempt to match a prefix of the input with a regular expression given in one of the rules.  When a rule is matched, its \emph{action} (associated code) is evaluated and the result is returned.  Hence, all actions must belong to the same type.%, but no restrictions are placed on what that type is.
+In general, when \texttt{lex} is applied to an input stream, it will attempt to match a prefix of the input with a regular expression given in one of the rules.  When a rule is matched, its \emph{action} (associated code) is evaluated and the result is returned.  Hence, all actions must belong to the same type. %, but no restrictions are placed on what that type is.
 Rules are specified by an optional list of start states, a regular expression, and the action code.  The rule is said to ``belong'' to the start states it lists.  If no start states are specified, the rule belongs to \emph{all} defined start states.
 
 Rule matching is determined by three factors: start state, match length, and rule order.  A rule is only considered for matching if it belongs to the lexer's current start state.  If multiple rules match an input prefix, the rule matching the longest prefix is selected.  In the case of a tie, the rule appearing first in the specification is selected.
 
-For example, suppose the start state {\tt FOO} is defined, and the following rules appear, with no other rules belonging to {\tt FOO}:
+For example, suppose the start state \texttt{FOO} is defined, and the following rules appear, with no other rules belonging to \texttt{FOO}:
 \begin{verbatim}
     <FOO> a+    => ( Tokens.as );
     <FOO> a+b+  => ( Tokens.asbs );
     <FOO> a+bb* => ( Tokens.asbs );
 \end{verbatim}
-If the current start state is not {\tt FOO}, none of the rules will be considered.  Otherwise, on input ``aabbbc'' all three rules are possible matches.  The first rule is discarded, since the others match a longer prefix.  The second rule is then selected, because it matches the same prefix as the third rule, but appears earlier in the specification.
+If the current start state is not \texttt{FOO}, none of the rules will be considered.  Otherwise, on input ``aabbbc'' all three rules are possible matches.  The first rule is discarded, since the others match a longer prefix.  The second rule is then selected, because it matches the same prefix as the third rule, but appears earlier in the specification.
 
 \subsection{Regular expression syntax}
 
@@ -248,21 +248,21 @@ The syntax of regular expressions is given in Figure~\ref{fig:ulex-syntax}; cons
 The semantics for \ulex{} regular expressions are shown in Figure~\ref{ulex-re-semantics}; they are standard.  Some examples:
 \[
 \begin{array}{rcl}
-{\tt 0 | 1 | 2 | 3}	& \textit{denotes} &
+\texttt{0 | 1 | 2 | 3}	& \textit{denotes} &
     \{ \texttt{0}, \texttt{1}, \texttt{2}, \texttt{3} \}	\\
-{\tt [0123]}	& \textit{denotes} &
+\texttt{[0123]}	& \textit{denotes} &
     \{ \texttt{0}, \texttt{1}, \texttt{2}, \texttt{3} \}	\\
-{\tt 0123}	& \textit{denotes} &
+\texttt{0123}	& \textit{denotes} &
     \{ \texttt{0123} \}						\\
-{\tt 0*}	& \textit{denotes} &
+\texttt{0*}	& \textit{denotes} &
     \{ \epsilon, \texttt{0}, \texttt{00}, \dots \}		\\
-{\tt 00*}	& \textit{denotes} &
+\texttt{00*}	& \textit{denotes} &
     \{ \texttt{0}, \texttt{00}, \dots \}		\\
-{\tt 0+}	& \textit{denotes} &
+\texttt{0+}	& \textit{denotes} &
     \{ \texttt{0}, \texttt{00}, \dots \}		\\
-{\tt [0-9]\{3\}}	& \textit{denotes} &
+\texttt{[0-9]\{3\}}	& \textit{denotes} &
     \{ \texttt{000}, \texttt{001}, \texttt{002}, \dots, \texttt{999} \}	\\
-{\tt 0* \& (..)*}	& \textit{denotes} &
+\texttt{0* \& (..)*}	& \textit{denotes} &
     \{ \epsilon, \texttt{00}, \texttt{0000}, \dots \}	\\
 \texttt{\^{ }(abc)}	& \textit{denotes} &
     \Sigma^* \setminus \{ \texttt{abc} \}	\\
@@ -286,20 +286,20 @@ Other than the special \T{<<EOF>>} symbol, EOF rules work exactly like normal ru
 Actions are arbitrary SML code enclosed in parentheses.  The following names are in scope:
 \vskip 12pt
 \begin{tabular}{lp{0.7\textwidth}}
-  {\tt YYBEGIN} & a function taking a start state and returning unit; changes to that start state.	\\
-  {\tt yysetStrm} & a function taking a {\tt ULexBuffer.stream} and returning unit; changes the current input source.  The functions {\tt yystreamify}, {\tt yystreamifyInstream} and {\tt yystreamifyReader} can be used to construct the stream; they work identically to the corresponding functions described in Section~\ref{sec:ulex-code}
+  \texttt{YYBEGIN} & a function taking a start state and returning unit; changes to that start state.	\\
+  \texttt{yysetStrm} & a function taking a \texttt{ULexBuffer.stream} and returning unit; changes the current input source.  The functions \texttt{yystreamify}, \texttt{yystreamifyInstream} and \texttt{yystreamifyReader} can be used to construct the stream; they work identically to the corresponding functions described in Section~\ref{sec:ulex-code}
 \\
-  {\tt yytext} & the matched text as a string.	\\
-  {\tt yysubstr} & the matched text as a substring (avoids copying).	\\
-  {\tt yyunicode} & the matched Unicode text as a list of \texttt{Word.word} values \\
+  \texttt{yytext} & the matched text as a string.	\\
+  \texttt{yysubstr} & the matched text as a substring (avoids copying).	\\
+  \texttt{yyunicode} & the matched Unicode text as a list of \texttt{Word.word} values \\
 \\
-  {\tt continue} & a unit to \texttt{lex\_result} function which recursively calls the lexer on the input following the matched prefix, and returns its result.  The span for the resulting token begins at the left border of the match that calls \texttt{continue},  \\
-  {\tt skip} & identical to {\tt continue}, but moves forward the left marker for the position span of the returned token.  Thus \texttt{skip} should be used for skipping whitespace.\\
+  \texttt{continue} & a unit to \texttt{lex\char`\_result} function which recursively calls the lexer on the input following the matched prefix, and returns its result.  The span for the resulting token begins at the left border of the match that calls \texttt{continue},  \\
+  \texttt{skip} & identical to \texttt{continue}, but moves forward the left marker for the position span of the returned token.  Thus \texttt{skip} should be used for skipping whitespace.\\
 \\
-  {\tt yysm} & the sourcemap for the lexer, to be used with the functions in the {\tt AntlrSourcePos} module.\\
-  {\tt yypos} & the position of the left border of the matched RE, starting from 0.	\\  
-  {\tt yylineno} & the current line number, starting from 1.	\\
-  {\tt yycolno} & the current column number, starting from 1.\\
+  \texttt{yysm} & the sourcemap for the lexer, to be used with the functions in the \texttt{AntlrSourcePos} module.\\
+  \texttt{yypos} & the position of the left border of the matched RE, starting from 0.	\\  
+  \texttt{yylineno} & the current line number, starting from 1.	\\
+  \texttt{yycolno} & the current column number, starting from 1.\\
 \\
   ? & any name bound in the \kw{defs} section.
 \end{tabular}
@@ -318,12 +318,12 @@ The generated lexer module has a signature including the following:
     val lex    : AntlrStreamPos.sourcemap -> strm -> 
                  lex_result * AntlrStreamPos.span * strm
 \end{verbatim}
-where \texttt{lex\_result} is the result type of the lexer actions, and \texttt{start\_state} is an algebraic datatype with nullary constructors for each defined start state.
-Note that \texttt{lex\_result} must be defined as a type using the \kw{defs} directive.
-In this interface, lexer start states are conceptually part of the input stream; thus, from an external viewpoint start states can be ignored.  However, it is sometimes helpful to control the lexer start state externally, allowing contextual information to influence the lexer.  This is why the \texttt{strm} type includes a concrete \texttt{start\_state} component.
+where \texttt{lex\char`\_result} is the result type of the lexer actions, and \texttt{start\char`\_state} is an algebraic datatype with nullary constructors for each defined start state.
+Note that \texttt{lex\char`\_result} must be defined as a type using the \kw{defs} directive.
+In this interface, lexer start states are conceptually part of the input stream; thus, from an external viewpoint start states can be ignored.  However, it is sometimes helpful to control the lexer start state externally, allowing contextual information to influence the lexer.  This is why the \texttt{strm} type includes a concrete \texttt{start\char`\_state} component.
 
-Note that the {\tt AntlrStreamPos} module is part of the {\tt ml-lpt-lib} library described in Chapter~\ref{ch:ml-lpt-lib}.  An {\tt AntlrStreamPos.sourcemap} value, combined with an {\tt AntlrStreamPos.pos} value, compactly represents position information (line number, column number, and so on).  An {\tt AntlrStreamPos.span} is a pair of {\tt pos} values.
+Note that the \texttt{AntlrStreamPos} module is part of the \texttt{ml-lpt-lib} library described in Chapter~\ref{ch:ml-lpt-lib}.  An \texttt{AntlrStreamPos.sourcemap} value, combined with an \texttt{AntlrStreamPos.pos} value, compactly represents position information (line number, column number, and so on).  An \texttt{AntlrStreamPos.span} is a pair of \texttt{pos} values.
 
 \section{\texttt{ml-lex} compatibility}\label{sec:lex-compat}
 
-Running \ulex{} with the {\tt --ml-lex-mode} option will cause it to process its input file using the ML-Lex format, and interpret the actions in a ML-Lex-compatible way.  The compatibility extends to the bugs in ML-Lex, so in particular \texttt{yylineno} starts at 2 in \texttt{--ml-lex-mode}.
+Running \ulex{} with the \texttt{--ml-lex-mode} option will cause it to process its input file using the ML-Lex format, and interpret the actions in a ML-Lex-compatible way.  The compatibility extends to the bugs in ML-Lex, so in particular \texttt{yylineno} starts at 2 in \texttt{--ml-lex-mode}.
