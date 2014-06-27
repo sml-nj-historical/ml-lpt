@@ -8,20 +8,22 @@ Lexers analyze the lexical structure of an input string, and are usually specifi
 \begin{verbatim}
     val lex : AntlrStreamPos.sourcemap -> strm
           -> lex_result * AntlrStreamPos.span * strm
-\end{verbatim}
+\end{verbatim}%
 where \texttt{lex\char`\_result} is a type that must be defined by the user of \ulex{}.
-Note that the lexer always returns a token: we assume that end-of-file will be explicitly represented by a token.  Compared to ML-Lex, \ulex{} offers the following improvements:
+Note that the lexer always returns a token: we assume that end-of-file will be explicitly represented by a token.
+Compared to ML-Lex, \ulex{} offers the following improvements:
 \begin{itemize}
  \item Unicode is supported under the UTF8 encoding.
- \item Intersection and negation of REs are supported.
- \item Token position spans are automatically generated.
+ \item Regular expressions can include intersection and negation operators.
+ \item The position span of a token is automatically computed and returned to the lexer's caller (as can be seen
+   by the specification of the \texttt{lex} function above).
  \item The specification format is somewhat cleaner.
  \item The code base is much cleaner, and supports multiple back-ends, including DFA graph visualization and interactive testing of rules.
-\end{itemize}
+\end{itemize}%
 The tool is invoked from the command-line as follows:
 \begin{verbatim}
     ml-ulex [options] file
-\end{verbatim}
+\end{verbatim}%
 where \texttt{file} is the name of the input \ulex{} specification, and where \texttt{options} may be any combination of:
 
 \vskip 12pt
