@@ -295,12 +295,16 @@ Actions are arbitrary SML code enclosed in parentheses.  The following names are
   \texttt{yysubstr} & the matched text as a substring (avoids copying).	\\
   \texttt{yyunicode} & the matched Unicode text as a list of \texttt{Word.word} values \\
 \\
-  \texttt{continue} & a unit to \texttt{lex\char`\_result} function which recursively calls the lexer on the input following the matched prefix, and returns its result.  The span for the resulting token begins at the left border of the match that calls \texttt{continue},  \\
-  \texttt{skip} & identical to \texttt{continue}, but moves forward the left marker for the position span of the returned token.  Thus \texttt{skip} should be used for skipping whitespace.\\
+  \texttt{continue} & a unit to \texttt{lex\char`\_result} function that recursively calls the
+    lexer on the input following the matched prefix, and returns its result.
+    The span for the resulting token begins at the left border of the match that calls \texttt{continue},  \\
+  \texttt{skip} & a function identical to \texttt{continue}, except that it moves forward the left marker
+  for the span of the returned token.  Thus \texttt{skip} should be used for skipping whitespace.\\
 \\
   \texttt{yysm} & the sourcemap for the lexer, to be used with the functions in the \texttt{AntlrSourcePos} module.\\
   \texttt{yypos} & the position of the left border of the matched RE, starting from 0.	\\  
-  \texttt{yylineno} & the current line number, starting from 1.	\\
+  \texttt{yylineno} & the current line number, starting from 1.
+    Note that lines are counted using the Unix line-ending convention. \\
   \texttt{yycolno} & the current column number, starting from 1.\\
 \\
   ? & any name bound in the \kw{defs} section.
@@ -308,7 +312,7 @@ Actions are arbitrary SML code enclosed in parentheses.  The following names are
 
 \section{Using the generated code}\label{sec:ulex-code}
 
-The generated lexer module has a signature including the following:
+The generated lexer module has a signature that includes the following specifications:
 \begin{verbatim}
     type prestrm
     type strm = prestrm * start_state
@@ -317,14 +321,25 @@ The generated lexer module has a signature including the following:
     val streamifyReader   : (char, 'a) StringCvt.reader -> 'a -> strm
     val streamifyInstream : TextIO.instream -> strm
     
-    val lex    : AntlrStreamPos.sourcemap -> strm -> 
-                 lex_result * AntlrStreamPos.span * strm
-\end{verbatim}
+    val lex : AntlrStreamPos.sourcemap -> strm
+                -> lex_result * AntlrStreamPos.span * strm
+\end{verbatim}%
 where \texttt{lex\char`\_result} is the result type of the lexer actions, and \texttt{start\char`\_state} is an algebraic datatype with nullary constructors for each defined start state.
 Note that \texttt{lex\char`\_result} must be defined as a type using the \kw{defs} directive.
-In this interface, lexer start states are conceptually part of the input stream; thus, from an external viewpoint start states can be ignored.  However, it is sometimes helpful to control the lexer start state externally, allowing contextual information to influence the lexer.  This is why the \texttt{strm} type includes a concrete \texttt{start\char`\_state} component.
+In this interface, lexer start states are conceptually part of the input stream; thus, from an external viewpoint,
+start states can be ignored.
+It is, however, sometimes helpful to control the lexer start state externally, allowing contextual
+information to influence the lexer.
+This is why the \texttt{strm} type includes a concrete \texttt{start\char`\_state} component.
 
-Note that the \texttt{AntlrStreamPos} module is part of the \texttt{ml-lpt-lib} library described in Chapter~\ref{ch:ml-lpt-lib}.  An \texttt{AntlrStreamPos.sourcemap} value, combined with an \texttt{AntlrStreamPos.pos} value, compactly represents position information (line number, column number, and so on).  An \texttt{AntlrStreamPos.span} is a pair of \texttt{pos} values.
+Note that the \texttt{AntlrStreamPos} module is part of the \texttt{ml-lpt-lib} library described in Chapter~\ref{ch:ml-lpt-lib}. 
+An \texttt{AntlrStreamPos.sourcemap} value, combined with an \texttt{AntlrStreamPos.pos} value, compactly represents position information (line number, column number, and so on).
+An \texttt{AntlrStreamPos.span} is a pair of \texttt{pos} values that specify the character position of the
+leftmost character of the scanned token and the position of the character following the token (respectively).
+By default, the span will cover the entire sequence of characters consumed by a call to the lexer, but one may
+use the \texttt{skip} function (see Section~\ref{sec:ulex-actions}) to ignore leading whitespace, \textit{etc.}\ when computing
+the span.
+Code to compute the span is generated automatically by \texttt{ml-ulex}.
 
 \section{\texttt{ml-lex} compatibility}\label{sec:lex-compat}
 
