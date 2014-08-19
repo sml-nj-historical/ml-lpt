@@ -4,7 +4,6 @@ structure
 
 @tokens@
 
-
   fun toksToString toks = String.concatWith " " (map toString toks)
 
   fun isEOF EOF = true
@@ -23,19 +22,19 @@ end
 
 @defs@
 
-    end
+      end (* UserCode *)
 
     structure Err = AntlrErrHandler(
       structure Tok = Tok
       structure Lex = Lex)
-    structure EBNF = AntlrEBNF(struct
-			         type strm = Err.wstream
-			         val getSpan = Err.getSpan
-			       end)
+    structure EBNF = AntlrEBNF(
+      struct
+	type strm = Err.wstream
+	val getSpan = Err.getSpan
+      end)
 
     fun mk lexFn = let
 @ehargs@
-
         val (eh, lex) = Err.mkErrHandler {get = getS, put = putS}
 	fun fail() = Err.failure eh
 	fun tryProds (strm, prods) = let

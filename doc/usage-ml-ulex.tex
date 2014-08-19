@@ -157,18 +157,18 @@ Specifies an additional curried parameter, appearing after the sourcemap paramet
 \subsection{The \kw{defs} directive}
 
 The \kw{defs} directive is used to include a segment of code in the generated lexer module, as in the following example:
-\begin{verbatim}
-    %defs (
-      type lex_result = CalcParseToks.token
-      fun eof() = CalcParseTokens.EOF
-      fun helperFn x = (* ... *)
-    )
-\end{verbatim}
+\begin{lstlisting}
+%defs (
+  type lex_result = CalcParseToks.token
+  fun eof() = CalcParseTokens.EOF
+  fun helperFn x = (* ... *)
+)
+\end{lstlisting}
 The definitions must at least fulfill the following signature:
-\begin{verbatim}
-    type lex_result
-    val eof : unit -> lex_result
-\end{verbatim}
+\begin{lstlisting}
+type lex_result
+val eof : unit -> lex_result
+\end{lstlisting}
 unless EOF rules are specified, in which case only the \texttt{lex\char`\_result} type is needed~(see Section~\ref{sec:eof-rules}).
 All semantic actions must yield values of type \texttt{lex\char`\_result}.  The \texttt{eof} function is called by \ulex{} when the end of file is reached -- it acts as the semantic action for the empty input string.  All definitions given will be in scope for the rule actions (see Section~\ref{sec:ulex-rules}).
 
@@ -176,11 +176,11 @@ All semantic actions must yield values of type \texttt{lex\char`\_result}.  The 
 
 Use \kw{let} to define named abbreviations for regular expressions; once bound, an abbreviation can be used in further \kw{let}-bindings or in rules.  For example,
 \begin{verbatim}
-    %let digit = [0-9];
+%let digit = [0-9];
 \end{verbatim}
 introduces an abbreviation for a regular expression matching a single digit.  To use abbreviations, enclose their name in curly braces.  For example, an additional \kw{let} definition can be given in terms of \texttt{digit},
 \begin{verbatim}
-    %let int = {digit}+;
+%let int = {digit}+;
 \end{verbatim}
 which matches arbitrary-length integers.  Note that scoping of let-bindings follows standard SML rules, so that the definition of \texttt{int} must appear after the definition of \texttt{digit}.
 
@@ -192,10 +192,9 @@ The name to use for the generated lexer module is specified using \kw{name}.
 The \kw{header} directive allows one to specify the lexer's header.
 This directive is useful when you want to use a functor for the lexer.
 For example,
-\begin{verbatim}
-    %header (
-      functor ExampleLexFn (Extras : EXTRA_SIG));
-\end{verbatim}%
+\begin{lstlisting}
+%header (functor ExampleLexFn (Extras : EXTRA_SIG));
+\end{lstlisting}%
 Note that it is an error to include both the \kw{header} and \kw{name} directive in the
 same lexer specification.
 
@@ -313,17 +312,17 @@ Actions are arbitrary SML code enclosed in parentheses.  The following names are
 \section{Using the generated code}\label{sec:ulex-code}
 
 The generated lexer module has a signature that includes the following specifications:
-\begin{verbatim}
-    type prestrm
-    type strm = prestrm * start_state
+\begin{lstlisting}
+type prestrm
+type strm = prestrm * start_state
     
-    val streamify         : (unit -> string) -> strm
-    val streamifyReader   : (char, 'a) StringCvt.reader -> 'a -> strm
-    val streamifyInstream : TextIO.instream -> strm
+val streamify         : (unit -> string) -> strm
+val streamifyReader   : (char, 'a) StringCvt.reader -> 'a -> strm
+val streamifyInstream : TextIO.instream -> strm
     
-    val lex : AntlrStreamPos.sourcemap -> strm
-                -> lex_result * AntlrStreamPos.span * strm
-\end{verbatim}%
+val lex : AntlrStreamPos.sourcemap -> strm
+      -> lex_result * AntlrStreamPos.span * strm
+\end{lstlisting}%
 where \texttt{lex\char`\_result} is the result type of the lexer actions, and \texttt{start\char`\_state} is an algebraic datatype with nullary constructors for each defined start state.
 Note that \texttt{lex\char`\_result} must be defined as a type using the \kw{defs} directive.
 In this interface, lexer start states are conceptually part of the input stream; thus, from an external viewpoint,

@@ -6,62 +6,72 @@
 
 \section{The {\tt AntlrStreamPos} structure}
 
-\begin{verbatim}
-    structure AntlrStreamPos : sig
+\begin{lstlisting}
+structure AntlrStreamPos : sig
 
-      type pos = Position.int
-      type span = pos * pos
-      type sourceloc = { fileName : string option, lineNo : int, colNo : int }
-      type sourcemap
+  type pos = Position.int
+  type span = pos * pos
+  type sourceloc = { fileName : string option, lineNo : int, colNo : int }
+  type sourcemap
 
-      (* the result of moving forward an integer number of characters *)
-      val forward : pos * int -> pos
+  (* the result of moving forward an integer number of characters *)
+  val forward : pos * int -> pos
 
-      val mkSourcemap  : unit   -> sourcemap
-      val mkSourcemap' : string -> sourcemap
+  val mkSourcemap  : unit   -> sourcemap
+  val mkSourcemap' : string -> sourcemap
 
-      val same : sourcemap * sourcemap -> bool
+  val same : sourcemap * sourcemap -> bool
 
-      (* log a new line occurence *)
-      val markNewLine : sourcemap -> pos -> unit
-      (* resychronize to a full source location *)
-      val resynch     : sourcemap -> pos * sourceloc -> unit
+  (* log a new line occurence *)
+  val markNewLine : sourcemap -> pos -> unit
+  (* resychronize to a full source location *)
+  val resynch     : sourcemap -> pos * sourceloc -> unit
 
-      val sourceLoc : sourcemap -> pos -> sourceloc
-      val fileName  : sourcemap -> pos -> string option
-      val lineNo    : sourcemap -> pos -> int
-      val colNo     : sourcemap -> pos -> int
-      val toString  : sourcemap -> pos -> string
-      val spanToString : sourcemap -> span -> string
+  val sourceLoc : sourcemap -> pos -> sourceloc
+  val fileName  : sourcemap -> pos -> string option
+  val lineNo    : sourcemap -> pos -> int
+  val colNo     : sourcemap -> pos -> int
+  val toString  : sourcemap -> pos -> string
+  val spanToString : sourcemap -> span -> string
 
-    end
-\end{verbatim}
+end
+\end{lstlisting}%
 
 
 \section{The {\tt AntlrRepair} structure}
 
-\begin{verbatim}
-    structure AntlrRepair : sig
+\begin{lstlisting}
+structure AntlrRepair : sig
 
-      datatype 'tok repair_action
-        = Insert of 'tok list
-        | Delete of 'tok list
-        | Subst of {
-            old : 'tok list,
-            new : 'tok list
-          }
-        | FailureAt of 'tok
-      
-      type 'a repair = AntlrStreamPos.pos * 'tok repair_action
-      
-      val actionToString : 
-            ('tok -> string)
-              -> 'tok repair_action -> string
-        
-      val repairToString : 
-            ('tok -> string)
-              -> AntlrStreamPos.sourcemap
-                -> 'tok repair -> string
-        
-    end
-\end{verbatim}
+  datatype 'tok repair_action
+    = Insert of 'tok list
+    | Delete of 'tok list
+    | Subst of {
+	old : 'tok list,
+	new : 'tok list
+      }
+    | FailureAt of 'tok
+  
+  type 'a repair = AntlrStreamPos.pos * 'tok repair_action
+  
+  val actionToString :  ('tok -> string)
+	-> 'tok repair_action
+	-> string
+    
+  val repairToString : ('tok -> string)
+	-> AntlrStreamPos.sourcemap
+	-> 'tok repair -> string
+
+  datatype add_or_delete = ADD | DEL
+
+(* return a string representation of the repair action.  This version
+ * uses the add_or_delete information to allow different token names
+ * for deletion (more specific) and addition (more general).
+ *)
+  val actionToString' : (add_or_delete -> 'tok -> string)
+	-> 'tok repair_action -> string
+  val repairToString' : (add_or_delete -> 'tok -> string)
+	-> AntlrStreamPos.sourcemap -> 'tok repair -> string
+
+end
+\end{lstlisting}%

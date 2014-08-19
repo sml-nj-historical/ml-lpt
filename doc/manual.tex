@@ -1,5 +1,14 @@
 \documentclass[11pt,letterpaper]{book}
 
+\usepackage{times}
+%-------------------------
+% the following magic makes the tt font in math mode be the same as the
+% normal tt font (i.e., Courier)
+%
+\SetMathAlphabet{\mathtt}{normal}{OT1}{pcr}{n}{n}
+\SetMathAlphabet{\mathtt}{bold}{OT1}{pcr}{bx}{n}
+%-------------------------
+
 \usepackage[top=1.33in, bottom=1.33in, left=1.33in, right=1.33in]{geometry}
 \usepackage{amsmath}
 \usepackage[all]{xy}
@@ -67,7 +76,7 @@
 \usepackage{ifpdf}
 
 \usepackage{mathpazo}
-\renewcommand{\ttdefault}{cmtt}
+%\renewcommand{\ttdefault}{cmtt}
 
 %\newcommand{\parttext}{}
 %\newcommand{\cpart}[1]{\renewcommand{\parttext}{#1}\part{#1}}
@@ -76,6 +85,38 @@
 \usepackage{multicol}
 
 \newcommand{\sem}[1]{\llbracket #1\rrbracket}
+
+\usepackage{listings}
+
+\lstdefinelanguage{SML}{%
+  morekeywords={%
+    abstype, and, andalso, as, case, datatype, do, else, end, eqtype, exception,%
+    fn, fun, functor, handle, if, in, include, infix, infixr, let, local, nonfix,%
+    of, op, open, orelse, raise, rec, sharing, sig, signature, struct, structure,%
+    then, type, val, where, while, with, withtype%
+  },%
+  % otherkeywords={(,),[,],\{,\},\,,:,...,_,|,=,=>,->,\#,:>},
+  sensitive,%
+  morecomment=[n]{(*}{*)},%
+  morestring=[d]",%
+}[keywords,comments,strings]%
+
+\lstdefinelanguage{CM}{%
+  morekeywords={%
+    functor, signature, structure,%
+    Library, is,%
+  },%
+  sensitive,%
+  morecomment=[n]{(*}{*)},%
+  morestring=[d]",%
+}[keywords,comments,strings]%
+
+\lstset{
+  basicstyle=\small\ttfamily,
+  keywordstyle=\bfseries,
+  showstringspaces=false,
+  language=SML
+}
 
 \begin{document}
 
@@ -121,6 +162,7 @@
 		\input{usage-ml-antlr}
 		\input{ml-lpt-lib}
 		\input{example}
+		\input{history}
 	
 %	\cpart{Theory}
 %	

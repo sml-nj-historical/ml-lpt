@@ -1,0 +1,17 @@
+%!TEX root = manual.tex
+%
+\chapter{Change history}
+\label{ch:history}
+
+Here is a history of changes to the SML/NJ Language Processing Tools.
+More details can be found in the SML/NJ \texttt{NOTES} and \texttt{README} files.
+\begin{description}
+  \item[SML/NJ 110.77] \mbox{}\\
+    Added the \texttt{actionToString'} and \texttt{repairToString'} functions
+    to the \texttt{AntlrRepair} structure.  These functions allow one to
+    specialize the printing of tokens based on whether they are being added or deleted.
+  \item[SML/NJ 110.72] \mbox{}\\
+    Added \texttt{--strict-sml} flag to \ulex{} for MLton compatibility.\\[0.25em]
+    Added \texttt{\%header} directive to the \mlantlr{} parser generator.  Also
+    updated the documentation.
+\end{description}%

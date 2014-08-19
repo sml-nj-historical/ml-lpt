@@ -8,8 +8,7 @@ language implemented using both \texttt{ml-ulex} and \texttt{ml-antlr}.
 Figure~\ref{fig:calc-sources} gives the CM file for the project.
 %Note that we are assuming that the \texttt{ml-ulex} and \texttt{ml-antlr} tools have been run by hand.
 \begin{figure}[h]
-\begin{verbatim}
-
+\begin{lstlisting}[language=CM]
 Library
 
   structure CalcLexer
@@ -24,15 +23,14 @@ is
   calc.grm : ml-antlr
   calc.lex : ml-ulex
   calc-test.sml
-
-\end{verbatim}
+\end{lstlisting}%
 \caption{The CM file: {\tt sources.cm}}
 \label{fig:calc-sources}
-\end{figure}
+\end{figure}%
 
 \begin{figure}
 
-\begin{verbatim}
+\begin{lstlisting}[language=SML]
 %name CalcLexer;
 
 %let digit = [0-9];
@@ -59,13 +57,13 @@ in      => ( T.KW_in );
 " " | \n | \t
         => ( continue() );
 .       => ( (* handle error *) );
-\end{verbatim}
+\end{lstlisting}
 \caption{The ml-ulex specification: \texttt{calc.lex}}
 \label{fig:calc-lex}
 \end{figure}%
 
 \begin{figure}[p]
-\begin{verbatim}
+\begin{lstlisting}[language=SML]
 %name Calc;
 
 %tokens
@@ -105,18 +103,22 @@ atomicExp(env)
   | NUM
   | "(" exp@(env) ")"
   ;
-\end{verbatim}
+\end{lstlisting}
 \caption{The ml-antlr specification: \texttt{calc.grm}}
 \label{fig:calc-grm}
 \end{figure}%
 
 \begin{figure}
-\begin{verbatim}
+\begin{lstlisting}[language=SML]
 structure CalcTest =
   struct
 
     structure CP = CalcParseFn(CalcLexer)
 
+    fun tok2s (ID s) = s
+      | tok2s (NUM n) = Int.toString n
+      | tok2s tok = CalcTokens.toString tok
+      
   (* val calc : TextIO.instream -> Int.int *)
     fun calc instrm = let
       val sm = AntlrStreamPos.mkSourcemap()
@@ -125,14 +127,13 @@ structure CalcTest =
       val (r, strm', errs) = CP.parse lex AtomMap.empty strm
       in
         print (String.concatWith "\n" 
-            (map (AntlrRepair.repairToString 
-                    CalcTokens.toString sm) 
+            (List.map (AntlrRepair.repairToString tok2s sm) 
                  errs));
         r
       end
 
   end
-\end{verbatim}
+\end{lstlisting}
 \caption{The driver: {\tt calc-test.sml}}
 \label{fig:calc-test}
 \end{figure}%
