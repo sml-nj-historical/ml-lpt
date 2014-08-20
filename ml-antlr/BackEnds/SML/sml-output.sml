@@ -359,7 +359,15 @@ structure SMLOutput =
 
   (* output user definitions *)
     fun defsHook spec strm = let
-          val (S.Grammar {defs, prods, refcells, ...}, _) = spec
+          val (S.Grammar {defs, ...}, _) = spec
+	  fun output ss = TextIO.output (strm, String.concat ss)
+          in
+            TextIO.output (strm, Action.toString defs)
+          end
+
+  (* output user actions *)
+    fun actsHook spec strm = let
+          val (S.Grammar {prods, refcells, ...}, _) = spec
 	  fun output ss = TextIO.output (strm, String.concat ss)
 	  fun actionLevel (suffix, f, isPred) prod = (case f prod
             of SOME code => output [
@@ -385,8 +393,6 @@ structure SMLOutput =
 		  "fun mk", name ^ rcSuffix, "() : (", ty, ") ref = ref (", 
 		  Action.toString initCode, ")\n"])
           in
-            TextIO.output (strm, Action.toString defs);
-	    TextIO.output (strm, "\n\n");
 	    app (actionLevel ("_ACT", Prod.action, false)) prods;
 	    app (actionLevel ("_PRED", Prod.pred, true)) prods;
 	    app (fn prod => app (args prod) (Prod.items prod)) prods;
@@ -429,7 +435,8 @@ structure SMLOutput =
 		       ("tokens",   tokensHook (grm, pm)),
 		       ("tokmod",   tokmodHook (grm, pm)),
 		       ("header",   headerHook (grm, pm)),
-		       ("defs",     defsHook (grm, pm)),
+		       ("usrdefs",  defsHook (grm, pm)),
+		       ("actions",  actsHook (grm, pm)),
 		       ("ehargs",   ehargsHook (grm, pm)),
 		       ("matchfns", matchfnsHook (grm, pm))]
 	    }

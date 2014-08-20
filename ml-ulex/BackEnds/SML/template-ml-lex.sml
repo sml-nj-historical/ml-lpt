@@ -147,7 +147,7 @@
 		(fn (~1, _, oldMatches) => yystuck oldMatches
 		  | (curState, strm, oldMatches) => let
 		      val (transitions, finals') = Vector.sub (yytable, curState)
-		      val finals = map (fn i => Vector.sub (actTable, i)) finals'
+		      val finals = List.map (fn i => Vector.sub (actTable, i)) finals'
 		      fun tryfinal() = 
 		            yystuck (yyactsToMatches (strm, finals, oldMatches))
 		      fun find (c, []) = NONE

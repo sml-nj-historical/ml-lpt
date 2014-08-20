@@ -6,12 +6,27 @@
 Here is a history of changes to the SML/NJ Language Processing Tools.
 More details can be found in the SML/NJ \texttt{NOTES} and \texttt{README} files.
 \begin{description}
-  \item[SML/NJ 110.77] \mbox{}\\
+  \item[SML/NJ 110.77]
+    \mbox{}\\[0.5em]
+    Fixed an inconsistency in the way that \mlantlr{} and \ulex{} handled the contents of
+    a \texttt{\%defs} declaration.  \ulex{} made these definitions visible in the \texttt{UserDeclarations}
+    substructure, whereas \mlantlr{} hid them.  We have changed the behavior of ml-ulex to match
+    that of \mlantlr{} (\ie{}, hide the user definitions).  We chose to hide the user definitions
+    in ml-ulex because they are usually not useful outside the lexer, hiding them reduces The
+    size of the generated code, and definitions that are needed outside the lexer can be
+    defined in an external module.  Note that the \texttt{UserDeclarations} substructure remains
+    visible when \ulex{} is run in \texttt{ml-lex} compatibility mode.
+    \\[0.5em]
     Added the \texttt{actionToString'} and \texttt{repairToString'} functions
     to the \texttt{AntlrRepair} structure.  These functions allow one to
     specialize the printing of tokens based on whether they are being added or deleted.
-  \item[SML/NJ 110.72] \mbox{}\\
-    Added \texttt{--strict-sml} flag to \ulex{} for MLton compatibility.\\[0.25em]
-    Added \texttt{\%header} directive to the \mlantlr{} parser generator.  Also
-    updated the documentation.
+    \\[0.5em]
+    Removed the \texttt{toksToString} function from the tokens structure that ml-antlr
+    generates.  It was originally for use by the \texttt{AntlrRepair} structure, but that
+    structure does not use it.
+  \item[SML/NJ 110.72]
+    \mbox{}\\[0.5em]
+    Added \texttt{--strict-sml} flag to \ulex{} for MLton compatibility.
+    \\[0.5em]
+    Added \texttt{\%header} directive to the \mlantlr{} parser generator.
 \end{description}%

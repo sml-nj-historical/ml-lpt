@@ -4,8 +4,6 @@ structure
 
 @tokens@
 
-  fun toksToString toks = String.concatWith " " (map toString toks)
-
   fun isEOF EOF = true
     | isEOF _ = false
 
@@ -18,10 +16,11 @@ end
     structure Tok = 
 @tokmod@
 
-    structure UserCode = struct
+    structure UserCode =
+      struct
+@usrdefs@
 
-@defs@
-
+@actions@
       end (* UserCode *)
 
     structure Err = AntlrErrHandler(
