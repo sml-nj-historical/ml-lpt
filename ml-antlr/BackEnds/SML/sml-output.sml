@@ -312,8 +312,17 @@ structure SMLOutput =
 	  val toksDT = 
 	        "    datatype token = "
 		^ (String.concatWith "\n      | " (List.map Token.def toks))
-        (* allToks list *)
-	  val allToks = map Token.name (List.filter (not o Token.hasTy) toks)
+        (* list of all nullary and default token values for error repair *)
+	  val allToks = let
+		fun make (tok, ts) = if Token.hasTy tok
+		      then (case Token.default tok
+			 of SOME arg => concat[Token.name tok, "(", arg, ")"] :: ts
+			  | NONE => ts
+			(* end case *))
+		      else Token.name tok :: ts
+		in
+		  List.foldr make [] toks
+		end
 	(* toString function *)
 	  fun mkMat t = (ML_TupPat [tokConPat' t], rawCode (Token.quoted t))
           val casesExp = ML_Case (ML_Var "tok", List.map mkMat toks)

@@ -64,6 +64,7 @@ fun dec (ri as ref i) = (ri := i-1)
 <INITIAL,PRECODE>"%token"("s")?		=> (YYBEGIN CONSTR; Tok.KW_tokens);
 <INITIAL,PRECODE>"%defs"		=> (YYBEGIN PRECODE; Tok.KW_defs);
 <INITIAL,PRECODE>"%keyword"("s")?	=> (Tok.KW_keywords);
+<INITIAL,PRECODE>"%default"		=> (YYBEGIN PRECODE; Tok.KW_default);
 <INITIAL,PRECODE>"%nonterm"("s")?	=> (Tok.KW_nonterms);
 <INITIAL,PRECODE>"%import"		=> (Tok.KW_import);
 <INITIAL,PRECODE>"%name"		=> (Tok.KW_name);

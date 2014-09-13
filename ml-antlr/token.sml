@@ -18,6 +18,7 @@ structure Token =
     fun hasTy (T{ty = SOME _, ...}) = true
       | hasTy _ = false
     fun isKW (T{keyword, ...}) = keyword
+    fun default (T{default, ...}) = default
 
     fun toString (T{abbrev = SOME a, ...}) = Atom.toString a
       | toString tok = name tok

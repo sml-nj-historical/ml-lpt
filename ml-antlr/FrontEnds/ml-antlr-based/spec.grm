@@ -24,7 +24,8 @@
 %name Spec;
 
 %tokens 
-  : KW_defs	("%defs")
+  : KW_default	("%default")
+  | KW_defs	("%defs")
   | KW_dropping	("%dropping")		
   | KW_entry	("%entry")
   | KW_header	("%header")
@@ -83,6 +84,8 @@ Decl
   | "%start" ID		=> ([ (FULL_SPAN, GS.START (Atom.atom ID)) ])
   | "%entry" IDList	=> (map (lift (GS.ENTRY o Atom.atom)) IDList)
   | "%keywords" SymList	=> (map (lift GS.KEYWORD) SymList)
+  | "%default" ID Code
+      => ([ (FULL_SPAN, GS.DEFAULT (Atom.atom ID, Code)) ])
   | "%defs" Code	=> ([ (FULL_SPAN, GS.DEFS Code) ])
   | "%tokens" ":"? ConstrList
       => (map (lift GS.TOKEN) ConstrList)

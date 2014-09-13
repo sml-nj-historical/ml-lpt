@@ -64,6 +64,7 @@ structure CheckGrammar : sig
 	  val dropSet = ASet.fromList (map (fn (_, s) => s) dropping)
 	  fun keep s = not (ASet.member (dropSet, s))
 	  fun shouldImport (_, Syn.KEYWORD _)		 = true
+	    | shouldImport (_, Syn.DEFAULT _)		 = true
 	    | shouldImport (_, Syn.DEFS _)		 = true
 	    | shouldImport (_, Syn.TOKEN (sym, _, SOME abbrev)) = 
 	        keep sym andalso keep abbrev
@@ -88,10 +89,11 @@ structure CheckGrammar : sig
 (*	  val _ = print (Syn.ppGrammar ds) *)
 	(* ref cells used to incrementally build grammar representation *)
 	  val nextGlobalID = nextId (ref 0)
-	  val tokTbl	: S.token ATbl.hash_table = ATbl.mkTable (64, Fail "tokens table")
+	  val tokTbl	: S.token ATbl.hash_table = ATbl.mkTable (128, Fail "tokens table")
 	  val tokList	: S.token list ref = ref []
-	  val keywords	: Err.span ATbl.hash_table = ATbl.mkTable (32, Fail "keywords table")
-	  val entryPts	: Err.span ATbl.hash_table = ATbl.mkTable (4, Fail "entryPts table")
+	  val keywords	: Err.span ATbl.hash_table = ATbl.mkTable (64, Fail "keywords table")
+	  val defaults	: (Err.span * string) ATbl.hash_table = ATbl.mkTable (32, Fail "defaults table")
+	  val entryPts	: Err.span ATbl.hash_table = ATbl.mkTable (16, Fail "entryPts table")
 	  val name	: (string * Err.span) option ref = ref NONE
 	  val header    : Syn.code option ref = ref NONE
 	  val startSym	: (Atom.atom * Err.span) option ref = ref NONE
@@ -131,6 +133,12 @@ structure CheckGrammar : sig
 			"%keywords declaration for '", Atom.toString sym, "'"
 		      ])
 		(* end case *))
+	    | doDecl1 (span, Syn.DEFAULT(sym, (_, code))) = (case ATbl.find defaults sym
+		 of NONE => ATbl.insert defaults (sym, (span, code))
+		  | SOME(span', _) => dupeErr (span', span, [
+			"%default declaration for '", Atom.toString sym, "'"
+		      ])
+		(* end case *))
 	    | doDecl1 (span, Syn.REFCELL (name, ty, code)) = (
 		case ATbl.find refCells (Atom.atom name)
 		 of NONE => ATbl.insert refCells 
@@ -146,27 +154,43 @@ structure CheckGrammar : sig
 	    | doDecl1 _ = ()
 	  val _ = app doDecl1 ds
 	(* PHASE 2: record %tokens declarations *)
-	  val kwSet = ASet.addList (ASet.empty, 
-			map (fn (x, _) => x) (ATbl.listItemsi keywords))
+	  val kwSet = ASet.addList (ASet.empty, map (fn (x, _) => x) (ATbl.listItemsi keywords))
 	  fun isKW s = ASet.member (kwSet, s)
 	  fun doDecl2 (span, Syn.TOKEN (sym, tyOpt, abbrevOpt)) = (
 	        case ATbl.find tokTbl sym
 		 of NONE => let
-		      val _ = case abbrevOpt
-			       of SOME a => 
-				  (case ATbl.find tokTbl a
-				    of SOME (S.T{loc, ...}) =>
-				       dupeErr (loc, span, [
-					   "%tokens declaration with abbreviation ",
-					   Atom.toString a
-					 ])
-				     | NONE => ())
-				| NONE => ()
+		      val _ = (case abbrevOpt
+			     of SOME a => (case ATbl.find tokTbl a
+				   of SOME (S.T{loc, ...}) =>
+					dupeErr (loc, span, [
+					    "%tokens declaration with abbreviation ",
+					    Atom.toString a
+				       ])
+				    | NONE => ()
+				  (* end case *))
+			      | NONE => ()
+			    (* end case *))
+		    (* check for default argument for non-nullary tokens *)
+		      val dfltOpt = (case ATbl.find defaults sym
+			     of SOME(span, code) => if Option.isSome tyOpt
+				  then SOME code
+				  else (
+				    Err.spanErr (span, [
+					"default declaration for nullary token '",
+					Atom.toString sym, "'"
+				      ]);
+				    NONE)
+			      | NONE => NONE
+			    (* end case *))
 		      val tok = S.T {
-			    name = sym, id = nextGlobalID(), abbrev = abbrevOpt, 
-			    keyword = isKW sym orelse 
-				      getOpt(Option.map isKW abbrevOpt, false),
-			    ty = tyOpt, loc = span}
+			      id = nextGlobalID(),
+			      name = sym,
+			      loc = span,
+			      ty = tyOpt,
+			      abbrev = abbrevOpt,
+			      keyword = isKW sym orelse getOpt(Option.map isKW abbrevOpt, false),
+			      default = dfltOpt
+			    }
 		      in 
 			ATbl.insert tokTbl (sym, tok);
 			Option.app (fn a => ATbl.insert tokTbl (a, tok)) abbrevOpt;
@@ -180,16 +204,21 @@ structure CheckGrammar : sig
 	  val _ = if List.length (!tokList) = 0 then
 		    Err.errMsg ["Error: no tokens defined"]
 		  else ()
-	  val eofTok = S.T { name = Atom.atom "EOF", id = nextGlobalID(), ty = NONE,
-			     abbrev = NONE, keyword = false, loc = Err.emptySpan }
+	  val eofTok = S.T {
+		  id = nextGlobalID(), name = Atom.atom "EOF", loc = Err.emptySpan, ty = NONE,
+		  abbrev = NONE, keyword = false, default = NONE
+		}
 	  val _ = (ATbl.insert tokTbl (Atom.atom "EOF", eofTok);
 		   tokList := eofTok :: !tokList)
-	(* check for any symbols marked as %keywords but not defined as tokens *)
+	(* check for any symbols marked as %keywords or %default but not defined as tokens *)
 	  val tokSet = ASet.addList (ASet.empty, #1 (ListPair.unzip (ATbl.listItemsi tokTbl)))
 	  val undefKWs = ASet.difference (kwSet, tokSet)
-	  fun undefErr kw = Err.spanErr (valOf (ATbl.find keywords kw), 
-			      ["'", Atom.toString kw, "' is declared as a keyword, but not as a token"])
-	  val _ = ASet.app undefErr undefKWs
+	  fun undefErr kind kw = Err.spanErr (valOf (ATbl.find keywords kw), 
+		[kind, " '", Atom.toString kw, "' is not declared as a token"])
+	  val _ = ASet.app (undefErr "keyword") undefKWs
+	  val dfltSet = ASet.addList (ASet.empty, map (fn (x, _) => x) (ATbl.listItemsi defaults))
+	  val undefDflts = ASet.difference (dfltSet, tokSet)
+	  val _ = ASet.app (undefErr "default") undefDflts
 	(* PHASE 3: load nonterminals *)
 	  fun insNTerm (nt as S.NT{name, ...}) = let 
 	        val nid = nextId (ref 1)
@@ -306,9 +335,10 @@ structure CheckGrammar : sig
 		            hd nterms)
 		 | SOME (nt, _) => nt
 	       (* end case *))
-	  val startnt = case !startSym
-			 of NONE => hd nterms
-			  | SOME s => findNT "%start" s
+	  val startnt = (case !startSym
+		 of NONE => hd nterms
+		  | SOME s => findNT "%start" s
+		(* end case *))
 	  val entryPoints = map (findNT "%entry") (ATbl.listItemsi entryPts)
 	  val sortedTops = Nonterm.topsort (startnt::entryPoints)
 	  val topsSet = AtomSet.addList 

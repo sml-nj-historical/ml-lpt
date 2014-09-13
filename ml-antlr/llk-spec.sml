@@ -27,7 +27,8 @@ structure LLKSpec =
 	loc : span,
 	ty : ty option,
 	abbrev : Atom.atom option,
-	keyword : bool
+	keyword : bool,			(* true if marked as a %keyword *)
+	default : string option		(* optional default argument for error repair *)
       } 
 
     and nonterm = NT of {
