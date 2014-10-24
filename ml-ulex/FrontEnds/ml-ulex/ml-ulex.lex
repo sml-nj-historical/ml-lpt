@@ -39,6 +39,10 @@
 
   fun mkUChar yyunicode = Tok.UCHAR (hd yyunicode)
 
+  fun unclosedErr (sm, pos) =
+	TextIO.output (TextIO.stdErr, String.concat[
+	    " ", AntlrStreamPos.toString sm pos, " Syntax error: unclosed string\n"
+	  ])
 );
 
 %let eol=("\n"|"\013\n"|"\013");
@@ -68,9 +72,8 @@
 	=> (skip());
 
 <<EOF>>	=> (Tok.EOF);
-<RESTRING, STRING><<EOF>> => 
-	   (print (Int.toString (!yylineno) ^ ": unclosed string\n");
-	    Tok.EOF);
+<STRING><<EOF>> => (unclosedErr (yysm, yypos); Tok.EOF);
+<RESTRING><<EOF>> => (unclosedErr (yysm, yypos); YYBEGIN INITIAL; Tok.EOF);
 
 <INITIAL>"%defs"	=> (YYBEGIN CODE; clrText(); Tok.KW_defs);
 <INITIAL>"%arg"		=> (YYBEGIN CODE; clrText(); Tok.KW_arg);
@@ -176,8 +179,7 @@
 <CODE>[^()"]+	=> (addText yytext; continue());
 
 <STRING>"\""	=> (Tok.BOGUS);
-<STRING>{eol}	=> (addText yytext; print ("unclosed string\n");
- 	            Tok.BOGUS);
+<STRING>{eol}	=> (addText yytext; unclosedErr (yysm, yypos); Tok.BOGUS);
 <STRING>"\\"	=> (addText yytext; continue());
 <STRING>"\\\\"	=> (addText yytext; continue());
 <STRING>"\\\""	=> (addText yytext; continue());
@@ -185,7 +187,7 @@
 		=> (addText yytext; continue());
 
 <RESTRING>"\""	=> (YYBEGIN INITIAL; continue());
-<RESTRING>{eol} => (print ("unclosed string\n"); continue());
+<RESTRING>{eol} => (unclosedErr (yysm, yypos); YYBEGIN INITIAL; continue());
 <RESTRING>.	=> (mkUChar yyunicode);
 
 <INITIAL>[^\n{};]

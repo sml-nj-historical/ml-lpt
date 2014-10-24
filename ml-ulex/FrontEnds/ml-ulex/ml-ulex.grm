@@ -1,9 +1,14 @@
+(* ml-ulex.grm
+ *
+ * COPYRIGHT (c) 2006 
+ * John Reppy (http://www.cs.uchicago.edu/~jhr)
+ * Aaron Turon (http://www.cs.uchicago.edu/~adrassi)
+ * All rights reserved.
+ *)
+
 %defs (
   structure LS = LexSpec
   structure AMap = AtomMap
-
-  structure S = LexSpec
-
   structure RE = RegExp
   structure SIS = RE.SymSet
 
@@ -12,8 +17,6 @@
   val dashSet = SIS.singleton (charToSym #"-")
 
   fun flip (x, y) = (y, x)
-
-
 );
 
 %name MLULex;

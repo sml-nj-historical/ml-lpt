@@ -23,7 +23,7 @@ structure LexSpec =
 	header : string,
 	arg : string,
 	startStates : AtomSet.set,
-	clamp : clamp
+	clamp : clamp			(* not used yet *)
       }
 
     datatype spec = Spec of {

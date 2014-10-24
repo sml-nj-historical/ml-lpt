@@ -23,7 +23,7 @@ structure MLULexInput =
 	  val (spec, strm', errors, {errs}) = 
 	        P.parse lex strm
 		before TextIO.closeIn fstrm
-	  fun errMsg ty (pos, err) = print (String.concat [
+	  fun errMsg ty (pos, err) = TextIO.output (TextIO.stdErr, String.concat [
 		" ", SP.toString sm pos, 
 		ty, err, "\n"])
 	  in

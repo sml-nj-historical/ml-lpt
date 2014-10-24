@@ -134,9 +134,6 @@ MLULexTokens = struct
   | (BAR) => false
 (* end case *))
 
-
-  fun toksToString toks = String.concatWith " " (map toString toks)
-
   fun isEOF EOF = true
     | isEOF _ = false
 
@@ -147,14 +144,11 @@ functor MLULexParseFn(Lex : ANTLR_LEXER) = struct
   local
     structure Tok = 
 MLULexTokens
-    structure UserCode = struct
+    structure UserCode =
+      struct
 
- 
   structure LS = LexSpec
   structure AMap = AtomMap
-
-  structure S = LexSpec
-
   structure RE = RegExp
   structure SIS = RE.SymSet
 
@@ -164,99 +158,95 @@ MLULexTokens
 
   fun flip (x, y) = (y, x)
 
-
-
-
 fun decls_PROD_1_ACT (env, SEMI, decl, spec, decls, SEMI_SPAN : (Lex.pos * Lex.pos), decl_SPAN : (Lex.pos * Lex.pos), decls_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( decls)
+  (decls)
 fun decls_PROD_2_ACT (env, spec, FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( spec)
+  (spec)
 fun decl_PROD_1_ACT (env, spec, directive, directive_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( let val (conf', env') = directive
+  (let val (conf', env') = directive
 	  in 
 	    (LS.updConf (spec, conf'),
 	     env')
 	  end)
 fun decl_PROD_2_ACT (env, CODE, spec, KW_defs, CODE_SPAN : (Lex.pos * Lex.pos), KW_defs_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( LS.updDecls (spec, CODE), env)
+  (LS.updDecls (spec, CODE), env)
 fun decl_PROD_3_SUBRULE_1_PROD_1_SUBRULE_1_PROD_1_ACT (ID, LT, env, spec, COMMA, ID_SPAN : (Lex.pos * Lex.pos), LT_SPAN : (Lex.pos * Lex.pos), COMMA_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( ID)
+  (ID)
 fun decl_PROD_3_SUBRULE_2_PROD_1_SUBRULE_1_PROD_1_ACT (SS, env, spec, SS_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( fn c => c)
+  (fn c => c)
 fun decl_PROD_3_SUBRULE_2_PROD_1_SUBRULE_1_PROD_2_ACT (SS, env, spec, CARAT, SS_SPAN : (Lex.pos * Lex.pos), CARAT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( fn c => "if not yylastwasn then REJECT() else (" ^ c ^")")
+  (fn c => "if not yylastwasn then REJECT() else (" ^ c ^")")
 fun decl_PROD_3_SUBRULE_2_PROD_1_ACT (SS, re, env, CODE, spec, addNewlCheck, DARROW, SS_SPAN : (Lex.pos * Lex.pos), re_SPAN : (Lex.pos * Lex.pos), CODE_SPAN : (Lex.pos * Lex.pos), addNewlCheck_SPAN : (Lex.pos * Lex.pos), DARROW_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  (  LS.addRule (spec, 
+  ( LS.addRule (spec, 
 	         ((Option.map (listToASet o (map Atom.atom)) SS, re), addNewlCheck CODE)),
 	       env )
 fun decl_PROD_3_SUBRULE_2_PROD_2_ACT (SS, env, CODE, spec, EOFMARK, DARROW, SS_SPAN : (Lex.pos * Lex.pos), CODE_SPAN : (Lex.pos * Lex.pos), EOFMARK_SPAN : (Lex.pos * Lex.pos), DARROW_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  (  case SS
+  ( case SS
 		of NONE => (LS.addEOFRule (spec, ("_", CODE)), env)
 		 | SOME ss => (foldl (fn (s, spec) => LS.addEOFRuleFront (spec, (s, CODE)))
 			             spec ss,
 			       env) )
 fun decl_PROD_3_ACT (SS, env, main, spec, SS_SPAN : (Lex.pos * Lex.pos), main_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  (  main )
+  ( main )
 fun directive_PROD_1_ACT (EQ, ID, re, env, conf, KW_let, EQ_SPAN : (Lex.pos * Lex.pos), ID_SPAN : (Lex.pos * Lex.pos), re_SPAN : (Lex.pos * Lex.pos), KW_let_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( conf, AMap.insert (env, Atom.atom ID, re))
+  (conf, AMap.insert (env, Atom.atom ID, re))
 fun directive_PROD_2_ACT (env, CODE, conf, KW_arg, CODE_SPAN : (Lex.pos * Lex.pos), KW_arg_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( LS.updArg (conf, CODE), env)
+  (LS.updArg (conf, CODE), env)
 fun directive_PROD_3_SUBRULE_1_PROD_1_ACT (ID, env, conf, COMMA, KW_states, ID_SPAN : (Lex.pos * Lex.pos), COMMA_SPAN : (Lex.pos * Lex.pos), KW_states_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( ID)
+  (ID)
 fun directive_PROD_3_ACT (SR, env, conf, KW_states, SR_SPAN : (Lex.pos * Lex.pos), KW_states_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( LS.updStartStates (conf, listToASet (map Atom.atom SR)), 
+  (LS.updStartStates (conf, listToASet (map Atom.atom SR)), 
 	  env)
 fun directive_PROD_4_SUBRULE_1_PROD_1_ACT (env, UTF8, conf, KW_charset, UTF8_SPAN : (Lex.pos * Lex.pos), KW_charset_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( LS.updClamp (conf, LS.NO_CLAMP), env)
+  (LS.updClamp (conf, LS.NO_CLAMP), env)
 fun directive_PROD_4_SUBRULE_1_PROD_2_ACT (env, conf, ASCII7, KW_charset, ASCII7_SPAN : (Lex.pos * Lex.pos), KW_charset_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  (  LS.updClamp (conf, LS.CLAMP127), env)
+  (LS.updClamp (conf, LS.CLAMP127), env)
 fun directive_PROD_4_SUBRULE_1_PROD_3_ACT (env, conf, ASCII8, KW_charset, ASCII8_SPAN : (Lex.pos * Lex.pos), KW_charset_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  (  LS.updClamp (conf, LS.CLAMP255), env)
+  (LS.updClamp (conf, LS.CLAMP255), env)
 fun directive_PROD_5_ACT (ID, env, conf, KW_name, ID_SPAN : (Lex.pos * Lex.pos), KW_name_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( LS.updStructName (conf, ID), env)
+  (LS.updStructName (conf, ID), env)
 fun directive_PROD_6_ACT (env, CODE, conf, KW_header, CODE_SPAN : (Lex.pos * Lex.pos), KW_header_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( LS.updHeader (conf, CODE), env)
+  (LS.updHeader (conf, CODE), env)
 fun or_re_PROD_1_ACT (SR, env, and_re, SR_SPAN : (Lex.pos * Lex.pos), and_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( foldl (RE.mkOr o flip) and_re SR)
+  (foldl (RE.mkOr o flip) and_re SR)
 fun and_re_PROD_1_ACT (SR, env, cat_re, SR_SPAN : (Lex.pos * Lex.pos), cat_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( foldl (RE.mkAnd o flip) cat_re SR)
+  (foldl (RE.mkAnd o flip) cat_re SR)
 fun cat_re_PROD_1_ACT (SR, env, not_re, SR_SPAN : (Lex.pos * Lex.pos), not_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( foldl (RE.mkConcat o flip) not_re SR)
+  (foldl (RE.mkConcat o flip) not_re SR)
 fun not_re_PROD_1_ACT (NEG, env, post_re, NEG_SPAN : (Lex.pos * Lex.pos), post_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( RE.mkNot post_re)
+  (RE.mkNot post_re)
 fun post_re_PROD_1_SUBRULE_1_PROD_1_ACT (env, prim_re, QUERY, prim_re_SPAN : (Lex.pos * Lex.pos), QUERY_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( RE.mkOpt)
+  (RE.mkOpt)
 fun post_re_PROD_1_SUBRULE_1_PROD_2_ACT (env, STAR, prim_re, STAR_SPAN : (Lex.pos * Lex.pos), prim_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( RE.mkClosure)
+  (RE.mkClosure)
 fun post_re_PROD_1_SUBRULE_1_PROD_3_ACT (env, PLUS, prim_re, PLUS_SPAN : (Lex.pos * Lex.pos), prim_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( fn re => RE.mkAtLeast (re, 1))
+  (fn re => RE.mkAtLeast (re, 1))
 fun post_re_PROD_1_SUBRULE_1_PROD_4_ACT (INT, LCB, RCB, env, prim_re, INT_SPAN : (Lex.pos * Lex.pos), LCB_SPAN : (Lex.pos * Lex.pos), RCB_SPAN : (Lex.pos * Lex.pos), prim_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( fn re => RE.mkRep (re, INT, INT))
+  (fn re => RE.mkRep (re, INT, INT))
 fun post_re_PROD_1_SUBRULE_1_PROD_5_ACT (LCB, RCB, env, INT1, INT2, prim_re, COMMA, LCB_SPAN : (Lex.pos * Lex.pos), RCB_SPAN : (Lex.pos * Lex.pos), INT1_SPAN : (Lex.pos * Lex.pos), INT2_SPAN : (Lex.pos * Lex.pos), prim_re_SPAN : (Lex.pos * Lex.pos), COMMA_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( fn re => RE.mkRep (re, INT1, INT2))
+  (fn re => RE.mkRep (re, INT1, INT2))
 fun post_re_PROD_1_SUBRULE_1_PROD_6_ACT (env, prim_re, prim_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( fn x => x)
+  (fn x => x)
 fun post_re_PROD_1_ACT (SR, env, prim_re, SR_SPAN : (Lex.pos * Lex.pos), prim_re_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( SR prim_re)
+  (SR prim_re)
 fun prim_re_PROD_1_ACT (ID, LCB, RCB, env, ID_SPAN : (Lex.pos * Lex.pos), LCB_SPAN : (Lex.pos * Lex.pos), RCB_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( case (AMap.find (env, Atom.atom ID))
+  (case (AMap.find (env, Atom.atom ID))
 	   of SOME re => re
 	    | NONE => (errs := (ID_SPAN, String.concat [
 		"Error: {", ID, "} is undefined."])::(!errs);
 		RE.any))
 fun prim_re_PROD_3_ACT (env, char, char_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( RE.mkSym char)
+  (RE.mkSym char)
 fun prim_re_PROD_4_ACT (DOT, env, DOT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( RE.mkSymSet SIS.universe)
+  (RE.mkSymSet SIS.universe)
 fun prim_re_PROD_5_SUBRULE_1_PROD_1_ACT (LSB, env, CARAT, LSB_SPAN : (Lex.pos * Lex.pos), CARAT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( SIS.complement)
+  (SIS.complement)
 fun prim_re_PROD_5_SUBRULE_1_PROD_2_ACT (LSB, env, DASH, LSB_SPAN : (Lex.pos * Lex.pos), DASH_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( fn x => SIS.union (x, dashSet))
+  (fn x => SIS.union (x, dashSet))
 fun prim_re_PROD_5_SUBRULE_1_PROD_3_ACT (LSB, env, LSB_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( fn x => x)
+  (fn x => x)
 fun prim_re_PROD_5_SUBRULE_2_PROD_1_ACT (LSB, SR1, env, DASH, char1, char2, LSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), DASH_SPAN : (Lex.pos * Lex.pos), char1_SPAN : (Lex.pos * Lex.pos), char2_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( 
-	    if char1 <= char2 then
+  (if char1 <= char2 then
 	       SIS.interval (char1, char2)
 	     else (errs := (FULL_SPAN, String.concat [
 	       "Error: malformed character class: ",
@@ -264,16 +254,16 @@ fun prim_re_PROD_5_SUBRULE_2_PROD_1_ACT (LSB, SR1, env, DASH, char1, char2, LSB_
 	       Word.toString char2, "."])::(!errs);
 	       SIS.universe))
 fun prim_re_PROD_5_SUBRULE_2_PROD_2_ACT (LSB, SR1, env, char, LSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), char_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( SIS.singleton char)
+  (SIS.singleton char)
 fun prim_re_PROD_5_SUBRULE_3_PROD_1_ACT (LSB, SR1, SR2, env, DASH, LSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), SR2_SPAN : (Lex.pos * Lex.pos), DASH_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( dashSet)
+  (dashSet)
 fun prim_re_PROD_5_SUBRULE_3_PROD_2_ACT (LSB, SR1, SR2, env, LSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), SR2_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( SIS.empty)
+  (SIS.empty)
 fun prim_re_PROD_5_ACT (LSB, RSB, SR1, SR2, SR3, env, LSB_SPAN : (Lex.pos * Lex.pos), RSB_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), SR2_SPAN : (Lex.pos * Lex.pos), SR3_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( RE.mkSymSet 
+  (RE.mkSymSet 
 	    (SR1 (foldl SIS.union SR3 SR2)))
 fun char_PROD_1_ACT (CHAR, CHAR_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), errs) = 
-  ( charToSym CHAR)
+  (charToSym CHAR)
 fun ARGS_4 (errs) = 
   (LS.mkSpec(), AMap.empty)
 fun ARGS_6 (env, spec, errs) = 
@@ -308,24 +298,23 @@ fun ARGS_43 (env, errs) =
   (env)
 fun ARGS_51 (LP, env, errs) = 
   (env)
-fun mkerrs_REFC() : ((AntlrStreamPos.span * string) list) ref = ref ( [])
-
-    end
+fun mkerrs_REFC() : ((AntlrStreamPos.span * string) list) ref = ref ([])
+      end (* UserCode *)
 
     structure Err = AntlrErrHandler(
       structure Tok = Tok
       structure Lex = Lex)
-    structure EBNF = AntlrEBNF(struct
-			         type strm = Err.wstream
-			         val getSpan = Err.getSpan
-			       end)
+    structure EBNF = AntlrEBNF(
+      struct
+	type strm = Err.wstream
+	val getSpan = Err.getSpan
+      end)
 
     fun mk lexFn = let
 val errs_REFC = UserCode.mkerrs_REFC()
 fun getS() = {errs = !errs_REFC}
 fun putS{errs} = (errs_REFC := errs)
-fun unwrap (ret, strm, repairs) = (ret, strm, repairs, getS())
-        val (eh, lex) = Err.mkErrHandler {get = getS, put = putS}
+fun unwrap (ret, strm, repairs) = (ret, strm, repairs, getS())        val (eh, lex) = Err.mkErrHandler {get = getS, put = putS}
 	fun fail() = Err.failure eh
 	fun tryProds (strm, prods) = let
 	  fun try [] = fail()

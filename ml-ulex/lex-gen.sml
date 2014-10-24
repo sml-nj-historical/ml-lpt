@@ -103,6 +103,7 @@ structure LexGen :
 	  end
 
   (* clamp a machine to the right character set *)
+(* unused
     fun clamp clampTo states = let
 	  val ascii127 = SIS.interval (0w0, 0w127)
           fun clampTrans (edge, q) = 
@@ -113,6 +114,7 @@ structure LexGen :
             (List.app clampState states;
 	     states)
           end
+*)
 
     fun minimize (initStates, states, numStates) = let
           val statesVec = Vector.fromList states
