@@ -35,17 +35,28 @@ structure ComputePredict :
             mapf (0, l, [])
           end
 
+    fun ntToString (S.NT{binding = S.WITHIN prod, ...}) = Prod.toString prod
+      | ntToString nt = Nonterm.name nt
+
   (* error handling, for lookahead computation failure *)
-    fun doErr (prePath, nt, msg) = Err.errMsg [
-            "Error: lookahead computation failed for ",
-            "'", Nonterm.qualName nt, "',\n", msg, "\n",
-            "The conflicting token sets are:\n  ",
-            String.concatWith "\n  " 
-              (mapi (fn (k, s) => concat[
-                  "k = ", Int.toString (k+1), ": ", Token.setToString s
-                ]) prePath),
-            "\n"
-          ]
+    fun doErr (prePath, nt, msg) = let
+	  val (prefix, obj) = (case nt
+		 of S.NT{binding = S.WITHIN prod, ...} =>
+		      ("Error " ^ Err.span2str(Prod.span prod), Prod.toString prod)
+		  | _ => ("Error", Nonterm.name nt)
+		(* end case *))
+	  in
+	    Err.errMsg [
+		prefix, ": lookahead computation failed for ",
+		"'", obj, "',\n", msg, "\n",
+		"The conflicting token sets are:\n  ",
+		String.concatWith "\n  " 
+		  (mapi (fn (k, s) => concat[
+		      "k = ", Int.toString (k+1), ": ", Token.setToString s
+		    ]) prePath),
+		"\n"
+	      ]
+	  end
 
   (* compute a decision tree for predicting a production for a nonterminal *)
     fun compute(gla, nt) = let

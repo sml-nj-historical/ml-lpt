@@ -31,6 +31,8 @@ structure Nonterm =
     fun formals (NT{formals, ...}) = !formals
     fun ty (NT{ty, ...}) = !ty
 
+    fun span (NT{loc, ...}) = !loc
+
     fun compare (NT{id=a, ...}, NT{id=b, ...}) = Int.compare(a, b)
     fun lexCompare (NT{name=a, ...}, NT{name=b, ...}) =
 	  String.compare(Atom.toString a, Atom.toString b)

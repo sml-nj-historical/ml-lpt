@@ -23,6 +23,8 @@ structure Prod =
     fun action (PROD{action, ...}) = action
     fun pred (PROD{pred, ...}) = pred
 
+    fun span (PROD{loc, ...}) = loc
+
     fun name (PROD{name, ...}) = name
     fun fullName p = name p
 (*    fun fullName p = (case Nonterm.parent (lhs p)
