@@ -79,7 +79,7 @@ A \antlr{} specification is a list of semicolon-terminated \emph{declarations}. 
 \GNextB
 	{\kw{keywords} symbol $($ \T{,} symbol $)^*$}
 \GNextB
-	{\kw{default} ID code}
+	{\kw{value} ID code}
 \GNextB
 	{\kw{name} ID}
 \GNextB
@@ -195,7 +195,7 @@ Finally, the \emph{start} symbol (Section~\ref{sec:start}) is always an entry po
 The \kw{import} directive is used to include one grammar inside another.  The string given in the directive should hold the path to a grammar file, and $\backslash$ characters must be escaped.  By default, all declarations appearing in the specified file are included in the resulting grammar, except for \kw{start}, \kw{entry}, and \kw{name} declarations.  However, individual tokens or nonterminals can be dropped by listing them in the \kw{dropping} clause of an \kw{import} declaration.  Since nonterminal definitions are cumulative (Section~\ref{sec:antlr-nt}), the imported nonterminals can be extended with new productions simply by listing them.
 The final grammar must, of course, ensure that all used tokens and nonterminals are defined.
 
-\subsection{The \kw{keywords} and \kw{default} directives}
+\subsection{The \kw{keywords} and \kw{value} directives}
 
 \Antlr{} uses an error-repair mechanism that is based on inserting or deleting tokens until
 a correct parse is found.
@@ -203,12 +203,12 @@ The \kw{keywords} and \kw{default} directives allow one to improve this process.
 Since changes to the input involving keywords can drastically alter the meaning of the
 input, it is usually desirable to favor non-keyword repairs.
 The \kw{keywords} directive is used to tell \antlr{} which tokens should be considered keywords.
-The \kw{default} directive is used to define a default argument for non-nullary tokens, which
+The \kw{value} directive is used to define a default argument for non-nullary tokens, which
 is used to construct a token value that can be inserted into the token stream
 when attempting to find a repair.
 For example
 \begin{verbatim}
-    %default NUMBER(0);
+    %value NUMBER(0);
 \end{verbatim}
 would allow the \texttt{NUMBER} token to be inserted as an error repair.
 

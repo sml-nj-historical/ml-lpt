@@ -24,8 +24,7 @@
 %name Spec;
 
 %tokens 
-  : KW_default	("%default")
-  | KW_defs	("%defs")
+  : KW_defs	("%defs")
   | KW_dropping	("%dropping")		
   | KW_entry	("%entry")
   | KW_header	("%header")
@@ -37,6 +36,7 @@
   | KW_start	("%start")
   | KW_tokens	("%tokens")
   | KW_try	("%try")
+  | KW_value	("%value")
   | KW_where	("%where")
   | LP  ("(")	| RP  (")")
   | LSB ("[")	| RSB ("]")
@@ -84,8 +84,8 @@ Decl
   | "%start" ID		=> ([ (FULL_SPAN, GS.START (Atom.atom ID)) ])
   | "%entry" IDList	=> (map (lift (GS.ENTRY o Atom.atom)) IDList)
   | "%keywords" SymList	=> (map (lift GS.KEYWORD) SymList)
-  | "%default" ID Code
-      => ([ (FULL_SPAN, GS.DEFAULT (Atom.atom ID, Code)) ])
+  | "%value" ID Code
+      => ([ (FULL_SPAN, GS.VALUE (Atom.atom ID, Code)) ])
   | "%defs" Code	=> ([ (FULL_SPAN, GS.DEFS Code) ])
   | "%tokens" ":"? ConstrList
       => (map (lift GS.TOKEN) ConstrList)

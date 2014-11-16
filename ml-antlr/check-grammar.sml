@@ -64,7 +64,7 @@ structure CheckGrammar : sig
 	  val dropSet = ASet.fromList (map (fn (_, s) => s) dropping)
 	  fun keep s = not (ASet.member (dropSet, s))
 	  fun shouldImport (_, Syn.KEYWORD _)		 = true
-	    | shouldImport (_, Syn.DEFAULT _)		 = true
+	    | shouldImport (_, Syn.VALUE _)		 = true
 	    | shouldImport (_, Syn.DEFS _)		 = true
 	    | shouldImport (_, Syn.TOKEN (sym, _, SOME abbrev)) = 
 	        keep sym andalso keep abbrev
@@ -133,10 +133,10 @@ structure CheckGrammar : sig
 			"%keywords declaration for '", Atom.toString sym, "'"
 		      ])
 		(* end case *))
-	    | doDecl1 (span, Syn.DEFAULT(sym, (_, code))) = (case ATbl.find defaults sym
+	    | doDecl1 (span, Syn.VALUE(sym, (_, code))) = (case ATbl.find defaults sym
 		 of NONE => ATbl.insert defaults (sym, (span, code))
 		  | SOME(span', _) => dupeErr (span', span, [
-			"%default declaration for '", Atom.toString sym, "'"
+			"%value declaration for '", Atom.toString sym, "'"
 		      ])
 		(* end case *))
 	    | doDecl1 (span, Syn.REFCELL (name, ty, code)) = (
@@ -176,7 +176,7 @@ structure CheckGrammar : sig
 				  then SOME code
 				  else (
 				    Err.spanErr (span, [
-					"default declaration for nullary token '",
+					"value declaration for nullary token '",
 					Atom.toString sym, "'"
 				      ]);
 				    NONE)
@@ -210,7 +210,7 @@ structure CheckGrammar : sig
 		}
 	  val _ = (ATbl.insert tokTbl (Atom.atom "EOF", eofTok);
 		   tokList := eofTok :: !tokList)
-	(* check for any symbols marked as %keywords or %default but not defined as tokens *)
+	(* check for any symbols marked as %keywords or %value but not defined as tokens *)
 	  val tokSet = ASet.addList (ASet.empty, #1 (ListPair.unzip (ATbl.listItemsi tokTbl)))
 	  val undefKWs = ASet.difference (kwSet, tokSet)
 	  fun undefErr kind kw = Err.spanErr (valOf (ATbl.find keywords kw), 
@@ -218,7 +218,7 @@ structure CheckGrammar : sig
 	  val _ = ASet.app (undefErr "keyword") undefKWs
 	  val dfltSet = ASet.addList (ASet.empty, map (fn (x, _) => x) (ATbl.listItemsi defaults))
 	  val undefDflts = ASet.difference (dfltSet, tokSet)
-	  val _ = ASet.app (undefErr "default") undefDflts
+	  val _ = ASet.app (undefErr "value") undefDflts
 	(* PHASE 3: load nonterminals *)
 	  fun insNTerm (nt as S.NT{name, ...}) = let 
 	        val nid = nextId (ref 1)

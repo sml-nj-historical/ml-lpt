@@ -22,7 +22,7 @@ structure GrammarSyntax =
       | START of symbol
       | ENTRY of symbol
       | KEYWORD of symbol
-      | DEFAULT of symbol * code
+      | VALUE of symbol * code
       | DEFS of code
       | TOKEN of constr
       | IMPORT of {
@@ -60,7 +60,7 @@ structure GrammarSyntax =
 	| ppDecl (_, START s) = "%start"
 	| ppDecl (_, ENTRY s) = "%entry"
 	| ppDecl (_, KEYWORD s) = "%keywords"
-	| ppDecl (_, DEFAULT _) = "%default"
+	| ppDecl (_, VALUE _) = "%value"
 	| ppDecl (_, DEFS c) = "%defs"
 	| ppDecl (_, TOKEN cstr) = "%tokens"
 	| ppDecl (_, NONTERM cstr) = "%nonterm"

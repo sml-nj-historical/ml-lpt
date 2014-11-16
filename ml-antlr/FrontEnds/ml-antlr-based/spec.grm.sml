@@ -31,6 +31,7 @@ SpecTokens = struct
       | RP
       | LP
       | KW_where
+      | KW_value
       | KW_try
       | KW_tokens
       | KW_start
@@ -43,9 +44,8 @@ SpecTokens = struct
       | KW_entry
       | KW_dropping
       | KW_defs
-      | KW_default
 
-    val allToks = [EOF, BOGUS, STRING("<string>"), ID("<id>"), OF, REFSET, DARROW, ARROW, EQ, QUERY, PLUS, STAR, BAR, DOLLAR, AT, COMMA, SEMI, COLON, SLASH, RCB, LCB, RSB, LSB, RP, LP, KW_where, KW_try, KW_tokens, KW_start, KW_refcell, KW_nonterms, KW_name, KW_keywords, KW_import, KW_header, KW_entry, KW_dropping, KW_defs, KW_default]
+    val allToks = [EOF, BOGUS, OF, REFSET, DARROW, ARROW, EQ, QUERY, PLUS, STAR, BAR, DOLLAR, AT, COMMA, SEMI, COLON, SLASH, RCB, LCB, RSB, LSB, RP, LP, KW_where, KW_value, KW_try, KW_tokens, KW_start, KW_refcell, KW_nonterms, KW_name, KW_keywords, KW_import, KW_header, KW_entry, KW_dropping, KW_defs]
 
     fun toString tok =
 (case (tok)
@@ -79,6 +79,7 @@ SpecTokens = struct
   | (RP) => ")"
   | (LP) => "("
   | (KW_where) => "%where"
+  | (KW_value) => "%value"
   | (KW_try) => "%try"
   | (KW_tokens) => "%tokens"
   | (KW_start) => "%start"
@@ -91,7 +92,6 @@ SpecTokens = struct
   | (KW_entry) => "%entry"
   | (KW_dropping) => "%dropping"
   | (KW_defs) => "%defs"
-  | (KW_default) => "%default"
 (* end case *))
     fun isKW tok =
 (case (tok)
@@ -125,6 +125,7 @@ SpecTokens = struct
   | (RP) => false
   | (LP) => false
   | (KW_where) => false
+  | (KW_value) => false
   | (KW_try) => false
   | (KW_tokens) => false
   | (KW_start) => false
@@ -137,7 +138,6 @@ SpecTokens = struct
   | (KW_entry) => false
   | (KW_dropping) => false
   | (KW_defs) => false
-  | (KW_default) => false
 (* end case *))
 
   fun isEOF EOF = true
@@ -184,8 +184,8 @@ fun Decl_PROD_4_ACT (KW_entry, IDList, KW_entry_SPAN : (Lex.pos * Lex.pos), IDLi
   (map (lift (GS.ENTRY o Atom.atom)) IDList) : (StreamPos.span * GS.decl) list
 fun Decl_PROD_5_ACT (KW_keywords, SymList, KW_keywords_SPAN : (Lex.pos * Lex.pos), SymList_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   (map (lift GS.KEYWORD) SymList) : (StreamPos.span * GS.decl) list
-fun Decl_PROD_6_ACT (ID, Code, KW_default, ID_SPAN : (Lex.pos * Lex.pos), Code_SPAN : (Lex.pos * Lex.pos), KW_default_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  ([ (FULL_SPAN, GS.DEFAULT (Atom.atom ID, Code)) ]) : (StreamPos.span * GS.decl) list
+fun Decl_PROD_6_ACT (ID, Code, KW_value, ID_SPAN : (Lex.pos * Lex.pos), Code_SPAN : (Lex.pos * Lex.pos), KW_value_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
+  ([ (FULL_SPAN, GS.VALUE (Atom.atom ID, Code)) ]) : (StreamPos.span * GS.decl) list
 fun Decl_PROD_7_ACT (Code, KW_defs, Code_SPAN : (Lex.pos * Lex.pos), KW_defs_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ([ (FULL_SPAN, GS.DEFS Code) ]) : (StreamPos.span * GS.decl) list
 fun Decl_PROD_8_ACT (COLON, KW_tokens, ConstrList, COLON_SPAN : (Lex.pos * Lex.pos), KW_tokens_SPAN : (Lex.pos * Lex.pos), ConstrList_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
@@ -424,6 +424,10 @@ fun matchKW_where strm = (case (lex(strm))
  of (Tok.KW_where, span, strm') => ((), span, strm')
   | _ => fail()
 (* end case *))
+fun matchKW_value strm = (case (lex(strm))
+ of (Tok.KW_value, span, strm') => ((), span, strm')
+  | _ => fail()
+(* end case *))
 fun matchKW_try strm = (case (lex(strm))
  of (Tok.KW_try, span, strm') => ((), span, strm')
   | _ => fail()
@@ -470,10 +474,6 @@ fun matchKW_dropping strm = (case (lex(strm))
 (* end case *))
 fun matchKW_defs strm = (case (lex(strm))
  of (Tok.KW_defs, span, strm') => ((), span, strm')
-  | _ => fail()
-(* end case *))
-fun matchKW_default strm = (case (lex(strm))
- of (Tok.KW_default, span, strm') => ((), span, strm')
   | _ => fail()
 (* end case *))
 
@@ -1151,12 +1151,12 @@ fun Decl_NT (strm) = let
                 FULL_SPAN, strm')
             end
       fun Decl_PROD_6 (strm) = let
-            val (KW_default_RES, KW_default_SPAN, strm') = matchKW_default(strm)
+            val (KW_value_RES, KW_value_SPAN, strm') = matchKW_value(strm)
             val (ID_RES, ID_SPAN, strm') = matchID(strm')
             val (Code_RES, Code_SPAN, strm') = Code_NT(strm')
-            val FULL_SPAN = (#1(KW_default_SPAN), #2(Code_SPAN))
+            val FULL_SPAN = (#1(KW_value_SPAN), #2(Code_SPAN))
             in
-              (UserCode.Decl_PROD_6_ACT (ID_RES, Code_RES, KW_default_RES, ID_SPAN : (Lex.pos * Lex.pos), Code_SPAN : (Lex.pos * Lex.pos), KW_default_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
+              (UserCode.Decl_PROD_6_ACT (ID_RES, Code_RES, KW_value_RES, ID_SPAN : (Lex.pos * Lex.pos), Code_SPAN : (Lex.pos * Lex.pos), KW_value_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
                 FULL_SPAN, strm')
             end
       fun Decl_PROD_7 (strm) = let
@@ -1274,7 +1274,7 @@ fun Decl_NT (strm) = let
          of (Tok.ID(_), _, strm') => Decl_PROD_12(strm)
           | (Tok.KW_refcell, _, strm') => Decl_PROD_10(strm)
           | (Tok.KW_tokens, _, strm') => Decl_PROD_8(strm)
-          | (Tok.KW_default, _, strm') => Decl_PROD_6(strm)
+          | (Tok.KW_value, _, strm') => Decl_PROD_6(strm)
           | (Tok.KW_entry, _, strm') => Decl_PROD_4(strm)
           | (Tok.KW_header, _, strm') => Decl_PROD_2(strm)
           | (Tok.KW_name, _, strm') => Decl_PROD_1(strm)
@@ -1305,8 +1305,7 @@ fun File_NT (fileName_RES, sm_RES) (strm) = let
               ((Decl_RES), FULL_SPAN, strm')
             end
       fun File_PROD_1_SUBRULE_2_PRED (strm) = (case (lex(strm))
-             of (Tok.KW_default, _, strm') => true
-              | (Tok.KW_defs, _, strm') => true
+             of (Tok.KW_defs, _, strm') => true
               | (Tok.KW_entry, _, strm') => true
               | (Tok.KW_header, _, strm') => true
               | (Tok.KW_import, _, strm') => true
@@ -1316,6 +1315,7 @@ fun File_NT (fileName_RES, sm_RES) (strm) = let
               | (Tok.KW_refcell, _, strm') => true
               | (Tok.KW_start, _, strm') => true
               | (Tok.KW_tokens, _, strm') => true
+              | (Tok.KW_value, _, strm') => true
               | (Tok.ID(_), _, strm') => true
               | _ => false
             (* end case *))
