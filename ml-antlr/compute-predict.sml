@@ -42,13 +42,13 @@ structure ComputePredict :
     fun doErr (prePath, nt, msg) = let
 	  val (prefix, obj) = (case nt
 		 of S.NT{binding = S.WITHIN prod, ...} =>
-		      ("Error " ^ Err.span2str(Prod.span prod), Prod.toString prod)
-		  | _ => ("Error", Nonterm.name nt)
+		      ("Error " ^ Err.span2str(Prod.span prod), concat["\n  ", Prod.toString prod, "\n"])
+		  | _ => ("Error", concat[" '", Nonterm.name nt, "',\n"])
 		(* end case *))
 	  in
 	    Err.errMsg [
-		prefix, ": lookahead computation failed for ",
-		"'", obj, "',\n", msg, "\n",
+		prefix, ": lookahead computation failed for",
+		obj, msg, "\n",
 		"The conflicting token sets are:\n  ",
 		String.concatWith "\n  " 
 		  (mapi (fn (k, s) => concat[
