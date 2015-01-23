@@ -3,6 +3,33 @@
 \chapter{The {\tt ml-lpt-lib} library}
 \label{ch:ml-lpt-lib}
 
+To use the output of \ulex{} or \mlantlr{} in an SML program requires including the
+\texttt{ml-opt-lib} library.
+This library includes the \texttt{AntlrStreamPos} structure, which manages tracking
+positions in the input stream, and the \texttt{AntlrRepair} structure, which defines
+a representation of \mlantlr{}'s error-repair actions that can be used to generate
+error messages.
+
+\section{Usage}
+For SML/NJ, you should include the following line in your CM file:
+\begin{lstlisting}[language=CM]
+$/ml-lpt-lib.cm
+\end{lstlisting}%
+The SML/NJ Compilation Manager also understands how to generate SML files from \ulex{} and
+\mlantlr{} files.
+For example, if you include
+\begin{lstlisting}
+foo.grm : ml-antlr
+foo.lex : ml-ulex
+\end{lstlisting}%
+in the list of sources in a CM file, then CM will run the \ulex{} (reps.\ \mlantlr{})
+to produce \texttt{foo.lex.sml} (resp.\ \texttt{foo.grm.sml}).
+
+If you are using MLton SML compiler, then you will need to include the following line
+in your MLB file:
+\begin{lstlisting}
+$(SML_LIB)/mllpt-lib/mllpt-lib.mlb
+\end{lstlisting}%
 
 \section{The {\tt AntlrStreamPos} structure}
 
