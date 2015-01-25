@@ -13,6 +13,8 @@
 
  - check that all used start states are defined
  - check for stuck states
+ - default EOF rules for states that do not have an explicit rule (when
+   other states have an EOF rule)
 
  x switch ulex backend to functional stream
 
