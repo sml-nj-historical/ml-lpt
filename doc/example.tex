@@ -5,6 +5,24 @@
 
 This chapter gives a complete example of a simple calculator
 language implemented using both \texttt{ml-ulex} and \texttt{ml-antlr}.
+The language has the following syntax:
+\begin{displaymath}
+  \begin{array}{rcl}
+    E & ::=  & \mathtt{let}\;\mathrm{id}\;\mathtt{in}\;E \\
+      & \mid & E \;\mathtt{+}\; E \\
+      & \mid & E \;\mathtt{*}\; E \\
+      & \mid & \mathtt{-}\;E \\
+      & \mid & \mathrm{id} \\
+      & \mid & \mathrm{num}
+  \end{array}%
+\end{displaymath}%
+The lexical conventions allow arbitrary whitespace between tokens.
+Numbers ($\mathrm{num}$) numbers are unsigned decimal numbers
+and identifiers ($\mathrm{id}$) begin with a letter followed by letters and digits.
+The expression forms are listed in order of increasing precedence:
+let-expressions have the lowest precedence; then addition, multiplication, and negation.
+The calculator will compute and return the value of the expression.
+
 Figure~\ref{fig:calc-sources} gives the CM file for the project.
 %Note that we are assuming that the \texttt{ml-ulex} and \texttt{ml-antlr} tools have been run by hand.
 \begin{figure}[h]
