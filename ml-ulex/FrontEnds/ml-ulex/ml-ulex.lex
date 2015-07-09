@@ -89,6 +89,9 @@
 <DIRECTIVE>";"	=> (YYBEGIN INITIAL; Tok.SEMI);
 <DIRECTIVE>"="	=> (YYBEGIN INITIAL; Tok.EQ);
 <DIRECTIVE>">"	=> (YYBEGIN INITIAL; Tok.GT);
+<DIRECTIVE>"(*"	=> (comLvl := 1; comStart := !yylineno; YYBEGIN COM; 
+		    ignore(continue() before YYBEGIN DIRECTIVE);
+		    continue());
 <DIRECTIVE>.	=> (YYBEGIN INITIAL; REJECT());
 
 <CHARSET>"utf8" | "UTF8" => (YYBEGIN INITIAL; Tok.UTF8);
