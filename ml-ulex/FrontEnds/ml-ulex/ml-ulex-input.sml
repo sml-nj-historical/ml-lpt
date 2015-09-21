@@ -24,15 +24,12 @@ structure MLULexInput =
 	        P.parse lex strm
 		before TextIO.closeIn fstrm
 	  fun errMsg ty (pos, err) = TextIO.output (TextIO.stdErr, String.concat [
-		" ", SP.toString sm pos, 
-		ty, err, "\n"])
+		"[", SP.toString sm pos, "]",
+		ty, ": ", err, "\n"])
 	  in
-            app (errMsg " Syntax error: ") 
-	        (map (fn (p, e) => 
-			 (p, AntlrRepair.actionToString MLULexTokens.toString e)) 
-		     errors);
-	    app (errMsg " ") 
-		(map (fn ((p, _), e) => (p, e)) errs);
+            app (errMsg " Syntax error") 
+	      (map (fn (p, e) => (p, AntlrRepair.actionToString MLULexTokens.toString e)) errors);
+	    app (errMsg "") (map (fn ((p, _), e) => (p, e)) errs);
 	    case spec
 	     of SOME s => s
 	      | NONE => OS.Process.exit OS.Process.failure

@@ -69,9 +69,14 @@ structure Main =
 	  in 
 	    mlULex()
           end
-	    handle ex => (
+	    handle Options.Usage msg => (
+		TextIO.output(TextIO.stdErr, concat[
+		    "** ", msg, "\nusage: ml-ulex ", Options.args, "\n"
+		  ]);
+		OS.Process.exit OS.Process.failure)
+	    | ex => (
 	      TextIO.output(TextIO.stdErr, concat[
-		  "uncaught exception ", General.exnName ex,
+		  "** uncaught exception ", General.exnName ex,
 		  " [", General.exnMessage ex, "]\n"
 	        ]);
 	      app (fn s => TextIO.output(TextIO.stdErr, concat[

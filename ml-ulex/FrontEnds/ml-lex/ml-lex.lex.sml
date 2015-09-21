@@ -194,7 +194,7 @@ Vector.fromList []
 		(fn (~1, _, oldMatches) => yystuck oldMatches
 		  | (curState, strm, oldMatches) => let
 		      val (transitions, finals') = Vector.sub (yytable, curState)
-		      val finals = map (fn i => Vector.sub (actTable, i)) finals'
+		      val finals = List.map (fn i => Vector.sub (actTable, i)) finals'
 		      fun tryfinal() = 
 		            yystuck (yyactsToMatches (strm, finals, oldMatches))
 		      fun find (c, []) = NONE
@@ -501,8 +501,9 @@ fun yyAction59 (strm, lastMatch : yymatch) = let
       in
         yystrm := strm;
         (print (concat[
-	      "Syntax error: ", Int.toString (!yylineno), "illegal character '",
-              String.toCString yytext, "'"]);
+		"[", Int.toString (!yylineno), "] Illegal character '",
+		String.toCString yytext, "'\n"
+	      ]);
             continue())
       end
 fun yyQ124 (strm, lastMatch : yymatch) = (case (yygetc(strm))

@@ -157,6 +157,7 @@ id	= {alpha}({alpha} | {num} | "_" | "'")*;
 		=> (updAction yytext; lex());
 
 .       => (print (concat[
-	      "Syntax error: ", Int.toString (!yylineno), "illegal character '",
-              String.toCString yytext, "'"]);
+		"[", Int.toString (!yylineno), "] Illegal character '",
+		String.toCString yytext, "'\n"
+	      ]);
             continue());
