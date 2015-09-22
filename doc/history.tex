@@ -8,14 +8,16 @@ More details can be found in the SML/NJ \texttt{NOTES} and \texttt{README} files
 \begin{description}
   \item[SML/NJ 110.79]
     \mbox{}\\[0.5em]
-    Modified scanner to allow comments in ml-ulex directives.
+    Modified scanner to allow comments in \ulex{} directives.
     \\[0.5em]
     \mlantlr{} now inlines the \texttt{EBNF} structure in the generated parser (instead of using
     the \texttt{AntlrEBNF} functor from the \texttt{ml-lpt} library.
     \\[0.5em]
     Preliminary work on supporting the \texttt{\%prefer} and \texttt{\%change} directives
     from \texttt{ml-yacc}.  The front-end accepts and checks these declaration forms, but
-    the back-end does not yet generate code for them.
+    the back-end does not yet generate code for them.  These will be documented once the
+    implementation is complete.
+%
   \item[SML/NJ 110.78]
     \mbox{}\\[0.5em]
     Improved the error message for when the lookahead computation fails in \mlantlr{}.
@@ -26,13 +28,14 @@ More details can be found in the SML/NJ \texttt{NOTES} and \texttt{README} files
     this name was changed to \texttt{\%value} to match the ML-Yacc feature.
     \\[0.5em]
     Improved error messages for the situation where the lexer specification has an unclosed string.
+%
   \item[SML/NJ 110.77]
     \mbox{}\\[0.5em]
     Fixed an inconsistency in the way that \mlantlr{} and \ulex{} handled the contents of
     a \texttt{\%defs} declaration.  \ulex{} made these definitions visible in the \texttt{UserDeclarations}
-    substructure, whereas \mlantlr{} hid them.  We have changed the behavior of ml-ulex to match
+    substructure, whereas \mlantlr{} hid them.  We have changed the behavior of \ulex{} to match
     that of \mlantlr{} (\ie{}, hide the user definitions).  We chose to hide the user definitions
-    in ml-ulex because they are usually not useful outside the lexer, hiding them reduces The
+    in \ulex{} because they are usually not useful outside the lexer, hiding them reduces The
     size of the generated code, and definitions that are needed outside the lexer can be
     defined in an external module.  Note that the \texttt{UserDeclarations} substructure remains
     visible when \ulex{} is run in \texttt{ml-lex} compatibility mode.
@@ -45,6 +48,7 @@ More details can be found in the SML/NJ \texttt{NOTES} and \texttt{README} files
     generates.  It was originally for use by the \texttt{AntlrRepair} structure, but that
     structure does not use it.
     \pagebreak
+%
   \item[SML/NJ 110.72]
     \mbox{}\\[0.5em]
     Added \texttt{--strict-sml} flag to \ulex{} for MLton compatibility.
