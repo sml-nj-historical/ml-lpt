@@ -49,38 +49,36 @@ CalcParseTokens = struct
   | (KW_in) => false
   | (KW_let) => false
 (* end case *))
+    val changes = []
 
-
-  fun toksToString toks = String.concatWith " " (map toString toks)
 
   fun isEOF EOF = true
     | isEOF _ = false
 
 end
 
- functor CalcParseFn (Lex : ANTLR_LEXER) = struct
+functor CalcParseFn (Lex : ANTLR_LEXER) = struct
 
   local
     structure Tok = 
 CalcParseTokens
-    structure UserCode = struct
-
-
+    structure UserCode =
+      struct
 
 fun exp_PROD_1_ACT (EQ, ID, env, exp1, exp2, KW_in, KW_let, EQ_SPAN : (Lex.pos * Lex.pos), ID_SPAN : (Lex.pos * Lex.pos), exp1_SPAN : (Lex.pos * Lex.pos), exp2_SPAN : (Lex.pos * Lex.pos), KW_in_SPAN : (Lex.pos * Lex.pos), KW_let_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), nums, vars) = 
-  (  vars := ID::(!vars); exp2 )
+  ( vars := ID::(!vars); exp2 )
 fun addExp_PROD_1_ACT (SR, env, multExp, SR_SPAN : (Lex.pos * Lex.pos), multExp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), nums, vars) = 
-  (  List.foldl op+ multExp SR )
+  ( List.foldl op+ multExp SR )
 fun multExp_PROD_1_ACT (SR, env, prefixExp, SR_SPAN : (Lex.pos * Lex.pos), prefixExp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), nums, vars) = 
-  (  List.foldl op* prefixExp SR )
+  ( List.foldl op* prefixExp SR )
 fun prefixExp_PROD_2_ACT (env, MINUS, prefixExp, MINUS_SPAN : (Lex.pos * Lex.pos), prefixExp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), nums, vars) = 
-  (  ~prefixExp )
+  ( ~prefixExp )
 fun atomicExp_PROD_1_ACT (ID, env, ID_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), nums, vars) = 
-  (  valOf(AtomMap.find (env, Atom.atom ID)) )
+  ( valOf(AtomMap.find (env, Atom.atom ID)) )
 fun atomicExp_PROD_2_ACT (NUM, env, NUM_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), nums, vars) = 
-  (  nums := NUM::(!nums); NUM )
+  ( nums := NUM::(!nums); NUM )
 fun atomicExp_PROD_1_PRED (ID, env, nums, vars) = 
-  (  AtomMap.inDomain (env, Atom.atom ID) )
+  ( AtomMap.inDomain (env, Atom.atom ID) )
 fun ARGS_4 (nums, vars) = 
   (AtomMap.empty)
 fun ARGS_6 (EQ, ID, env, KW_let, nums, vars) = 
@@ -103,26 +101,25 @@ fun ARGS_17 (env, MINUS, nums, vars) =
   (env)
 fun ARGS_21 (LP, env, nums, vars) = 
   (env)
-fun mknums_REFC() : (int list) ref = ref ( [])
-fun mkvars_REFC() : (string list) ref = ref ( [])
-
-    end
+fun mknums_REFC() : (int list) ref = ref ([])
+fun mkvars_REFC() : (string list) ref = ref ([])
+      end (* UserCode *)
 
     structure Err = AntlrErrHandler(
       structure Tok = Tok
       structure Lex = Lex)
-    structure EBNF = AntlrEBNF(struct
-			         type strm = Err.wstream
-			         val getSpan = Err.getSpan
-			       end)
+    structure EBNF = AntlrEBNF(
+      struct
+	type strm = Err.wstream
+	val getSpan = Err.getSpan
+      end)
 
     fun mk lexFn = let
 val nums_REFC = UserCode.mknums_REFC()
 val vars_REFC = UserCode.mkvars_REFC()
 fun getS() = {nums = !nums_REFC, vars = !vars_REFC}
 fun putS{nums, vars} = (nums_REFC := nums; vars_REFC := vars)
-fun unwrap (ret, strm, repairs) = (ret, strm, repairs, getS())
-        val (eh, lex) = Err.mkErrHandler {get = getS, put = putS}
+fun unwrap (ret, strm, repairs) = (ret, strm, repairs, getS())        val (eh, lex) = Err.mkErrHandler {get = getS, put = putS}
 	fun fail() = Err.failure eh
 	fun tryProds (strm, prods) = let
 	  fun try [] = fail()

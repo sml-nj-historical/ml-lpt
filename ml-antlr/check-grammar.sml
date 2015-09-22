@@ -92,6 +92,8 @@ structure CheckGrammar : sig
 	  val tokTbl	: S.token ATbl.hash_table = ATbl.mkTable (128, Fail "tokens table")
 	  val tokList	: S.token list ref = ref []
 	  val keywords	: Err.span ATbl.hash_table = ATbl.mkTable (64, Fail "keywords table")
+	  val prefers   : Err.span ATbl.hash_table = ATbl.mkTable (64, Fail "prefers table")
+	  val changeList : (S.token list * S.token list) list ref = ref []
 	  val defaults	: (Err.span * string) ATbl.hash_table = ATbl.mkTable (32, Fail "defaults table")
 	  val entryPts	: Err.span ATbl.hash_table = ATbl.mkTable (16, Fail "entryPts table")
 	  val name	: (string * Err.span) option ref = ref NONE
@@ -130,7 +132,13 @@ structure CheckGrammar : sig
 	    | doDecl1 (span, Syn.KEYWORD sym) = (case ATbl.find keywords sym
 		 of NONE => ATbl.insert keywords (sym, span)
 		  | SOME span' => dupeErr (span', span, [
-			"%keywords declaration for '", Atom.toString sym, "'"
+			"%keyword declaration for '", Atom.toString sym, "'"
+		      ])
+		(* end case *))
+	    | doDecl1 (span, Syn.PREFER sym) = (case ATbl.find prefers sym
+		 of NONE => ATbl.insert prefers (sym, span)
+		  | SOME span' => dupeErr (span', span, [
+			"%prefer declaration for '", Atom.toString sym, "'"
 		      ])
 		(* end case *))
 	    | doDecl1 (span, Syn.VALUE(sym, (_, code))) = (case ATbl.find defaults sym
@@ -210,15 +218,34 @@ structure CheckGrammar : sig
 		}
 	  val _ = (ATbl.insert tokTbl (Atom.atom "EOF", eofTok);
 		   tokList := eofTok :: !tokList)
-	(* check for any symbols marked as %keywords or %value but not defined as tokens *)
+	(* check for symbols in a %keyword, %prefer, %value, or %change declaration that
+	 * are note defined as tokens.
+	 *)
 	  val tokSet = ASet.addList (ASet.empty, #1 (ListPair.unzip (ATbl.listItemsi tokTbl)))
-	  val undefKWs = ASet.difference (kwSet, tokSet)
-	  fun undefErr kind kw = Err.spanErr (valOf (ATbl.find keywords kw), 
-		[kind, " '", Atom.toString kw, "' is not declared as a token"])
-	  val _ = ASet.app (undefErr "keyword") undefKWs
+	  fun undefErr spanOf kind name =
+		Err.spanErr (spanOf name, [kind, " '", Atom.toString name, "' is not declared as a token"])
+	  val _ = ASet.app (undefErr (fn name => ATbl.lookup keywords name) "keyword") (ASet.difference (kwSet, tokSet))
+	  val prefSet = ASet.addList (ASet.empty, map (fn (x, _) => x) (ATbl.listItemsi prefers))
+	  val _ = ASet.app (undefErr (fn name => ATbl.lookup prefers name) "preferred token") (ASet.difference (prefSet, tokSet))
 	  val dfltSet = ASet.addList (ASet.empty, map (fn (x, _) => x) (ATbl.listItemsi defaults))
-	  val undefDflts = ASet.difference (dfltSet, tokSet)
-	  val _ = ASet.app (undefErr "value") undefDflts
+	  val _ = ASet.app (undefErr (fn name => #1(ATbl.lookup defaults name)) "value") (ASet.difference (dfltSet, tokSet))
+	  fun doChange (span, Syn.CHANGE(fromToks, toToks)) = let
+		fun toTok name = (case ATbl.find tokTbl name
+		       of NONE => (
+			    Err.spanErr (span, [
+				"'", Atom.toString name,
+				"' in %change declaration is not declared as a token"
+			      ]);
+			    eofTok)
+			| SOME tok => tok
+		      (* end case *))
+		val change = (List.map toTok fromToks, List.map toTok toToks)
+		in
+		  changeList := change :: !changeList
+		end
+	    | doChange _ = ()
+	  val _ = List.app doChange ds
+(* FIXME: need to check that any value-carrying token that might be inserted has a default value *)
 	(* PHASE 3: load nonterminals *)
 	  fun insNTerm (nt as S.NT{name, ...}) = let 
 	        val nid = nextId (ref 1)
@@ -353,19 +380,27 @@ structure CheckGrammar : sig
 		else ()
 	  val _ = app checkNTInTops nterms
 	  val _ = Err.abortIfErr()
-	  in S.Grammar {
-	    name = getOpt (Option.map #1 (!name), ""),
-	    header = Option.map #2 (!header),
-	    defs = !defs,
-	    toks = !tokList,
-	    nterms = nterms,
-	    prods = List.rev(!prodList),
-	    eof = eofTok,
-	    sortedTops = sortedTops,
-	    startnt = startnt,
-	    entryPoints = entryPoints,
-	    refcells = ATbl.listItems refCells
-	  } end
+	  in
+	    S.Grammar{
+		name = getOpt (Option.map #1 (!name), ""),
+		header = Option.map #2 (!header),
+		defs = !defs,
+		toks = !tokList,
+		changes = let (* add the %prefer tokens to the changes list *)
+		  fun preferChange (tok, _, changes) =
+			([], [ATbl.lookup tokTbl tok]) :: changes
+		  in
+		    ATbl.foldi preferChange (List.rev (!changeList)) prefers
+		  end,
+		nterms = nterms,
+		prods = List.rev(!prodList),
+		eof = eofTok,
+		sortedTops = sortedTops,
+		startnt = startnt,
+		entryPoints = entryPoints,
+		refcells = ATbl.listItems refCells
+	      }
+	  end
       | check NONE = raise Err.Abort
 
   end

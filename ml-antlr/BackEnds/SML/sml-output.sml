@@ -254,30 +254,31 @@ structure SMLOutput =
 	  val entriesVal = "val (" ^ String.concatWith ", " entries ^ ") = "
 	  val innerExp = ML_Tuple (map ML_Var entries)
 	  val parser = List.foldl (mkNonterms (grm, pm)) innerExp sortedTops
-	  fun optParam nt = if length (Nonterm.formals nt) > 0 then " x " else " "
-	  fun optParamFn nt = if length (Nonterm.formals nt) > 0 then " fn x => " else " "
+	  fun optParam nt = if List.null (Nonterm.formals nt) then " " else " x "
+	  fun optParamFn nt = if List.null (Nonterm.formals nt) then " " else " fn x => "
 	  fun wrWrapParse nt = TextIO.output (strm, String.concat [
-		"val ", NTFnName nt, " = ", optParamFn nt, 
-		"fn s => unwrap (Err.launch (eh, lexFn, ",
-		NTFnName nt, optParam nt, ", ",
-		if Nonterm.same (nt, startnt) then "true" else "false",
-		") s)\n"])
+		  "val ", NTFnName nt, " = ", optParamFn nt, 
+		  "fn s => unwrap (Err.launch (eh, lexFn, ",
+		  NTFnName nt, optParam nt, ", ",
+		  if Nonterm.same (nt, startnt) then "true" else "false",
+		  ") s)\n"
+		])
 	  fun wrEntry (name, nt) = TextIO.output (strm, String.concat [
-		"fun ", name, " lexFn ", optParam nt,
-		"s = let ", entriesVal, "mk lexFn in ", NTFnName nt,
-		if length (Nonterm.formals nt) > 0
-		  then  " x "
-		  else " ",
-		"s end\n\n"])
-		  
+		  "fun ", name, " lexFn ", optParam nt,
+		  "s = let ", entriesVal, "mk lexFn in ", NTFnName nt,
+		  if List.null (Nonterm.formals nt) then " " else " x ",
+		  "s end\n\n"
+		])
           in
             TextIO.output (strm, entriesVal ^ "\n");
             ML.ppML (ppStrm, parser);
 	    TextIO.output (strm, "\n");
 	    app wrWrapParse (startnt::entryPoints);
-            TextIO.output (strm, "\nin ("
-	      ^ String.concatWith ", " entries
-	      ^ ") end\n");
+            TextIO.output (strm, concat [
+		"\nin (",
+		String.concatWith ", " entries,
+		") end\n"
+	      ]);
 	    TextIO.output (strm, "  in\n");
 	    wrEntry ("parse", startnt);
 	    app (wrEntry o (fn x => ("parse" ^ Nonterm.name x, x))) entryPoints;
@@ -305,9 +306,44 @@ structure SMLOutput =
 	    TextIO.output (strm, "\n")
           end
 
+  (* a token trie used to organize the preferred changes *)
+    datatype trie = TR of {
+	replacements : S.token list list,	(* replacements *)
+	kids : (S.token * trie) list
+      }
+
+    val emptyTrie = TR{replacements=[], kids=[]}
+
+  (* build the token trie from the list of preferred changes; we quietly
+   * eliminate duplicate changes as part of this building process.
+   *)
+    fun mkTrie (changes : (S.token list * S.token list) list) = let
+	  fun insert ((old, new), tr) = let
+		fun ins ([], tr as TR{replacements, kids}) = let
+		      fun same repl = ListPair.allEq Token.same (new, repl)
+		      in
+		        if List.exists same replacements
+			  then tr
+			  else TR{replacements=new::replacements, kids=kids}
+		      end
+		  | ins (t::toks, TR{replacements, kids}) = let
+		      fun find [] = [(t, ins(toks, emptyTrie))]
+			| find ((t', tr)::rest) = if Token.same(t, t')
+			    then (t', ins(toks, tr)) :: rest
+			    else (t', tr) :: find rest
+		      in
+			TR{replacements = replacements, kids = find kids}
+		      end
+		in
+		  ins (old, tr)
+		end
+	  in
+	    List.foldl insert emptyTrie changes
+	  end
+
   (* output the tokens datatype and related functions *)
     fun tokensHook spec strm = let
-          val (S.Grammar {toks, ...}, _) = spec
+          val (S.Grammar{toks, changes, ...}, _) = spec
           val ppStrm = TextIOPP.openOut {dst = strm, wid = 80}
 	  val toksDT = 
 	        "    datatype token = "
@@ -323,24 +359,87 @@ structure SMLOutput =
 		in
 		  List.foldr make [] toks
 		end
-	(* toString function *)
+	(* support for toString function *)
 	  fun mkMat t = (ML_TupPat [tokConPat' t], rawCode (Token.quoted t))
           val casesExp = ML_Case (ML_Var "tok", List.map mkMat toks)
-        (* isKW function *)
+        (* support for isKW function *)
 	  fun mkKWMat t = (ML_TupPat [tokConPat' t], 
 			   ML_Var (if Token.isKW t then "true" else "false"))
 	  val kwCasesExp = ML_Case (ML_Var "tok", List.map mkKWMat toks)
+	(* support for the changes function *)
+(*****
+	  val changesDT = 
+		"    datatype 'strm changes\n\
+		\      = CHANGE of 'strm * int * token list * ('strm -> 'strm changes)\n\
+		\      | NOCHANGE;\n"
+	  fun genChanges [] = TextIO.output (strm, "    fun changes _ _ = NOCHANGE\n")
+	    | genChanges changes = let
+		val TR{replacements, kids} = mkTrie changes
+		val noKids = List.null kids
+	      (* map a token to an expression that evaluates to it *)
+		fun tok2exp tok = if Token.hasTy tok
+		      then (case Token.default tok
+			 of SOME code => ML_App(Token.name tok, [ML_Raw[Tok code]])
+			  | NONE => raise Fail(concat[
+				"token '", Token.name tok, "' does not have a default value"
+			      ])
+			(* end case *))
+		      else ML_Var(Token.name tok)
+	      (* generate the insertion states first *)
+		fun genInsFns (idx, [], fns) = if noKids
+		      then (idx+1, (s idx, ["_"], ML_Var "NOCHANGE") :: fns)
+		      else (idx+1, fns)
+		  | genInsFns (idx, []::reps, fns) = (* ignore [] -> [] substitution *)
+		      genInsFns (idx, reps, fns)
+		  | genInsFns (idx, new::reps, fns) = let
+		      val f = (s idx, ["strm"], ML_App("CHANGE", [
+			      ML_Var "strm", ML_Int 0,
+			      ML_List(List.map tok2exp new),
+			      s(idx+1)
+			    ]))
+		      in
+			genInsFns (idx+1, reps, f::fns)
+		      end
+		val (idx, fns) = genInsFns (0, replacements, [])
+	      (* function to handle recursive cases *)
+		fun gen (idx, depth, [], fns) = (idx, fns)
+		  | gen (idx, depth, kids, fns) = let
+		      fun genKid ((tok, tr), (idx, kfns, fns)) = let
+			    val (idx', fns) = genKidFn (idx, depth+1, tr, fns)
+			    in
+			      (idx', (tok, s idx)::kfns, fns)
+			    end
+		      val (idx, kfns, fns) = List.foldl genKid (idx, [], fns) kids
+		      in
+		        (idx, fns)
+		      end
+		val (idx, fns) = gen (idx, 0, kids, fns)
+		in
+		  FUN(FUNHEAD("changes", [ML_TypePat(ML_VarPat "getTok", T_FUN())]),
+		    ML_Funs(List.rev fns, ML_Var(s 0)))
+		end
+	  fun genChanges (idx, depth, TR{replacements, kids}) = let
+		val noKids = List.null kids
+		fun s idx = "s" ^ Int.toString idx
+	
+		fun gen 
+*****)
           in
             TextIO.output (strm, toksDT ^ "\n\n");
+	  (* "allToks" value *)
 	    TextIO.output (strm, "    val allToks = [");
 	    TextIO.output (strm, String.concatWith ", " allToks);
 	    TextIO.output (strm, "]\n\n");
+	  (* "toString" function *)
             TextIO.output (strm, "    fun toString tok =\n");
 	    ML.ppML (ppStrm, casesExp);
 	    TextIO.output (strm, "\n");
+	  (* "isKW" function *)
             TextIO.output (strm, "    fun isKW tok =\n");
 	    ML.ppML (ppStrm, kwCasesExp);
-	    TextIO.output (strm, "\n")
+	    TextIO.output (strm, "\n");
+	  (* preferred "changes" support *)
+(* TODO *)()
           end
 
     fun matchfnsHook spec strm = let
@@ -433,7 +532,7 @@ structure SMLOutput =
 	    out (String.concat ["fun unwrap (ret, strm, repairs) = ",
 		   "(ret, strm, repairs",
 		   if List.length names > 0 then ", getS()" else "",
-		   ")"])
+		   ")\n"])
           end
 
     fun output (grm, pm, fname) = 

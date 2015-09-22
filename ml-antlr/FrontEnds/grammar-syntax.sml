@@ -21,11 +21,10 @@ structure GrammarSyntax =
       | HEADER of code
       | START of symbol
       | ENTRY of symbol
-      | KEYWORD of symbol
-      | VALUE of symbol * code
-      | PREFER of symbol list				(* %prefer TOKEN ... *)
-      | SUBST of (symbol * symbol) list			(* %subst TOKEN for TOKEN | ... *)
-      | CHANGE of (symbol list * symbol list) list	(* %change TOKEN* -> TOKEN* | ... *)
+      | KEYWORD of symbol				(* %keywords TOKEN ... *)
+      | VALUE of symbol * code				(* %value TOKEN ( ... ) *)
+      | PREFER of symbol				(* %prefer TOKEN ... *)
+      | CHANGE of (symbol list * symbol list)		(* %change TOKEN* -> TOKEN* | ... *)
       | DEFS of code
       | TOKEN of constr
       | IMPORT of {
@@ -62,10 +61,9 @@ structure GrammarSyntax =
 	| ppDecl (_, HEADER _) = "%code"
 	| ppDecl (_, START s) = "%start"
 	| ppDecl (_, ENTRY s) = "%entry"
-	| ppDecl (_, KEYWORD s) = "%keywords"
+	| ppDecl (_, KEYWORD s) = "%keyword"
 	| ppDecl (_, VALUE _) = "%value"
 	| ppDecl (_, PREFER _) = "%prefer"
-	| ppDecl (_, SUBST _) = "%subst"
 	| ppDecl (_, CHANGE _) = "%change"
 	| ppDecl (_, DEFS c) = "%defs"
 	| ppDecl (_, TOKEN cstr) = "%tokens"

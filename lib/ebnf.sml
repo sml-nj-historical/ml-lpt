@@ -6,6 +6,11 @@
  * All rights reserved.
  *
  * EBNF combinators used for ml-antlr.
+ *
+ * NOTE: this functor is no longer used; instead we have inlined its code into the
+ * body of the generated parser module.  It remains in the ml-lpt library to
+ * preserve backward compatibility with parsers that were generated with an older
+ * version of the ml-antlr tool.  [JHR; 2015-09-22]
  *)
 
 functor AntlrEBNF (S : sig 

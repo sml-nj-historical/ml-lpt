@@ -61,20 +61,22 @@ fun dec (ri as ref i) = (ri := i-1)
 <INITIAL,PRECODE>{ws}+		=> (skip());
 <INITIAL,PRECODE>{id}		=> (Tok.ID yytext);
 
-<INITIAL,PRECODE>"%token"("s")?		=> (YYBEGIN CONSTR; Tok.KW_tokens);
+<INITIAL,PRECODE>"%change"		=> (Tok.KW_change);
 <INITIAL,PRECODE>"%defs"		=> (YYBEGIN PRECODE; Tok.KW_defs);
-<INITIAL,PRECODE>"%keyword"("s")?	=> (Tok.KW_keywords);
-<INITIAL,PRECODE>"%value"		=> (YYBEGIN PRECODE; Tok.KW_value);
-<INITIAL,PRECODE>"%nonterm"("s")?	=> (Tok.KW_nonterms);
-<INITIAL,PRECODE>"%import"		=> (Tok.KW_import);
-<INITIAL,PRECODE>"%name"		=> (Tok.KW_name);
-<INITIAL,PRECODE>"%start"		=> (Tok.KW_start);
-<INITIAL,PRECODE>"%entry"		=> (Tok.KW_entry);
-<INITIAL,PRECODE>"%try"			=> (Tok.KW_try);
-<INITIAL,PRECODE>"%where"       	=> (YYBEGIN PRECODE; Tok.KW_where);
 <INITIAL,PRECODE>"%dropping"		=> (Tok.KW_dropping);
-<INITIAL,PRECODE>"%refcell"		=> (YYBEGIN CONSTR; Tok.KW_refcell);
+<INITIAL,PRECODE>"%entry"		=> (Tok.KW_entry);
 <INITIAL,PRECODE>"%header"		=> (YYBEGIN PRECODE; Tok.KW_header);
+<INITIAL,PRECODE>"%import"		=> (Tok.KW_import);
+<INITIAL,PRECODE>"%keyword"("s")?	=> (Tok.KW_keywords);
+<INITIAL,PRECODE>"%name"		=> (Tok.KW_name);
+<INITIAL,PRECODE>"%nonterm"("s")?	=> (Tok.KW_nonterms);
+<INITIAL,PRECODE>"%prefer"		=> (Tok.KW_prefer);
+<INITIAL,PRECODE>"%refcell"		=> (YYBEGIN CONSTR; Tok.KW_refcell);
+<INITIAL,PRECODE>"%start"		=> (Tok.KW_start);
+<INITIAL,PRECODE>"%token"("s")?		=> (YYBEGIN CONSTR; Tok.KW_tokens);
+<INITIAL,PRECODE>"%try"			=> (Tok.KW_try);
+<INITIAL,PRECODE>"%value"		=> (YYBEGIN PRECODE; Tok.KW_value);
+<INITIAL,PRECODE>"%where"       	=> (YYBEGIN PRECODE; Tok.KW_where);
 
 <INITIAL,PRECODE>"|"	=> (Tok.BAR); 
 <INITIAL,PRECODE>"@"	=> (YYBEGIN PRECODE; Tok.AT); 

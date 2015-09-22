@@ -9,6 +9,13 @@ More details can be found in the SML/NJ \texttt{NOTES} and \texttt{README} files
   \item[SML/NJ 110.79]
     \mbox{}\\[0.5em]
     Modified scanner to allow comments in ml-ulex directives.
+    \\[0.5em]
+    \mlantlr{} now inlines the \texttt{EBNF} structure in the generated parser (instead of using
+    the \texttt{AntlrEBNF} functor from the \texttt{ml-lpt} library.
+    \\[0.5em]
+    Preliminary work on supporting the \texttt{\%prefer} and \texttt{\%change} directives
+    from \texttt{ml-yacc}.  The front-end accepts and checks these declaration forms, but
+    the back-end does not yet generate code for them.
   \item[SML/NJ 110.78]
     \mbox{}\\[0.5em]
     Improved the error message for when the lookahead computation fails in \mlantlr{}.

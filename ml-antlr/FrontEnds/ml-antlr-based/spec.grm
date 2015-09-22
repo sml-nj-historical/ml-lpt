@@ -24,7 +24,8 @@
 %name Spec;
 
 %tokens 
-  : KW_defs	("%defs")
+  : KW_change	("%change")
+  | KW_defs	("%defs")
   | KW_dropping	("%dropping")		
   | KW_entry	("%entry")
   | KW_header	("%header")
@@ -32,6 +33,7 @@
   | KW_keywords	("%keywords")
   | KW_name	("%name")
   | KW_nonterms	("%nonterms")
+  | KW_prefer	("%prefer")
   | KW_refcell	("%refcell")
   | KW_start	("%start")
   | KW_tokens	("%tokens")
@@ -79,37 +81,58 @@ File(fileName, sm) :
 
 %nonterm Decl of (StreamPos.span * GS.decl) list ;
 Decl
-  : "%name" ID		=> ([ (FULL_SPAN, GS.NAME ID) ])
-  | "%header" Code	=> ([ (FULL_SPAN, GS.HEADER Code) ])
-  | "%start" ID		=> ([ (FULL_SPAN, GS.START (Atom.atom ID)) ])
-  | "%entry" IDList	=> (map (lift (GS.ENTRY o Atom.atom)) IDList)
-  | "%keywords" SymList	=> (map (lift GS.KEYWORD) SymList)
-  | "%value" ID Code
-      => ([ (FULL_SPAN, GS.VALUE (Atom.atom ID, Code)) ])
-  | "%defs" Code	=> ([ (FULL_SPAN, GS.DEFS Code) ])
-  | "%tokens" ":"? ConstrList
-      => (map (lift GS.TOKEN) ConstrList)
-  | "%import" STRING ("%dropping" SymList)?
-      => ([ (FULL_SPAN, GS.IMPORT {
-	      filename = trimQuotes STRING,
-	      dropping = map (mapFst (!liftSpan)) (getOpt (SR, []))
-	    }) ])
-  | "%refcell" ID ":" Ty "=" Code
-      => ([ (FULL_SPAN, GS.REFCELL (ID, Ty, Code)) ])
-  | "%nonterms" ":"? TyAnn ("|" TyAnn)*
-      => (map (lift GS.NONTERM) (TyAnn::SR))
-  | ID Formals? ":" AltList
-      => (map (fn (span, alt) => 
-	    (span, GS.RULE {
-	      lhs = Atom.atom ID,
-	      formals = getOpt(Formals, []),
-	      rhs = alt
-	    })) AltList)
-  ;
+	: "%name" ID
+		=> ([ (FULL_SPAN, GS.NAME ID) ])
+	| "%header" Code
+		=> ([ (FULL_SPAN, GS.HEADER Code) ])
+	| "%start" ID
+		=> ([ (FULL_SPAN, GS.START (Atom.atom ID)) ])
+	| "%entry" IDList
+		=> (map (lift (GS.ENTRY o Atom.atom)) IDList)
+	| "%keywords" SymList
+		=> (map (lift GS.KEYWORD) SymList)
+	| "%value" ID Code
+		=> ([ (FULL_SPAN, GS.VALUE (Atom.atom ID, Code)) ])
+	| "%prefer" SymList
+		=> (map (lift GS.PREFER) SymList)
+	| "%change" ChangeList
+		=> (map (lift GS.CHANGE) ChangeList)
+	| "%defs" Code
+		=> ([ (FULL_SPAN, GS.DEFS Code) ])
+	| "%tokens" ":"? ConstrList
+		=> (map (lift GS.TOKEN) ConstrList)
+	| "%import" STRING ("%dropping" SymList)?
+		=> ([ (FULL_SPAN, GS.IMPORT{
+		      filename = trimQuotes STRING,
+		      dropping = map (mapFst (!liftSpan)) (getOpt (SR, []))
+		    }) ])
+	| "%refcell" ID ":" Ty "=" Code
+		=> ([ (FULL_SPAN, GS.REFCELL (ID, Ty, Code)) ])
+	| "%nonterms" ":"? TyAnn ("|" TyAnn)*
+		=> (map (lift GS.NONTERM) (TyAnn::SR))
+	| ID Formals? ":" AltList
+		=> (map (fn (span, alt) => 
+		      (span, GS.RULE {
+			lhs = Atom.atom ID,
+			formals = getOpt(Formals, []),
+			rhs = alt
+		      })) AltList)
+	;
 
 Formals : "(" ID ("," ID)* ")" => (ID::SR) ;
 IDList	: ID' ("," ID')* => (ID'::SR) ;
-SymList	: Symbol ("," Symbol)* => (Symbol::SR) ;
+SymList	: Symbol' ("," Symbol')* => (Symbol'::SR) ;
+
+ChangeList
+	: Change ("|" Change)*
+		=> (Change::SR)
+	;
+
+Change
+	: Symbol* "->" Symbol*
+		=> (FULL_SPAN, (Symbol1, Symbol2))
+	;
+
 AltList	: Alt ("|" Alt)* => (Alt::SR) ;
 TyAnn   : ID ("of" Ty | => ("unit")) => (FULL_SPAN, (Atom.atom ID, SR)) ;
 
@@ -135,16 +158,24 @@ Item
 
 PrimItem
   : Symbol ("@" Code)?
-      => ((!liftSpan) FULL_SPAN, GS.SYMBOL ((fn (_, s) => s) Symbol, SR))
+      => ((!liftSpan) FULL_SPAN, GS.SYMBOL (Symbol, SR))
   | "(" AltList ")"
       => ((!liftSpan) FULL_SPAN, GS.SUBRULE (map (fn (_, alt) => alt) AltList))
   ;
 
 ID' : ID => (ID_SPAN, ID) ;
+
+Symbol'
+	: Symbol
+		=> (FULL_SPAN, Symbol)
+	;
+
 Symbol
-  : ID		=> (ID_SPAN, Atom.atom ID)
-  | STRING	=> (STRING_SPAN, Atom.atom STRING)
-  ;
+	: ID
+		=> (Atom.atom ID)
+	| STRING
+		=> (Atom.atom STRING)
+	;
 
 Constr : ID ("of" Ty)? Abbrev? => (FULL_SPAN, (Atom.atom ID, SR, Abbrev)) ;
 ConstrList : Constr ("|" Constr)* => (Constr::SR) ;

@@ -2,6 +2,9 @@ structure
 Tokens = struct
 
     datatype token = EOF
+      | REAL of Real.real
+      | INT of IntInf.int
+      | ID of string
       | MULOP of string
       | ADDOP of string
       | RELOP of string
@@ -15,9 +18,6 @@ Tokens = struct
       | COLON
       | COMMA
       | ASSIGNOP
-      | REAL of Real.real
-      | INT of IntInf.int
-      | ID of string
       | KW_not
       | KW_do
       | KW_while
@@ -35,15 +35,18 @@ Tokens = struct
       | KW_var
       | KW_program
 
-    val allToks = [EOF, MINUS, RP, LP, RSB, LSB, DOT, SEMI, COLON, COMMA, ASSIGNOP, KW_not, KW_do, KW_while, KW_else, KW_then, KW_if, KW_end, KW_begin, KW_procedure, KW_function, KW_real, KW_integer, KW_of, KW_array, KW_var, KW_program]
+    val allToks = [EOF, ID("bogus"), MINUS, RP, LP, RSB, LSB, DOT, SEMI, COLON, COMMA, ASSIGNOP, KW_not, KW_do, KW_while, KW_else, KW_then, KW_if, KW_end, KW_begin, KW_procedure, KW_function, KW_real, KW_integer, KW_of, KW_array, KW_var, KW_program]
 
     fun toString tok =
 (case (tok)
  of (EOF) => "EOF"
+  | (REAL(_)) => "REAL"
+  | (INT(_)) => "INT"
+  | (ID(_)) => "ID"
   | (MULOP(_)) => "MULOP"
   | (ADDOP(_)) => "ADDOP"
   | (RELOP(_)) => "RELOP"
-  | (MINUS) => "MINUS"
+  | (MINUS) => "-"
   | (RP) => ")"
   | (LP) => "("
   | (RSB) => "]"
@@ -53,29 +56,29 @@ Tokens = struct
   | (COLON) => ":"
   | (COMMA) => ","
   | (ASSIGNOP) => ":="
-  | (REAL(_)) => "REAL"
-  | (INT(_)) => "INT"
-  | (ID(_)) => "ID"
-  | (KW_not) => "KW_not"
-  | (KW_do) => "KW_do"
-  | (KW_while) => "KW_while"
-  | (KW_else) => "KW_else"
-  | (KW_then) => "KW_then"
-  | (KW_if) => "KW_if"
-  | (KW_end) => "KW_end"
-  | (KW_begin) => "KW_begin"
-  | (KW_procedure) => "KW_procedure"
-  | (KW_function) => "KW_function"
-  | (KW_real) => "KW_real"
-  | (KW_integer) => "KW_integer"
-  | (KW_of) => "KW_of"
-  | (KW_array) => "KW_array"
-  | (KW_var) => "KW_var"
+  | (KW_not) => "not"
+  | (KW_do) => "do"
+  | (KW_while) => "while"
+  | (KW_else) => "else"
+  | (KW_then) => "then"
+  | (KW_if) => "if"
+  | (KW_end) => "end"
+  | (KW_begin) => "begin"
+  | (KW_procedure) => "procedure"
+  | (KW_function) => "function"
+  | (KW_real) => "real"
+  | (KW_integer) => "integer"
+  | (KW_of) => "of"
+  | (KW_array) => "array"
+  | (KW_var) => "var"
   | (KW_program) => "program"
 (* end case *))
     fun isKW tok =
 (case (tok)
  of (EOF) => false
+  | (REAL(_)) => false
+  | (INT(_)) => false
+  | (ID(_)) => false
   | (MULOP(_)) => false
   | (ADDOP(_)) => false
   | (RELOP(_)) => false
@@ -89,9 +92,6 @@ Tokens = struct
   | (COLON) => false
   | (COMMA) => false
   | (ASSIGNOP) => false
-  | (REAL(_)) => false
-  | (INT(_)) => false
-  | (ID(_)) => false
   | (KW_not) => true
   | (KW_do) => true
   | (KW_while) => true
@@ -109,9 +109,8 @@ Tokens = struct
   | (KW_var) => true
   | (KW_program) => true
 (* end case *))
+    val changes = []
 
-
-  fun toksToString toks = String.concatWith " " (map toString toks)
 
   fun isEOF EOF = true
     | isEOF _ = false
@@ -123,9 +122,9 @@ functor ParseFn(Lex : ANTLR_LEXER) = struct
   local
     structure Tok = 
 Tokens
-    structure UserCode = struct
+    structure UserCode =
+      struct
 
- 
   val cat     = String.concat
   val catSp   = String.concatWith " "
   val catNl   = String.concatWith "\n"
@@ -134,98 +133,110 @@ Tokens
   val catSemi = String.concatWith "; "
   val catSemiNl = String.concatWith ";\n"
 
-
 fun program_PROD_1_ACT (ID, LP, RP, DOT, SR1, SR2, SEMI, compound_statement, id_list, KW_program, ID_SPAN : (Lex.pos * Lex.pos), LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), DOT_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), SR2_SPAN : (Lex.pos * Lex.pos), SEMI_SPAN : (Lex.pos * Lex.pos), compound_statement_SPAN : (Lex.pos * Lex.pos), id_list_SPAN : (Lex.pos * Lex.pos), KW_program_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  catNl [ 
+  ( catNl [ 
 	 cat ["program ", ID, "(", id_list, ");"],
 	 catNl   SR1, catNlNl SR2,
 	 compound_statement ^ "."
       ])
 fun id_list_PROD_1_ACT (ID, SR, ID_SPAN : (Lex.pos * Lex.pos), SR_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  catCm (ID::SR) )
+  ( catCm (ID::SR) )
 fun declaration_PROD_1_ACT (SEMI, id_list_type, KW_var, SEMI_SPAN : (Lex.pos * Lex.pos), id_list_type_SPAN : (Lex.pos * Lex.pos), KW_var_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  cat ["var ", id_list_type, ";"] )
+  ( cat ["var ", id_list_type, ";"] )
 fun compound_type_PROD_2_ACT (LSB, RSB, DOT1, DOT2, INT1, INT2, KW_array, standard_type, KW_of, LSB_SPAN : (Lex.pos * Lex.pos), RSB_SPAN : (Lex.pos * Lex.pos), DOT1_SPAN : (Lex.pos * Lex.pos), DOT2_SPAN : (Lex.pos * Lex.pos), INT1_SPAN : (Lex.pos * Lex.pos), INT2_SPAN : (Lex.pos * Lex.pos), KW_array_SPAN : (Lex.pos * Lex.pos), standard_type_SPAN : (Lex.pos * Lex.pos), KW_of_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  cat ["array [", IntInf.toString INT1, "..", IntInf.toString INT2, "] of ", standard_type] )
+  ( cat ["array [", IntInf.toString INT1, "..", IntInf.toString INT2, "] of ", standard_type] )
 fun standard_type_PROD_1_ACT (KW_integer, KW_integer_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  "integer" )
+  ( "integer" )
 fun standard_type_PROD_2_ACT (KW_real, KW_real_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  "real" )
+  ( "real" )
 fun id_list_type_PROD_1_ACT (compound_type, COLON, id_list, compound_type_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), id_list_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  catSp [id_list, ":", compound_type] )
+  ( catSp [id_list, ":", compound_type] )
 fun subprogram_declaration_PROD_1_ACT (SR, SEMI, compound_statement, subprogram_head, SR_SPAN : (Lex.pos * Lex.pos), SEMI_SPAN : (Lex.pos * Lex.pos), compound_statement_SPAN : (Lex.pos * Lex.pos), subprogram_head_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  catNl [subprogram_head, catNl SR, compound_statement ^ ";"] )
+  ( catNl [subprogram_head, catNl SR, compound_statement ^ ";"] )
 fun subprogram_head_PROD_1_ACT (ID, SEMI, standard_type, COLON, arguments, KW_function, ID_SPAN : (Lex.pos * Lex.pos), SEMI_SPAN : (Lex.pos * Lex.pos), standard_type_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), arguments_SPAN : (Lex.pos * Lex.pos), KW_function_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  cat ["function ", ID, arguments, " : ", standard_type, ";"] )
+  ( cat ["function ", ID, arguments, " : ", standard_type, ";"] )
 fun subprogram_head_PROD_2_ACT (ID, SEMI, KW_procedure, arguments, ID_SPAN : (Lex.pos * Lex.pos), SEMI_SPAN : (Lex.pos * Lex.pos), KW_procedure_SPAN : (Lex.pos * Lex.pos), arguments_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  cat ["procedure ", ID, arguments, ";"] )
+  ( cat ["procedure ", ID, arguments, ";"] )
 fun arguments_PROD_1_ACT (LP, RP, parameter_list, LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), parameter_list_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  "(" ^ parameter_list ^ ")" )
+  ( "(" ^ parameter_list ^ ")" )
 fun arguments_PROD_2_ACT (FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  "" )
+  ( "" )
 fun parameter_list_PROD_1_ACT (SR, id_list_type, SR_SPAN : (Lex.pos * Lex.pos), id_list_type_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  catSemi (id_list_type::SR) )
-fun compound_statement_PROD_1_compound_statement_compound_statement_PROD_1_SUBRULE_1_PROD_1_ACT (SR, KW_begin, statement, SR_SPAN : (Lex.pos * Lex.pos), KW_begin_SPAN : (Lex.pos * Lex.pos), statement_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  catSemiNl (statement::SR) )
+  ( catSemi (id_list_type::SR) )
+fun compound_statement_PROD_1_SUBRULE_1_PROD_1_ACT (SR, KW_begin, statement, SR_SPAN : (Lex.pos * Lex.pos), KW_begin_SPAN : (Lex.pos * Lex.pos), statement_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+  ( catSemiNl (statement::SR) )
 fun compound_statement_PROD_1_ACT (SR, KW_begin, KW_end, SR_SPAN : (Lex.pos * Lex.pos), KW_begin_SPAN : (Lex.pos * Lex.pos), KW_end_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  catNl ["begin", getOpt(SR, ""), "end"] )
+  ( catNl ["begin", getOpt(SR, ""), "end"] )
 fun statement_PROD_1_ACT (exp, variable, ASSIGNOP, exp_SPAN : (Lex.pos * Lex.pos), variable_SPAN : (Lex.pos * Lex.pos), ASSIGNOP_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  cat [variable, " := ", exp] )
+  ( cat [variable, " := ", exp] )
 fun statement_PROD_4_ACT (exp, KW_else, KW_then, statement1, statement2, KW_if, exp_SPAN : (Lex.pos * Lex.pos), KW_else_SPAN : (Lex.pos * Lex.pos), KW_then_SPAN : (Lex.pos * Lex.pos), statement1_SPAN : (Lex.pos * Lex.pos), statement2_SPAN : (Lex.pos * Lex.pos), KW_if_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  cat ["if ", exp, " then ", statement1, " else ", statement2] )
+  ( cat ["if ", exp, " then ", statement1, " else ", statement2] )
 fun statement_PROD_5_ACT (exp, KW_while, KW_do, statement, exp_SPAN : (Lex.pos * Lex.pos), KW_while_SPAN : (Lex.pos * Lex.pos), KW_do_SPAN : (Lex.pos * Lex.pos), statement_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  cat ["while ", exp, " do ", statement] )
+  ( cat ["while ", exp, " do ", statement] )
 fun variable_PROD_2_ACT (ID, LSB, RSB, exp, ID_SPAN : (Lex.pos * Lex.pos), LSB_SPAN : (Lex.pos * Lex.pos), RSB_SPAN : (Lex.pos * Lex.pos), exp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  cat [ID, "[", exp, "]"] )
+  ( cat [ID, "[", exp, "]"] )
 fun procedure_statement_PROD_2_ACT (ID, LP, RP, SR, exp, ID_SPAN : (Lex.pos * Lex.pos), LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), SR_SPAN : (Lex.pos * Lex.pos), exp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  cat [ID, "(", catCm (exp::SR), ")" ] )
-fun exp_PROD_1_exp_exp_PROD_1_SUBRULE_1_PROD_1_ACT (simple_exp, RELOP, simple_exp_SPAN : (Lex.pos * Lex.pos), RELOP_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  RELOP ^ " " ^ simple_exp )
+  ( cat [ID, "(", catCm (exp::SR), ")" ] )
+fun exp_PROD_1_SUBRULE_1_PROD_1_ACT (simple_exp, RELOP, simple_exp_SPAN : (Lex.pos * Lex.pos), RELOP_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+  ( RELOP ^ " " ^ simple_exp )
 fun exp_PROD_1_ACT (SR, simple_exp, SR_SPAN : (Lex.pos * Lex.pos), simple_exp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  catSp [simple_exp, getOpt(SR, "")] )
-fun simple_exp_PROD_1_simple_exp_simple_exp_PROD_1_SUBRULE_1_PROD_1_ACT (signed_term, ADDOP, signed_term_SPAN : (Lex.pos * Lex.pos), ADDOP_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  ADDOP ^ " " ^signed_term )
+  ( catSp [simple_exp, getOpt(SR, "")] )
+fun simple_exp_PROD_1_SUBRULE_1_PROD_1_ACT (signed_term, ADDOP, signed_term_SPAN : (Lex.pos * Lex.pos), ADDOP_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+  ( ADDOP ^ " " ^signed_term )
 fun simple_exp_PROD_1_ACT (SR, signed_term, SR_SPAN : (Lex.pos * Lex.pos), signed_term_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  catSp (signed_term::SR) )
+  ( catSp (signed_term::SR) )
 fun signed_term_PROD_1_ACT (term, MINUS, term_SPAN : (Lex.pos * Lex.pos), MINUS_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  "-" ^ term )
-fun term_PROD_1_term_term_PROD_1_SUBRULE_1_PROD_1_ACT (factor, MULOP, factor_SPAN : (Lex.pos * Lex.pos), MULOP_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  MULOP ^ " " ^ factor )
+  ( "-" ^ term )
+fun term_PROD_1_SUBRULE_1_PROD_1_ACT (factor, MULOP, factor_SPAN : (Lex.pos * Lex.pos), MULOP_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+  ( MULOP ^ " " ^ factor )
 fun term_PROD_1_ACT (SR, factor, SR_SPAN : (Lex.pos * Lex.pos), factor_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  catSp (factor::SR) )
+  ( catSp (factor::SR) )
 fun factor_PROD_2_ACT (ID, LP, RP, SR, exp, ID_SPAN : (Lex.pos * Lex.pos), LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), SR_SPAN : (Lex.pos * Lex.pos), exp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  cat [ID, "(", catCm (exp::SR), ")" ] )
+  ( cat [ID, "(", catCm (exp::SR), ")" ] )
 fun factor_PROD_3_ACT (INT, INT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  IntInf.toString INT )
+  ( IntInf.toString INT )
 fun factor_PROD_4_ACT (REAL, REAL_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  Real.toString REAL )
+  ( Real.toString REAL )
 fun factor_PROD_5_ACT (LP, RP, exp, LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), exp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  "(" ^ exp ^ ")" )
+  ( "(" ^ exp ^ ")" )
 fun factor_PROD_6_ACT (factor, KW_not, factor_SPAN : (Lex.pos * Lex.pos), KW_not_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  (  "not " ^ factor )
+  ( "not " ^ factor )
+      end (* UserCode *)
 
-    end
-
-    structure Err = AntlrErrHandler(Tok)(Lex)
-    structure EBNF = AntlrEBNF(struct
-			         type strm = Err.wstream
-			         val getSpan = Err.getSpan
-			       end)
-
-    exception TryNextProd
+    structure Err = AntlrErrHandler(
+      structure Tok = Tok
+      structure Lex = Lex)
+    structure EBNF = AntlrEBNF(
+      struct
+	type strm = Err.wstream
+	val getSpan = Err.getSpan
+      end)
 
     fun mk lexFn = let
 fun getS() = {}
 fun putS{} = ()
-fun unwrap (ret, strm, repairs) = (ret, strm, repairs)
-        val (eh, lex) = Err.mkErrHandler {get = getS, put = putS}
+fun unwrap (ret, strm, repairs) = (ret, strm, repairs)        val (eh, lex) = Err.mkErrHandler {get = getS, put = putS}
 	fun fail() = Err.failure eh
 	fun tryProds (strm, prods) = let
 	  fun try [] = fail()
-	    | try (prod :: prods) = prod strm handle _ => try (prods)
+	    | try (prod :: prods) = 
+	        (Err.whileDisabled eh (fn() => prod strm)) 
+		handle Err.ParseError => try (prods)
           in try prods end
 fun matchEOF strm = (case (lex(strm))
  of (Tok.EOF, span, strm') => ((), span, strm')
+  | _ => fail()
+(* end case *))
+fun matchREAL strm = (case (lex(strm))
+ of (Tok.REAL(x), span, strm') => (x, span, strm')
+  | _ => fail()
+(* end case *))
+fun matchINT strm = (case (lex(strm))
+ of (Tok.INT(x), span, strm') => (x, span, strm')
+  | _ => fail()
+(* end case *))
+fun matchID strm = (case (lex(strm))
+ of (Tok.ID(x), span, strm') => (x, span, strm')
   | _ => fail()
 (* end case *))
 fun matchMULOP strm = (case (lex(strm))
@@ -278,18 +289,6 @@ fun matchCOMMA strm = (case (lex(strm))
 (* end case *))
 fun matchASSIGNOP strm = (case (lex(strm))
  of (Tok.ASSIGNOP, span, strm') => ((), span, strm')
-  | _ => fail()
-(* end case *))
-fun matchREAL strm = (case (lex(strm))
- of (Tok.REAL(x), span, strm') => (x, span, strm')
-  | _ => fail()
-(* end case *))
-fun matchINT strm = (case (lex(strm))
- of (Tok.INT(x), span, strm') => (x, span, strm')
-  | _ => fail()
-(* end case *))
-fun matchID strm = (case (lex(strm))
- of (Tok.ID(x), span, strm') => (x, span, strm')
   | _ => fail()
 (* end case *))
 fun matchKW_not strm = (case (lex(strm))
@@ -366,7 +365,7 @@ fun exp_NT (strm) = let
             val (simple_exp_RES, simple_exp_SPAN, strm') = simple_exp_NT(strm')
             val FULL_SPAN = (#1(RELOP_SPAN), #2(simple_exp_SPAN))
             in
-              (UserCode.exp_PROD_1_exp_exp_PROD_1_SUBRULE_1_PROD_1_ACT (simple_exp_RES, RELOP_RES, simple_exp_SPAN : (Lex.pos * Lex.pos), RELOP_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)),
+              (UserCode.exp_PROD_1_SUBRULE_1_PROD_1_ACT (simple_exp_RES, RELOP_RES, simple_exp_SPAN : (Lex.pos * Lex.pos), RELOP_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)),
                 FULL_SPAN, strm')
             end
       fun exp_PROD_1_SUBRULE_1_PRED (strm) = (case (lex(strm))
@@ -386,7 +385,7 @@ and simple_exp_NT (strm) = let
             val (signed_term_RES, signed_term_SPAN, strm') = signed_term_NT(strm')
             val FULL_SPAN = (#1(ADDOP_SPAN), #2(signed_term_SPAN))
             in
-              (UserCode.simple_exp_PROD_1_simple_exp_simple_exp_PROD_1_SUBRULE_1_PROD_1_ACT (signed_term_RES, ADDOP_RES, signed_term_SPAN : (Lex.pos * Lex.pos), ADDOP_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)),
+              (UserCode.simple_exp_PROD_1_SUBRULE_1_PROD_1_ACT (signed_term_RES, ADDOP_RES, signed_term_SPAN : (Lex.pos * Lex.pos), ADDOP_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)),
                 FULL_SPAN, strm')
             end
       fun simple_exp_PROD_1_SUBRULE_1_PRED (strm) = (case (lex(strm))
@@ -417,10 +416,10 @@ and signed_term_NT (strm) = let
       in
         (case (lex(strm))
          of (Tok.KW_not, _, strm') => signed_term_PROD_2(strm)
+          | (Tok.LP, _, strm') => signed_term_PROD_2(strm)
           | (Tok.ID(_), _, strm') => signed_term_PROD_2(strm)
           | (Tok.INT(_), _, strm') => signed_term_PROD_2(strm)
           | (Tok.REAL(_), _, strm') => signed_term_PROD_2(strm)
-          | (Tok.LP, _, strm') => signed_term_PROD_2(strm)
           | (Tok.MINUS, _, strm') => signed_term_PROD_1(strm)
           | _ => fail()
         (* end case *))
@@ -432,7 +431,7 @@ and term_NT (strm) = let
             val (factor_RES, factor_SPAN, strm') = factor_NT(strm')
             val FULL_SPAN = (#1(MULOP_SPAN), #2(factor_SPAN))
             in
-              (UserCode.term_PROD_1_term_term_PROD_1_SUBRULE_1_PROD_1_ACT (factor_RES, MULOP_RES, factor_SPAN : (Lex.pos * Lex.pos), MULOP_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)),
+              (UserCode.term_PROD_1_SUBRULE_1_PROD_1_ACT (factor_RES, MULOP_RES, factor_SPAN : (Lex.pos * Lex.pos), MULOP_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)),
                 FULL_SPAN, strm')
             end
       fun term_PROD_1_SUBRULE_1_PRED (strm) = (case (lex(strm))
@@ -630,7 +629,7 @@ fun compound_statement_NT (strm) = let
             val (SR_RES, SR_SPAN, strm') = EBNF.closure(compound_statement_PROD_1_SUBRULE_1_PROD_1_SUBRULE_1_PRED, compound_statement_PROD_1_SUBRULE_1_PROD_1_SUBRULE_1_NT, strm')
             val FULL_SPAN = (#1(statement_SPAN), #2(SR_SPAN))
             in
-              (UserCode.compound_statement_PROD_1_compound_statement_compound_statement_PROD_1_SUBRULE_1_PROD_1_ACT (SR_RES, KW_begin_RES, statement_RES, SR_SPAN : (Lex.pos * Lex.pos), KW_begin_SPAN : (Lex.pos * Lex.pos), statement_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)),
+              (UserCode.compound_statement_PROD_1_SUBRULE_1_PROD_1_ACT (SR_RES, KW_begin_RES, statement_RES, SR_SPAN : (Lex.pos * Lex.pos), KW_begin_SPAN : (Lex.pos * Lex.pos), statement_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)),
                 FULL_SPAN, strm')
             end
       fun compound_statement_PROD_1_SUBRULE_1_PRED (strm) = (case (lex(strm))

@@ -11,38 +11,38 @@
 );
 
 %tokens
-  : KW_program ("program")
-  | KW_var
-  | KW_array
-  | KW_of
-  | KW_integer
-  | KW_real
-  | KW_function
-  | KW_procedure
-  | KW_begin
-  | KW_end
-  | KW_if
-  | KW_then
-  | KW_else
-  | KW_while
-  | KW_do
-  | KW_not
-  | ID of string
-  | INT of IntInf.int
-  | REAL of Real.real
-  | ASSIGNOP	(":=")
-  | COMMA	(",")
-  | COLON	(":")
-  | SEMI	(";")
-  | DOT		(".")
-  | LSB		("[")
-  | RSB		("]")
-  | LP		("(")
-  | RP		(")")
-  | MINUS
+  : KW_program		("program")
+  | KW_var		("var")
+  | KW_array		("array")
+  | KW_of		("of")
+  | KW_integer		("integer")
+  | KW_real		("real")
+  | KW_function		("function")
+  | KW_procedure	("procedure")
+  | KW_begin		("begin")
+  | KW_end		("end")
+  | KW_if		("if")
+  | KW_then		("then")
+  | KW_else		("else")
+  | KW_while		("while")
+  | KW_do		("do")
+  | KW_not		("not")
+  | ASSIGNOP		(":=")
+  | COMMA		(",")
+  | COLON		(":")
+  | SEMI		(";")
+  | DOT			(".")
+  | LSB			("[")
+  | RSB			("]")
+  | LP			("(")
+  | RP			(")")
+  | MINUS		("-")
   | RELOP of string
   | ADDOP of string
   | MULOP of string
+  | ID of string
+  | INT of IntInf.int
+  | REAL of Real.real
   ;
 
 %keywords 
@@ -63,6 +63,12 @@
   KW_do,
   KW_not
   ;
+
+%prefer ID, ";", ",", "[";
+
+%change "," -> ";" | ";" -> "," ;
+
+%value ID("bogus");
 
 program
   : "program" ID LP id_list RP SEMI

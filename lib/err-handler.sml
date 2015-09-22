@@ -93,42 +93,43 @@ end = struct
 	      maxPos = maxPos, get = get, put = put,
 	      rs = WS.mkRepairState(), enabled = ref true
 	    }
-        fun lex ws = 
-	  if isSome (!cont)
-	  then (maxPos := Int.max (WS.getTokPos ws, !maxPos);
-		WS.get1 ws)
-	  else 
-	    if WS.getTokPos ws > !maxPos 
-	    then let
-	      val () = SMLofNJ.Cont.callcc 
-		(fn k => (checkpoints := (get(), k, ws) :: !checkpoints;
-			  maxPos := WS.getTokPos ws))
-	      in
-		WS.get1 ws
-	      end
-	    else WS.get1 ws
-        in (eh, lex)
+        fun lex ws = (case !cont
+	       of SOME _ => (
+		    maxPos := Int.max (WS.getTokPos ws, !maxPos);
+		    WS.get1 ws)
+		| NONE => if WS.getTokPos ws > !maxPos 
+		    then let
+		      val () = SMLofNJ.Cont.callcc (fn k => (
+				checkpoints := (get(), k, ws) :: !checkpoints;
+				maxPos := WS.getTokPos ws))
+		      in
+			WS.get1 ws
+		      end
+		    else WS.get1 ws
+	      (* end case *))
+        in
+	  (eh, lex)
         end
 
   val isEOF = Tok.isEOF o #1 o WS.get1
 
   val minAdvance = 1
 
-  fun restoreCheckpoint (eh, (x, cont, strm)) =
-        (getPut eh x;  (* retore refcell data for checkpoint *)
-	 setMaxPos (eh, WS.getTokPos strm);
-	 SMLofNJ.Cont.throw cont ())
+  fun restoreCheckpoint (eh, (x, cont, strm)) = (
+	getPut eh x;  (* restore refcell data for checkpoint *)
+	setMaxPos (eh, WS.getTokPos strm);
+	SMLofNJ.Cont.throw cont ())
 
   fun tryRepair (eh, c) = let
         val oldMax = getMaxPos eh
 	val firstTime = ref true
 	val () = SMLofNJ.Cont.callcc (fn k => (setCont (eh, SOME k)))
-        in if !firstTime then 
-	     (* first time through, try the repair *)
-	     (firstTime := false; restoreCheckpoint (eh, c))
-	   else
-	     (* second time through, return the distance achieved *)
-	     (setCont (eh, NONE); getMaxPos eh - oldMax)
+        in
+	  if !firstTime
+	    then ( (* first time through, try the repair *)
+	      firstTime := false; restoreCheckpoint (eh, c))
+	    else ( (* second time through, return the distance achieved *)
+	      setCont (eh, NONE); getMaxPos eh - oldMax)
         end
 
   local

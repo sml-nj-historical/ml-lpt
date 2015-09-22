@@ -87,6 +87,7 @@ structure LLKSpec =
 	header : string option,
 	defs : Action.action,		(* user definitions (code) *)
         toks : token list,
+	changes : (token list * token list) list,
         nterms : nonterm list,
         prods : prod list,
 	eof : token,
