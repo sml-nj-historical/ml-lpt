@@ -1,6 +1,6 @@
 (* dot-output.sml
  *
- * COPYRIGHT (c) 2005 
+ * COPYRIGHT (c) 2005
  * John Reppy (http://www.cs.uchicago.edu/~jhr)
  * Aaron Turon (adrassi@gmail.com)
  * All rights reserved.
@@ -22,8 +22,8 @@ structure DotOutput : OUTPUT =
     datatype di_graph = GRAPH of string * node list * di_edge list * attribute list
 
     fun replBS str =
-	  String.translate 
-	    (fn #"\\" => "\\\\" | c => String.str c) 
+	  String.translate
+	    (fn #"\\" => "\\\\" | #"\"" => "\\\"" | c => String.str c)
 	    str
 
     fun writeGraph (out, graph) = let
@@ -35,23 +35,23 @@ structure DotOutput : OUTPUT =
 	  fun wrIndent 0 = ()
 	    | wrIndent lvl = (wr "  "; wrIndent (lvl - 1))
         (* apply output functions, indenting each time *)
-	  fun app indent f list = 
+	  fun app indent f list =
 	        List.app (fn x => (wrIndent indent; f x)) list
           fun wrAttr (ATTR (name, value)) = wrs ([
 		  "[ ", name, " = \"", value, "\" ]", "\n"
 	        ])
-	  fun wrNode (NODE (name, atts)) = 
+	  fun wrNode (NODE (name, atts)) =
 	        (wr name;
 		 wr "\n";
 		 app 2 wrAttr atts)
 	  fun wrEdge (EDGE (no1, no2, atts)) =
 	        (wrs ([no1, " -> ", no2, "\n"]);
 		 app 2 wrAttr atts)
-	  fun wrGraphAttr attr = 
+	  fun wrGraphAttr attr =
 	        (wr "graph\n";
 		 wrIndent 2;
 		 wrAttr attr)
-	  fun wrGraph (GRAPH (name, nodes, edges, atts)) = 
+	  fun wrGraph (GRAPH (name, nodes, edges, atts)) =
 	        (wrs (["digraph ", name, " {\n"]);
 		 app 1 wrGraphAttr atts;
 		 app 1 wrNode nodes;
@@ -65,14 +65,14 @@ structure DotOutput : OUTPUT =
 	  fun name id = "Q" ^ Int.toString id
           fun mkNode (LO.State{id, label, final = [], ...}) =
 	        NODE (name id, [ATTR ("shape", "circle")])
-	    | mkNode (LO.State{id, label, final = i::_, ...}) = 
-	        NODE (name id, 
+	    | mkNode (LO.State{id, label, final = i::_, ...}) =
+	        NODE (name id,
 		  [ATTR ("shape", "doublecircle"),
 		   ATTR ("label", (name id) ^ "/" ^ (Int.toString i))])
-	  fun mkEdge fromID (symSet, LO.State{id, ...}) = 
+	  fun mkEdge fromID (symSet, LO.State{id, ...}) =
 	        EDGE (name fromID, name id,
 		  [ATTR ("label", replBS (RE.toString (RE.mkSymSet symSet)))])
-	  fun mkEdges (LO.State{id, next, ...}) = 
+	  fun mkEdges (LO.State{id, next, ...}) =
 	        List.map (mkEdge id) (List.rev (!next))
 	  fun mkRule (i, re) = String.concat (
 		["Rule ",
@@ -81,9 +81,9 @@ structure DotOutput : OUTPUT =
 		 replBS (RE.toString re),
 		 "\\n"])
         (* node for input REs *)
-	  fun mkRules res = 
-	        NODE ("Rules", 
-		  [ATTR ("label", Vector.foldli 
+	  fun mkRules res =
+	        NODE ("Rules",
+		  [ATTR ("label", Vector.foldli
 				    (fn (i, r, s) => s ^ (mkRule (i, r)))
 				    "" res),
 		   ATTR ("shape", "plaintext"),
@@ -100,7 +100,7 @@ structure DotOutput : OUTPUT =
           val LO.Spec {dfa, startStates, ...} = spec
 	  val out = TextIO.openOut (fname ^ ".dot")
 	  val graph = mkGraph dfa
-          in 
+          in
             print (" writing " ^ fname ^ ".dot\n");
             writeGraph (out, graph)
 	    before TextIO.closeOut out
