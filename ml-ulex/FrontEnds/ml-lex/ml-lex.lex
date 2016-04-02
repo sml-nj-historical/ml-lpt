@@ -33,7 +33,7 @@ end
 
 structure SIS = RegExp.SymSet
 fun uniChar s = let
-      fun toW32 (c : Char.char) : UTF8.wchar = 
+      fun toW32 (c : Char.char) : UTF8.wchar =
 	(case c of #"0" => 0w0 | #"1" => 0w1 | #"2" => 0w2 | #"3" => 0w3
 	 	 | #"4" => 0w4 | #"5" => 0w5 | #"6" => 0w6 | #"7" => 0w7
 	 	 | #"8" => 0w8 | #"9" => 0w9 | #"a" => 0w10 | #"A" => 0w10
@@ -44,7 +44,6 @@ fun uniChar s = let
       fun iter (#"u"::_, v) = v
         | iter (c::cs,   v) = iter (cs, 0w16*v + (toW32 c))
 	| iter _ = raise Fail "invalid unicode escape sequence"
-      val uni = iter (List.rev (String.explode s), 0w0)
       in iter (List.rev (String.explode s), 0w0)
       end
 
@@ -72,7 +71,7 @@ id	= {alpha}({alpha} | {num} | "_" | "'")*;
 <DEFS> "%%"	=> (YYBEGIN RE; LEXMARK(!yylineno, !yylineno));
 <DEFS> "%s"	=> (YYBEGIN LEXSTATES; STATES(!yylineno, !yylineno));
 <DEFS> "%header" {ws}* "("
-		=> (clrAction(); pcount := 1; inquote := false; 
+		=> (clrAction(); pcount := 1; inquote := false;
 	            YYBEGIN ACTION;
 		    afterAction := (fn () => YYBEGIN DEFS);
 		    HEADER(!yylineno, !yylineno));
@@ -85,7 +84,7 @@ id	= {alpha}({alpha} | {num} | "_" | "'")*;
 		    ARG(!yylineno, !yylineno));
 <DEFS> "%count" => (COUNT(!yylineno, !yylineno));
 <DEFS> "%reject"=> (REJECTTOK(!yylineno, !yylineno));
-<DEFS> "%unicode" 
+<DEFS> "%unicode"
 		=> (UNICODE(!yylineno, !yylineno));
 <DEFS> "%full"	=> (FULL(!yylineno, !yylineno));
 <DEFS> {id}	=> (ID(yytext, !yylineno, !yylineno));
@@ -132,9 +131,11 @@ id	= {alpha}({alpha} | {num} | "_" | "'")*;
 		=> (CHAR(valOf (String.fromString yytext), !yylineno, !yylineno));
 <RE,STRING,CHARCLASS>"\\u"{hex}{4}
 		=> (UNICHAR(uniChar yytext, !yylineno, !yylineno));
+<RE,STRING,CHARCLASS>"\\h"
+		=> (HIGH_CHAR(!yylineno, !yylineno));
 <RE,STRING,CHARCLASS>"\\".
 		=> (CHAR(String.substring (yytext, 1, 1), !yylineno, !yylineno));
-<RE,STRING,CHARCLASS>.	
+<RE,STRING,CHARCLASS>.
 		=> (CHAR(yytext, !yylineno, !yylineno));
 
 <LEXSTATES>{id} => (LEXSTATE(yytext, !yylineno, !yylineno));

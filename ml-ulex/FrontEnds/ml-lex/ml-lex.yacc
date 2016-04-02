@@ -3,7 +3,7 @@ structure S = LexSpec
 structure RE = RegExp
 structure SIS = RE.SymSet
 
-val symTable : RE.re AtomMap.map ref = ref AtomMap.empty 
+val symTable : RE.re AtomMap.map ref = ref AtomMap.empty
 
 val wildcard = SIS.complement (SIS.singleton 0w10) (* everything but \n *)
 fun charToSym c = Word.fromInt (Char.ord c)
@@ -17,7 +17,7 @@ fun mkRule (ss, (false, re), act) = ((ss, re), act)
 
 %name MLLex
 
-%term 
+%term
     EOF
   | DECLS of string
   | LT		(* < *)
@@ -29,24 +29,25 @@ fun mkRule (ss, (false, re), act) = ((ss, re), act)
   | RBD		(* -] *)
   | LCB		(* { *)
   | RCB		(* } *)
-  | QMARK    
-  | STAR     
-  | PLUS     
+  | QMARK
+  | STAR
+  | PLUS
   | BAR
-  | CARAT 
-  | DOLLAR 
-  | SLASH 
+  | CARAT
+  | DOLLAR
+  | SLASH
   | DASH
+  | HIGH_CHAR (* "\h"; represents the range \128-\255 when not in %full mode *)
   | CHAR of string
   | UNICHAR of UTF8.wchar
   | DOT
   | EQ
   | REPS of int
-  | ID of string 
+  | ID of string
   | ARROW
   | ACT of string
-  | SEMI 
-  | LEXMARK 
+  | SEMI
+  | LEXMARK
   | COMMA
   | STATES
   | LEXSTATE of string
@@ -93,13 +94,13 @@ fun mkRule (ss, (false, re), act) = ((ss, re), act)
 
 Start
 	: Decls LEXMARK Defs LEXMARK Rules
-		(S.Spec {decls = Decls, 
-		         conf = Defs, 
+		(S.Spec {decls = Decls,
+		         conf = Defs,
 			 rules = Rules,
 			 eofRules = []})
 
 Decls
-	: DECLS	
+	: DECLS
 		(DECLS)
 	| (* empty *)
 		("")
@@ -110,7 +111,7 @@ Defs
 	| Defs STATES StartStates SEMI
 		(S.updStartStates (Defs, StartStates))
 	| Defs HEADER ACT
-		(S.updHeader (Defs, 
+		(S.updHeader (Defs,
 		   String.substring (ACT, 1, String.size ACT - 2)))
 	| Defs STRUCT ID
 		(S.updStructName (Defs, ID))
@@ -125,7 +126,7 @@ Defs
 	| Defs REJECTTOK
 		(Defs)
 	| Defs ID EQ OrExp SEMI
-		(symTable := AtomMap.insert 
+		(symTable := AtomMap.insert
 		  	       (!symTable, Atom.atom ID, OrExp);
 		 Defs)
 
@@ -141,7 +142,7 @@ Rules
 	| Rule Rules
 		(Rule :: Rules)
 
-Rule	
+Rule
 	: LineBreakExp ARROW ACT
 		(mkRule (NONE, LineBreakExp, ACT))
 	| LT RuleStates GT LineBreakExp ARROW ACT
@@ -186,7 +187,9 @@ Exp
 		(InExp)
 
 InExp
-	: CHAR
+	: HIGH_CHAR
+		(RE.mkSymSet (SIS.interval (0w128, 0w255)))
+	| CHAR
 		(RE.mkSymSet (SIS.singleton (strToSym CHAR)))
 	| UNICHAR
 		(RE.mkSymSet (SIS.singleton UNICHAR))
@@ -198,9 +201,9 @@ InExp
 		   | NONE => raise Fail ("'" ^ ID ^ "' not defined"))
 	| LP OrExp RP
 		(OrExp)
-	| LB CARAT CharClass 
+	| LB CARAT CharClass
 		(RE.mkSymSet (SIS.complement CharClass))
-	| LB CharClass 
+	| LB CharClass
 		(RE.mkSymSet CharClass)
 
 CharClass
@@ -227,7 +230,7 @@ CharRng
 	| AChar
 		(SIS.singleton AChar)
 
-AChar	
+AChar
 	: CARAT
 		(charToSym #"^")
 	| NonCarat

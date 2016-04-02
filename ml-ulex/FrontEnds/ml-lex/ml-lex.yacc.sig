@@ -23,6 +23,7 @@ val EQ:  'a * 'a -> (svalue,'a) token
 val DOT:  'a * 'a -> (svalue,'a) token
 val UNICHAR: (UTF8.wchar) *  'a * 'a -> (svalue,'a) token
 val CHAR: (string) *  'a * 'a -> (svalue,'a) token
+val HIGH_CHAR:  'a * 'a -> (svalue,'a) token
 val DASH:  'a * 'a -> (svalue,'a) token
 val SLASH:  'a * 'a -> (svalue,'a) token
 val DOLLAR:  'a * 'a -> (svalue,'a) token
