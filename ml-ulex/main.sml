@@ -1,6 +1,6 @@
 (* main.sml
  *
- * COPYRIGHT (c) 2005 
+ * COPYRIGHT (c) 2005
  * John Reppy (http://www.cs.uchicago.edu/~jhr)
  * Aaron Turon (adrassi@gmail.com)
  * All rights reserved.
@@ -8,7 +8,7 @@
  * Driver for ml-ulex.
  *)
 
-structure Main = 
+structure Main =
   struct
 
     structure RE = RegExp
@@ -23,8 +23,9 @@ structure Main =
 
     fun status s = debug ("[" ^ name ^ ": " ^ s ^ "]")
 
-    fun mlULex () = let
-          val _ = if String.size (!Options.fname) = 0 
+    fun frontEnd () = let
+	  val fname = !Options.fname
+          val _ = if (String.size fname = 0)
 		  then (
 		    print (concat[
 			"No input file specified\n  usage:  ",
@@ -33,12 +34,16 @@ structure Main =
 		    OS.Process.exit OS.Process.failure)
 		  else ()
 	  val _ = status "parsing"
-          val inSpec' = if !Options.lexCompat
-			then MLLexInput.parseFile (!Options.fname)
-			else MLULexInput.parseFile (!Options.fname)
-	  val inSpec = if (!Options.beTest) 
-		       then LexSpec.emptyActions inSpec'
-		       else inSpec'
+	  in
+            if !Options.lexCompat
+	      then MLLexInput.parseFile fname
+	      else MLULexInput.parseFile fname
+	  end
+
+    fun compile inSpec = let
+	  val inSpec = if (!Options.beTest)
+		       then LexSpec.emptyActions inSpec
+		       else inSpec
 	  val _ = status "DFA gen"
 	  val outSpec = Lex.gen inSpec
 	  val _ = (debug (concat [" ", Int.toString (numStates outSpec),
@@ -47,26 +52,35 @@ structure Main =
 		    (status "DFA dump";
 		     DumpOutput.output (outSpec, !Options.fname))
 		  else ()
-	  val _ = if !Options.dot then
-		    (status "DOT gen";
-		     DotOutput.output (outSpec, !Options.fname))
-		  else ()
-	  val _ = status "SML gen"
-	  val _ = if (numStates outSpec > 150 andalso !Options.beMode = Options.BySize)
-		     orelse !Options.beMode = Options.TableBased
-		  then SMLTblOutput.output (outSpec, !Options.fname) 
-		  else SMLFunOutput.output (outSpec, !Options.fname)
-	  val _ = if !Options.match then 
-		    (debug "-- Interactive matching (blank line to quit) --";
-		     Match.output (outSpec, !Options.fname))
-		  else ()
 	  in
-            OS.Process.success
-          end
+	    outSpec
+	  end
+
+    fun backEnd outSpec = (
+	  if !Options.dot
+	    then (
+	      status "DOT gen";
+	      DotOutput.output (outSpec, !Options.fname))
+	    else ();
+	  status "SML gen";
+	  if (numStates outSpec > 150 andalso !Options.beMode = Options.BySize)
+	  orelse !Options.beMode = Options.TableBased
+	    then SMLTblOutput.output (outSpec, !Options.fname)
+	    else SMLFunOutput.output (outSpec, !Options.fname);
+	  if !Options.match
+	    then (
+	      debug "-- Interactive matching (blank line to quit) --";
+	      Match.output (outSpec, !Options.fname))
+	    else ())
+
+    fun mlULex () = (case frontEnd ()
+	   of SOME inSpec => (backEnd (compile inSpec); OS.Process.success)
+	    | NONE => OS.Process.failure
+	  (* end case *))
 
     fun main (_, args) = let
 	  val _ = List.app Options.procArg args
-	  in 
+	  in
 	    mlULex()
           end
 	    handle Options.Usage msg => (

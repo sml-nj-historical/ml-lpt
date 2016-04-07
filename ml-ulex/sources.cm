@@ -1,6 +1,6 @@
 (* sources.cm
  *
- * COPYRIGHT (c) 2005 
+ * COPYRIGHT (c) 2005
  * John Reppy (http://www.cs.uchicago.edu/~jhr)
  * Aaron Turon (adrassi@gmail.com)
  * All rights reserved.
@@ -16,10 +16,11 @@ is
   $/pp-lib.cm
   $/ml-yacc-lib.cm
 
-  ../lib/ml-lpt-lib.cm 
+  ../lib/ml-lpt-lib.cm
   ../common/lpt-common.cm
 
-  FrontEnds/lex-spec.sml
+  FrontEnds/common/lex-spec.sml
+  FrontEnds/common/input-sig.sml
 
 (* During installation we rely on pre-generated files
  * to avoid certain chicken-and-egg problems. *)

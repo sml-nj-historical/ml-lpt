@@ -1,6 +1,6 @@
 (* ml-ulex-input-bootstrap.sml
  *
- * COPYRIGHT (c) 2005 
+ * COPYRIGHT (c) 2005
  * John Reppy (http://www.cs.uchicago.edu/~jhr)
  * Aaron Turon (adrassi@gmail.com)
  * All rights reserved.
@@ -17,7 +17,7 @@ struct
    fun lex(STRM (ref(EVAL t))) = SOME t
      | lex(STRM (s as ref(UNEVAL f))) = let
 	 val tok = f()
-         val t = (tok, STRM(ref(UNEVAL f))) 
+         val t = (tok, STRM(ref(UNEVAL f)))
          in
 	   case tok
 	    of Tok.EOF => NONE
@@ -29,25 +29,21 @@ struct
 
 end
 
-structure MLULexInput =
+structure MLULexInput : INPUT =
   struct
 
     structure P = Parser(Streamify)
 
     fun parseFile fname = let
-          fun parseErr (msg, line, _) = 
-	        (print (Int.toString line);
-		 print ": ";
-		 print msg;
-		 print "\n")
 	  val strm = TextIO.openIn fname
-	  val lexer =
-		MLULexLex.makeLexer (fn n => TextIO.inputN (strm, n))
+	  val lexer = MLULexLex.makeLexer (fn n => TextIO.inputN (strm, n))
 	  val (spec, errors) = P.parse (Streamify.streamify lexer)
 			       before TextIO.closeIn strm
 	  fun errMsg (pos, err) = print (P.repairToString err ^ "\n")
 	  in
-            app errMsg errors;
+	    if (null errors)
+	      then SOME spec
+	      else (app errMsg errors; NONE)
 	    spec
 	  end
 

@@ -436,10 +436,7 @@ fun yyAction43 (strm, lastMatch : yymatch) = let
 fun yyAction44 (strm, lastMatch : yymatch) = let
       val yylineno = ref(yygetlineNo(!(yystrm)))
       in
-        yystrm := strm;
-        (
-print "** HIGH_CHAR\n";
-HIGH_CHAR(!yylineno, !yylineno))
+        yystrm := strm; (HIGH_CHAR(!yylineno, !yylineno))
       end
 fun yyAction45 (strm, lastMatch : yymatch) = let
       val yylineno = ref(yygetlineNo(!(yystrm)))
