@@ -6,7 +6,11 @@
 Here is a history of changes to the SML/NJ Language Processing Tools.
 More details can be found in the SML/NJ \texttt{NOTES} and \texttt{README} files.
 \begin{description}
-  \item[SML/NJ 110.79]
+  \item[SML/NJ 110.81]
+    \mbox{}\\[0.5em]
+    Added \texttt{\%tokentype} directive to \mlantlr{}.
+%
+ \item[SML/NJ 110.79]
     \mbox{}\\[0.5em]
     Modified scanner to allow comments in \ulex{} directives.
     \\[0.5em]
@@ -47,7 +51,6 @@ More details can be found in the SML/NJ \texttt{NOTES} and \texttt{README} files
     Removed the \texttt{toksToString} function from the tokens structure that ml-antlr
     generates.  It was originally for use by the \texttt{AntlrRepair} structure, but that
     structure does not use it.
-    \pagebreak
 %
   \item[SML/NJ 110.72]
     \mbox{}\\[0.5em]

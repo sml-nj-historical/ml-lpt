@@ -6,8 +6,8 @@
  * All rights reserved.
  *
  * Datatypes for grammar specification.
- * NOTE: individual modules are available that 
- *       manipulate the datatypes described in 
+ * NOTE: individual modules are available that
+ *       manipulate the datatypes described in
  *       this module.
  *)
 
@@ -29,7 +29,7 @@ structure LLKSpec =
 	abbrev : Atom.atom option,
 	keyword : bool,			(* true if marked as a %keyword *)
 	default : string option		(* optional default argument for error repair *)
-      } 
+      }
 
     and nonterm = NT of {
         id : Int.int,			(* globally unique ID *)
@@ -49,7 +49,7 @@ structure LLKSpec =
 	name : string,
 	try : bool,
 	lhs : nonterm,
-	rhs : item list ref,	(* ref for tying recursive knot: 
+	rhs : item list ref,	(* ref for tying recursive knot:
 				 * subrules refer to their containing prod
 				 *)
 	rhsBindings : (string * bool) list,
@@ -74,11 +74,11 @@ structure LLKSpec =
 
     withtype sem_pred = Action.action
 
-    datatype refcell 
+    datatype refcell
       = REFCELL of {
 	  name : string,
 	  ty : ty,
-	  initCode : Action.action, 
+	  initCode : Action.action,
 	  loc : span
         }
 
@@ -87,6 +87,7 @@ structure LLKSpec =
 	header : string option,
 	defs : Action.action,		(* user definitions (code) *)
         toks : token list,
+	toksImport : Action.action option,	(* optional token datatype *)
 	changes : (token list * token list) list,
         nterms : nonterm list,
         prods : prod list,

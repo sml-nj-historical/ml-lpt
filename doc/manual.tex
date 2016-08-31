@@ -28,7 +28,7 @@
   \texttt{adrassi@gmail.com}\\[0.5em]
   John Reppy\\
   \texttt{jhr@cs.chicago.edu}}
-\date{Revised: September 2015}
+\date{Revised: September 2016}
 
 \newcommand{\Carat}{\^{ }}
 \newcommand{\RE}{r}
@@ -94,6 +94,7 @@
 \definecolor{DarkGreen}{rgb}{0.0,0.5,0.0}
 \newcommand{\cdColor}{DarkBlue}
 \newcommand{\kwColor}{Purple}
+\newcommand{\dirColor}{Purple}
 \newcommand{\strColor}{DarkGreen}
 \newcommand{\comColor}{Red}
 
@@ -130,17 +131,20 @@
   alsoletter={_},
 }[keywords,comments,strings,directives]%
 
-\lstdefinelanguage{MLAntlr}[]{SML}{%
-  moredirectives={defs,entry,header,import,keywords,name,nonterms,refcell,tokens,start,value},
-  moredelim=*[directive]\%,%
-  alsoletter={_},
-}[keywords,comments,strings,directives]%
+\lstdefinelanguage{MLAntlr}{%
+  morekeywords={\%defs,\%entry,\%header,\%import,\%keywords,\%name,\%nonterms,of,
+    \%refcell,\%tokens,\%tokentype,\%start,\%value},
+  sensitive,%
+  alsoletter={_,\%},%
+  morecomment=[n]{(*}{*)},%
+  morestring=[d]",%
+}[keywords,comments,strings]%
 
 \lstset{
   basicstyle=\footnotesize\ttfamily\color{\cdColor},
   keywordstyle=\color{\kwColor}\bfseries,
   commentstyle=\color{\comColor}\itshape,
-  directivestyle=\color{\kwColor}\bfseries,
+  directivestyle=\color{\dirColor}\bfseries,
   stringstyle=\color{\strColor}\itshape,
   showstringspaces=false,
   language=SML

@@ -1,6 +1,6 @@
 (* check-grammar.sml
  *
- * COPYRIGHT (c) 2005 
+ * COPYRIGHT (c) 2005
  * John Reppy (http://www.cs.uchicago.edu/~jhr)
  * Aaron Turon (http://www.cs.uchicago.edu/~adrassi)
  * All rights reserved.
@@ -25,12 +25,12 @@ structure CheckGrammar : sig
   (* auto-number the bindings for repeated variable names *)
     local
       fun addNumbers(acc, _, _, []) = rev acc
-	| addNumbers(acc, n, s, s'::bs) = 
-	    if s = s' then 
+	| addNumbers(acc, n, s, s'::bs) =
+	    if s = s' then
 	      addNumbers((s' ^ (Int.toString n))::acc, n+1, s, bs)
 	    else addNumbers(s'::acc, n, s, bs)
       fun numberBindings([]) = []
-	| numberBindings(b::bs) = 
+	| numberBindings(b::bs) =
 	    if List.exists (fn b' => b = b') bs
 	    then (b ^ "1")::numberBindings(addNumbers([], 2, b, bs))
 	    else b::(numberBindings bs)
@@ -46,7 +46,7 @@ structure CheckGrammar : sig
     in
     (* assign bindings to a list of items *)
     fun bindings (userNames, items, tokTbl) = let
-        (* all symbols with user-assigned names should yield a result 
+        (* all symbols with user-assigned names should yield a result
 	 * for default actions
 	 *)
           val userBindings = map (Option.map (fn nm => (nm, true))) userNames
@@ -66,7 +66,7 @@ structure CheckGrammar : sig
 	  fun shouldImport (_, Syn.KEYWORD _)		 = true
 	    | shouldImport (_, Syn.VALUE _)		 = true
 	    | shouldImport (_, Syn.DEFS _)		 = true
-	    | shouldImport (_, Syn.TOKEN (sym, _, SOME abbrev)) = 
+	    | shouldImport (_, Syn.TOKEN (sym, _, SOME abbrev)) =
 	        keep sym andalso keep abbrev
 	    | shouldImport (_, Syn.TOKEN (sym, _, NONE)) = keep sym
 	    | shouldImport (_, Syn.REFCELL _)		 = true
@@ -75,7 +75,7 @@ structure CheckGrammar : sig
 	  val imp = case ParseFile.parse filename
 		     of SOME ds' => flatten ds'
 		      | NONE => []
-	  in 
+	  in
 	    (List.filter shouldImport imp) @ flatten ds
 	  end
       | flatten (d::ds) = d :: flatten ds
@@ -100,13 +100,14 @@ structure CheckGrammar : sig
 	  val header    : Syn.code option ref = ref NONE
 	  val startSym	: (Atom.atom * Err.span) option ref = ref NONE
 	  val defs	: Action.action ref = ref Action.empty
+	  val toksImport : Action.action option ref = ref NONE
 	  val refCells	: S.refcell ATbl.hash_table = ATbl.mkTable (4, Fail "refCells table")
-	  val ntTbl	: (S.nonterm * (unit -> int)) ATbl.hash_table = 
+	  val ntTbl	: (S.nonterm * (unit -> int)) ATbl.hash_table =
 				ATbl.mkTable (64, Fail "ntTbl table")
 	  val ntList	: S.nonterm list ref = ref []
 	  val prodList	: S.prod list ref = ref []
 	(* error message for duplicate declarations *)
-	  fun dupeErr (origSpan, newSpan, whatDupe) = 
+	  fun dupeErr (origSpan, newSpan, whatDupe) =
 	        Err.spanErr (newSpan,
 		  "duplicate " :: whatDupe
 		  @ [", originally declared at ", Err.span2str origSpan])
@@ -149,16 +150,20 @@ structure CheckGrammar : sig
 		(* end case *))
 	    | doDecl1 (span, Syn.REFCELL (name, ty, code)) = (
 		case ATbl.find refCells (Atom.atom name)
-		 of NONE => ATbl.insert refCells 
-			      (Atom.atom name, 
+		 of NONE => ATbl.insert refCells
+			      (Atom.atom name,
 			       S.REFCELL {
-				 name = name, ty = ty, 
+				 name = name, ty = ty,
 				 initCode = Action.action code, loc = span})
-		  | SOME (S.REFCELL {loc, ...}) => 
+		  | SOME (S.REFCELL {loc, ...}) =>
 		      dupeErr (loc, span, ["%refcell declaration for '", name, "'"])
 		(* end case *))
-	    | doDecl1 (span, Syn.DEFS code) = 
+	    | doDecl1 (span, Syn.DEFS code) =
 	        defs := Action.concat (!defs, Action.action code)
+	    | doDecl1 (span, Syn.TOKENTYPE ty) = (case !toksImport
+		 of NONE => toksImport := SOME(Action.action(span, ty))
+		  | SOME act => dupeErr (span, Action.span act, ["%tokentype declaration"])
+		(* end case *))
 	    | doDecl1 _ = ()
 	  val _ = app doDecl1 ds
 	(* PHASE 2: record %tokens declarations *)
@@ -199,12 +204,12 @@ structure CheckGrammar : sig
 			      keyword = isKW sym orelse getOpt(Option.map isKW abbrevOpt, false),
 			      default = dfltOpt
 			    }
-		      in 
+		      in
 			ATbl.insert tokTbl (sym, tok);
 			Option.app (fn a => ATbl.insert tokTbl (a, tok)) abbrevOpt;
 			tokList := tok :: !tokList
 		      end
-		  | SOME (S.T{loc, ...}) => 
+		  | SOME (S.T{loc, ...}) =>
 		      dupeErr (loc, span, ["%tokens declaration for '", Atom.toString sym, "'"])
 		(* end case *))
 	    | doDecl2 _ = ()
@@ -247,14 +252,14 @@ structure CheckGrammar : sig
 	  val _ = List.app doChange ds
 (* FIXME: need to check that any value-carrying token that might be inserted has a default value *)
 	(* PHASE 3: load nonterminals *)
-	  fun insNTerm (nt as S.NT{name, ...}) = let 
+	  fun insNTerm (nt as S.NT{name, ...}) = let
 	        val nid = nextId (ref 1)
-	        in 
+	        in
 	          ATbl.insert ntTbl (name, (nt, nid));
 		  ntList := nt :: !ntList;
 		  (nt, nid)
 	        end
-	(* map a non-terminal name to its info record, creating a new nonterminal 
+	(* map a non-terminal name to its info record, creating a new nonterminal
 	 * record if none is found.
 	 *)
 	  fun lookupNTerm name = (case ATbl.find ntTbl name
@@ -269,7 +274,7 @@ structure CheckGrammar : sig
 		(* end case *))
 	(* check and load a rules and type annotations *)
           fun doDecl3 (span, Syn.RULE {lhs, formals = newFormals, rhs}) = let
-		val (nt as S.NT{prods, formals, loc = ntLoc, ...}, nextProdID) = 
+		val (nt as S.NT{prods, formals, loc = ntLoc, ...}, nextProdID) =
 		      lookupNTerm lhs
 		val nextSRID = nextId (ref 1)
 		val prodName = concat [Nonterm.name nt, "_PROD_", Int.toString (nextProdID())]
@@ -288,7 +293,7 @@ structure CheckGrammar : sig
 			     pred = Option.map Action.action predicate,
 			     loc = rhsLoc
 			   }
-		fun doPreitem (Syn.SYMBOL (name, args)) = 
+		fun doPreitem (Syn.SYMBOL (name, args)) =
 		      if ATbl.inDomain tokTbl name
 		      then if not (isSome args)
 			   then S.TOK(valOf (ATbl.find tokTbl name))
@@ -300,7 +305,7 @@ structure CheckGrammar : sig
 		  | doPreitem (Syn.CLOS itm)     = S.CLOS(doSubrule (true, mkAlts itm))
 		  | doPreitem (Syn.POSCLOS itm)  = S.POSCLOS(doSubrule (true, mkAlts itm))
 		  | doPreitem (Syn.OPT itm)      = S.OPT(doSubrule (true, mkAlts itm))
-		and doItem (span, s) = S.ITEM {sym = doPreitem s, 
+		and doItem (span, s) = S.ITEM {sym = doPreitem s,
 					       id = nextGlobalID(),
 					       loc = span}
 		and mkAlts (_, Syn.SUBRULE alts) = alts
@@ -356,7 +361,7 @@ structure CheckGrammar : sig
 	  val _ = app chkNT nterms
 	(* note: safe to assume length nterms > 0, otherwise aborted above *)
 	  fun findNT errStr (sym, span) = (case ATbl.find ntTbl sym
-		of NONE => (Err.spanErr (span, ["Error: ", errStr, " symbol ", 
+		of NONE => (Err.spanErr (span, ["Error: ", errStr, " symbol ",
 						Atom.toString sym,
 						" is not defined."]);
 		            hd nterms)
@@ -368,13 +373,13 @@ structure CheckGrammar : sig
 		(* end case *))
 	  val entryPoints = map (findNT "%entry") (ATbl.listItemsi entryPts)
 	  val sortedTops = Nonterm.topsort (startnt::entryPoints)
-	  val topsSet = AtomSet.addList 
-			  (AtomSet.empty, 
+	  val topsSet = AtomSet.addList
+			  (AtomSet.empty,
 			   map (Atom.atom o Nonterm.name) (List.concat sortedTops))
 	(* check that all defined nonterminals are used *)
-	  fun checkNTInTops nt = 
-	        if Nonterm.isSubrule nt = false 
-		  andalso AtomSet.member (topsSet, Atom.atom (Nonterm.name nt)) = false 
+	  fun checkNTInTops nt =
+	        if Nonterm.isSubrule nt = false
+		  andalso AtomSet.member (topsSet, Atom.atom (Nonterm.name nt)) = false
 		then Err.warning ["Warning: nonterminal ", Nonterm.name nt,
 				  " is not reachable from any entry point."]
 		else ()
@@ -385,7 +390,8 @@ structure CheckGrammar : sig
 		name = getOpt (Option.map #1 (!name), ""),
 		header = Option.map #2 (!header),
 		defs = !defs,
-		toks = !tokList,
+		toks = List.rev (!tokList),
+		toksImport = !toksImport,
 		changes = let (* add the %prefer tokens to the changes list *)
 		  fun preferChange (tok, _, changes) =
 			([], [ATbl.lookup tokTbl tok]) :: changes

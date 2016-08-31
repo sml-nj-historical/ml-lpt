@@ -27,6 +27,7 @@ structure GrammarSyntax =
       | CHANGE of (symbol list * symbol list)		(* %change TOKEN* -> TOKEN* | ... *)
       | DEFS of code
       | TOKEN of constr
+      | TOKENTYPE of ty					(* %tokentype monotype *)
       | IMPORT of {
 	  filename : string,
 	  dropping : (span * symbol) list
@@ -66,6 +67,7 @@ structure GrammarSyntax =
 	| ppDecl (_, PREFER _) = "%prefer"
 	| ppDecl (_, CHANGE _) = "%change"
 	| ppDecl (_, DEFS c) = "%defs"
+	| ppDecl (_, TOKENTYPE c) = "%tokentype"
 	| ppDecl (_, TOKEN cstr) = "%tokens"
 	| ppDecl (_, NONTERM cstr) = "%nonterm"
 	| ppDecl (_, IMPORT {filename, dropping}) = "%import"

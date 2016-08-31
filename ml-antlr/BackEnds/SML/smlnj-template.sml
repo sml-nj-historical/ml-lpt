@@ -9,6 +9,6 @@
 structure SMLTemplate =
   struct
 
-    val template  = ExpandFile.mkTemplateFromFile "BackEnds/SML/template.sml" 
+    val template  = ExpandFile.mkTemplateFromFile "BackEnds/SML/template.sml"
 
   end

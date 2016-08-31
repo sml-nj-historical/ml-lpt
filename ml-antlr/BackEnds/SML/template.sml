@@ -1,19 +1,10 @@
-structure 
-@tokmod@
- = struct
-
-@tokens@
-
-  fun isEOF EOF = true
-    | isEOF _ = false
-
-end
+@token-struct@
 
 @header@
  = struct
 
   local
-    structure Tok = 
+    structure Tok =
 @tokmod@
 
     structure UserCode =
@@ -36,17 +27,17 @@ end
 *)
     structure EBNF =
       struct
-	fun optional (pred, parse, strm) = 
+	fun optional (pred, parse, strm) =
 	      if pred strm
 		then let
 		  val (y, span, strm') = parse strm
-		  in 
+		  in
 		    (SOME y, span, strm')
 		  end
 		else (NONE, Err.getSpan strm, strm)
 
 	fun closure (pred, parse, strm) = let
-	      fun iter (strm, (left, right), ys) = 
+	      fun iter (strm, (left, right), ys) =
 		    if pred strm
 		      then let
 			val (y, (_, right'), strm') = parse strm
@@ -71,8 +62,8 @@ end
 	fun fail() = Err.failure eh
 	fun tryProds (strm, prods) = let
 	  fun try [] = fail()
-	    | try (prod :: prods) = 
-	        (Err.whileDisabled eh (fn() => prod strm)) 
+	    | try (prod :: prods) =
+	        (Err.whileDisabled eh (fn() => prod strm))
 		handle Err.ParseError => try (prods)
           in try prods end
 @matchfns@

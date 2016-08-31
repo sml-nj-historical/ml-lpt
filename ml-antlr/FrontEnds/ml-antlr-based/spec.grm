@@ -13,52 +13,56 @@
   fun lift f (vspan, v) = (vspan, f v)
   fun mapFst f (fst, snd) = (f fst, snd)
 
-  val trimQuotes = 
+  val trimQuotes =
         Substring.string o
 	(Substring.triml 1) o
-	(Substring.trimr 1) o 
+	(Substring.trimr 1) o
 	Substring.full
 
 );
 
 %name Spec;
 
-%tokens 
-  : KW_change	("%change")
-  | KW_defs	("%defs")
-  | KW_dropping	("%dropping")		
-  | KW_entry	("%entry")
-  | KW_header	("%header")
-  | KW_import	("%import")
-  | KW_keywords	("%keywords")
-  | KW_name	("%name")
-  | KW_nonterms	("%nonterms")
-  | KW_prefer	("%prefer")
-  | KW_refcell	("%refcell")
-  | KW_start	("%start")
-  | KW_tokens	("%tokens")
-  | KW_try	("%try")
-  | KW_value	("%value")
-  | KW_where	("%where")
-  | LP  ("(")	| RP  (")")
-  | LSB ("[")	| RSB ("]")
-  | LCB ("{")	| RCB ("}")
-  | SLASH	("/")
-  | COLON	(":")
-  | SEMI	(";")
-  | COMMA	(",")
-  | AT		("@")
-  | DOLLAR	("$")
-  | BAR		("|")
-  | STAR	("*")
-  | PLUS	("+")
-  | QUERY	("?")
+%tokens
+  : KW_change		("%change")
+  | KW_defs		("%defs")
+  | KW_dropping		("%dropping")
+  | KW_entry		("%entry")
+  | KW_header		("%header")
+  | KW_import		("%import")
+  | KW_keywords		("%keywords")
+  | KW_name		("%name")
+  | KW_nonterms		("%nonterms")
+  | KW_prefer		("%prefer")
+  | KW_refcell		("%refcell")
+  | KW_start		("%start")
+  | KW_tokens		("%tokens")
+  | KW_tokentype	("%tokentype")
+  | KW_try		("%try")
+  | KW_value		("%value")
+  | KW_where		("%where")
+  | LP  		("(")
+  | RP  		(")")
+  | LSB 		("[")
+  | RSB 		("]")
+  | LCB 		("{")
+  | RCB 		("}")
+  | SLASH		("/")
+  | COLON		(":")
+  | SEMI		(";")
+  | COMMA		(",")
+  | AT			("@")
+  | DOLLAR		("$")
+  | BAR			("|")
+  | STAR		("*")
+  | PLUS		("+")
+  | QUERY		("?")
+  | EQ			("=")
+  | ARROW		("->")
+  | DARROW		("=>")
+  | REFSET		(":=")
+  | OF			("of")
   | CODE of string
-  | EQ		("=")
-  | ARROW	("->")
-  | DARROW	("=>")
-  | REFSET	(":=")
-  | OF		("of")
   | ID of string
   | STRING of string
   | IDDOT of string	(* identifier with dot (e.g., "module.") *)
@@ -68,16 +72,17 @@
   ;
 
 %refcell liftSpan : AntlrStreamPos.span -> GrammarSyntax.span
-  = (fn _ => let val z = ("", 0, 0) in (z, z) end); 
+	= (fn _ => let val z = ("", 0, 0) in (z, z) end);
 
 %nonterm File of GS.grammar ;
-File(fileName, sm) :
-  ( => (liftSpan := (fn (p1, p2) => ((fileName, StreamPos.lineNo sm p1,
-				                StreamPos.colNo  sm p1), 
-				     (fileName, StreamPos.lineNo sm p2,
-				                StreamPos.colNo  sm p2)))
-       ) )
-  (Decl ";")* => (map (mapFst (!liftSpan)) (List.concat SR2)) ;
+File(fileName, sm)
+	: ( => (liftSpan := (fn (p1, p2) => ((fileName, StreamPos.lineNo sm p1,
+							 StreamPos.colNo  sm p1),
+					      (fileName, StreamPos.lineNo sm p2,
+							 StreamPos.colNo  sm p2)))
+	  ) )
+	  (Decl ";")* => (map (mapFst (!liftSpan)) (List.concat SR2))
+	;
 
 %nonterm Decl of (StreamPos.span * GS.decl) list ;
 Decl
@@ -99,8 +104,10 @@ Decl
 		=> (map (lift GS.CHANGE) ChangeList)
 	| "%defs" Code
 		=> ([ (FULL_SPAN, GS.DEFS Code) ])
+	| "%tokentype" QualID
+		=> ([ (FULL_SPAN, GS.TOKENTYPE QualID)])
 	| "%tokens" ":"? ConstrList
-		=> (map (lift GS.TOKEN) ConstrList)
+		=> (List.map (lift GS.TOKEN) ConstrList)
 	| "%import" STRING ("%dropping" SymList)?
 		=> ([ (FULL_SPAN, GS.IMPORT{
 		      filename = trimQuotes STRING,
@@ -111,7 +118,7 @@ Decl
 	| "%nonterms" ":"? TyAnn ("|" TyAnn)*
 		=> (map (lift GS.NONTERM) (TyAnn::SR))
 	| ID Formals? ":" AltList
-		=> (map (fn (span, alt) => 
+		=> (map (fn (span, alt) =>
 		      (span, GS.RULE {
 			lhs = Atom.atom ID,
 			formals = getOpt(Formals, []),
@@ -137,33 +144,35 @@ AltList	: Alt ("|" Alt)* => (Alt::SR) ;
 TyAnn   : ID ("of" Ty | => ("unit")) => (FULL_SPAN, (Atom.atom ID, SR)) ;
 
 Alt	: "%try"? NamedItem* ("%where" Code)? ("=>" Code)?
-  => (FULL_SPAN, GS.RHS {
-        items = NamedItem,
-	try = isSome KW_try,
-	predicate = SR1,
-	action = SR2,
-	loc = (!liftSpan) FULL_SPAN
-      }) ;
+		=> (FULL_SPAN, GS.RHS {
+		      items = NamedItem,
+		      try = isSome KW_try,
+		      predicate = SR1,
+		      action = SR2,
+		      loc = (!liftSpan) FULL_SPAN
+		    })
+	;
 
-NamedItem : (ID "=")? Item => (SR, Item) ;
+NamedItem
+	: (ID "=")? Item => (SR, Item) ;
 
 Item
-  : PrimItem
-      ( "*" => ((!liftSpan) PrimItem_SPAN, GS.CLOS PrimItem)
-      | "+" => ((!liftSpan) PrimItem_SPAN, GS.POSCLOS PrimItem)
-      | "?" => ((!liftSpan) PrimItem_SPAN, GS.OPT PrimItem)
-      | => (PrimItem) )
-      => (SR)
-  ;
+	: PrimItem
+	    ( "*" => ((!liftSpan) PrimItem_SPAN, GS.CLOS PrimItem)
+	    | "+" => ((!liftSpan) PrimItem_SPAN, GS.POSCLOS PrimItem)
+	    | "?" => ((!liftSpan) PrimItem_SPAN, GS.OPT PrimItem)
+	    | => (PrimItem) )
+		=> (SR)
+	;
 
 PrimItem
-  : Symbol ("@" Code)?
-      => ((!liftSpan) FULL_SPAN, GS.SYMBOL (Symbol, SR))
-  | "(" AltList ")"
-      => ((!liftSpan) FULL_SPAN, GS.SUBRULE (map (fn (_, alt) => alt) AltList))
-  ;
+	: Symbol ("@" Code)?
+		=> ((!liftSpan) FULL_SPAN, GS.SYMBOL (Symbol, SR))
+	| "(" AltList ")"
+		=> ((!liftSpan) FULL_SPAN, GS.SUBRULE (map (fn (_, alt) => alt) AltList))
+	;
 
-ID' : ID => (ID_SPAN, ID) ;
+ID'	: ID => (ID_SPAN, ID) ;
 
 Symbol'
 	: Symbol
@@ -177,44 +186,46 @@ Symbol
 		=> (Atom.atom STRING)
 	;
 
-Constr : ID ("of" Ty)? Abbrev? => (FULL_SPAN, (Atom.atom ID, SR, Abbrev)) ;
-ConstrList : Constr ("|" Constr)* => (Constr::SR) ;
+Constr	: ID ("of" Ty)? Abbrev? => (FULL_SPAN, (Atom.atom ID, SR, Abbrev)) ;
+ConstrList
+	: Constr ("|" Constr)* => (Constr::SR)
+	;
 
-Ty 
-  : TyFun
-  ;
+Ty	: TyFun
+	;
 
 TyFun
-  : TyProd ("->" TyProd)* => (String.concatWith " -> " (TyProd::SR)) ;
+	: TyProd ("->" TyProd)* => (String.concatWith " -> " (TyProd::SR)) ;
 
 TyProd
-  : TyApp ("*" TyApp)* => (String.concatWith " * " (TyApp::SR)) ;
+	: TyApp ("*" TyApp)* => (String.concatWith " * " (TyApp::SR)) ;
 
 TyApp
-  : %try "(" Ty ("," Ty)+ ")" QualID		
-      => ("(" ^ String.concatWith "," (Ty::SR) ^ ") " ^ QualID)
-  | %try TyAtom ( QualID => (TyAtom ^ " " ^ QualID)
-                | => (TyAtom))
-      => (SR)
-  ;
+	: %try "(" Ty ("," Ty)+ ")" QualID
+		=> ("(" ^ String.concatWith "," (Ty::SR) ^ ") " ^ QualID)
+	| %try TyAtom ( QualID => (TyAtom ^ " " ^ QualID) | => (TyAtom))
+		=> (SR)
+	;
 
 TyAtom
-  : TYVAR
-  | "(" Ty ")" => ("(" ^ Ty ^ ")")
-  | "{" RowList "}"	=> ("{ " ^ RowList ^" } ")
-  | "{" "}"		=> ("{}")
-  | QualID
-  ;
-Row : Label ":" Ty => (Label ^ " : " ^ Ty) ;
-RowList : Row ("," Row)* => (String.concatWith "," (Row::SR)) ;
+	: TYVAR
+	| "(" Ty ")" => ("(" ^ Ty ^ ")")
+	| "{" RowList "}"	=> ("{ " ^ RowList ^" } ")
+	| "{" "}"		=> ("{}")
+	| QualID
+	;
 
-Label : ID | INT ;
+Row	: Label ":" Ty => (Label ^ " : " ^ Ty) ;
+RowList	: Row ("," Row)* => (String.concatWith "," (Row::SR)) ;
+
+Label	: ID | INT ;
+
 QualID
-  : ID	
-  | IDDOT QualID => (IDDOT ^ QualID)
-  ;
+	: ID
+	| IDDOT QualID => (IDDOT ^ QualID)
+	;
 
-Abbrev : "(" STRING ")" => (Atom.atom STRING) ;
+Abbrev	: "(" STRING ")" => (Atom.atom STRING) ;
 
 %nonterm Code of GrammarSyntax.code ;
-Code : CODE => ((!liftSpan) FULL_SPAN, CODE) ;
+Code	: CODE => ((!liftSpan) FULL_SPAN, CODE) ;

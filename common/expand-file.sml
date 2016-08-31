@@ -1,6 +1,6 @@
 (* expand-file.sml
  *
- * COPYRIGHT (c) 2009 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2016 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
  * Copy a template file to an output file while expanding placeholders.
@@ -17,7 +17,7 @@ structure ExpandFile :> sig
     val mkTemplateFromList : string list -> template
 
     val expandTemplate : {
-	  src : template, 
+	  src : template,
 	  dst : string, (* file name *)
 	  hooks : (string * hook) list
         } -> unit
@@ -41,7 +41,7 @@ structure ExpandFile :> sig
 		 of NONE => []
 		  | SOME line => line::read()
 		(* end case *))
-	  in 
+	  in
             read() handle ex => (done(); raise ex)
 	    before done()
 	  end
@@ -66,11 +66,10 @@ structure ExpandFile :> sig
 		  | (SOME id) => (
 		      case (List.find (fn (id', h) => id = id') hooks)
 		       of (SOME(_, h)) => h outStrm
-			| NONE => raise Fail "bogus placeholder"
+			| NONE => raise Fail(concat["bogus placeholder '", id, "'"])
 		      (* end case *))
 	        (* end case *);
 		lp(ss))
-		
 	  in
 	    lp(inStrm)
 	  end

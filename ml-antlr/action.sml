@@ -19,6 +19,8 @@ structure Action :>
 
     val toString : action -> string
     val name : action -> string
+    val span : action -> Err.span
+    val code : action -> string
     val same : (action * action) -> bool
 
   end = struct
@@ -44,11 +46,11 @@ structure Action :>
 	    "(*#line " ^ Int.toString (span - 1) ^ ".0*) \n" ^ code
 *)
 
-    fun name (ACT {id, ...}) = Int.toString id
-    fun same (ACT {id = id1, ...}, ACT {id = id2, ...}) = (id1 = id2)
+    fun name (ACT{id, ...}) = Int.toString id
+    fun same (ACT{id = id1, ...}, ACT {id = id2, ...}) = (id1 = id2)
 
-    fun span (ACT {span, ...}) = span
-    fun code (ACT {code, ...}) = code
+    fun span (ACT{span, ...}) = span
+    fun code (ACT{code, ...}) = code
 
     val empty = action (Err.emptySpan, "")
     fun concat (a, b) = 

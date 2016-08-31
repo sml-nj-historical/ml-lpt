@@ -8,12 +8,12 @@ SpecTokens = struct
       | IDDOT of string
       | STRING of string
       | ID of string
+      | CODE of string
       | OF
       | REFSET
       | DARROW
       | ARROW
       | EQ
-      | CODE of string
       | QUERY
       | PLUS
       | STAR
@@ -33,6 +33,7 @@ SpecTokens = struct
       | KW_where
       | KW_value
       | KW_try
+      | KW_tokentype
       | KW_tokens
       | KW_start
       | KW_refcell
@@ -47,7 +48,7 @@ SpecTokens = struct
       | KW_defs
       | KW_change
 
-    val allToks = [EOF, BOGUS, OF, REFSET, DARROW, ARROW, EQ, QUERY, PLUS, STAR, BAR, DOLLAR, AT, COMMA, SEMI, COLON, SLASH, RCB, LCB, RSB, LSB, RP, LP, KW_where, KW_value, KW_try, KW_tokens, KW_start, KW_refcell, KW_prefer, KW_nonterms, KW_name, KW_keywords, KW_import, KW_header, KW_entry, KW_dropping, KW_defs, KW_change]
+    val allToks = [EOF, BOGUS, OF, REFSET, DARROW, ARROW, EQ, QUERY, PLUS, STAR, BAR, DOLLAR, AT, COMMA, SEMI, COLON, SLASH, RCB, LCB, RSB, LSB, RP, LP, KW_where, KW_value, KW_try, KW_tokentype, KW_tokens, KW_start, KW_refcell, KW_prefer, KW_nonterms, KW_name, KW_keywords, KW_import, KW_header, KW_entry, KW_dropping, KW_defs, KW_change]
 
     fun toString tok =
 (case (tok)
@@ -58,12 +59,12 @@ SpecTokens = struct
   | (IDDOT(_)) => "IDDOT"
   | (STRING(_)) => "STRING"
   | (ID(_)) => "ID"
+  | (CODE(_)) => "CODE"
   | (OF) => "of"
   | (REFSET) => ":="
   | (DARROW) => "=>"
   | (ARROW) => "->"
   | (EQ) => "="
-  | (CODE(_)) => "CODE"
   | (QUERY) => "?"
   | (PLUS) => "+"
   | (STAR) => "*"
@@ -83,6 +84,7 @@ SpecTokens = struct
   | (KW_where) => "%where"
   | (KW_value) => "%value"
   | (KW_try) => "%try"
+  | (KW_tokentype) => "%tokentype"
   | (KW_tokens) => "%tokens"
   | (KW_start) => "%start"
   | (KW_refcell) => "%refcell"
@@ -106,12 +108,12 @@ SpecTokens = struct
   | (IDDOT(_)) => false
   | (STRING(_)) => false
   | (ID(_)) => false
+  | (CODE(_)) => false
   | (OF) => false
   | (REFSET) => false
   | (DARROW) => false
   | (ARROW) => false
   | (EQ) => false
-  | (CODE(_)) => false
   | (QUERY) => false
   | (PLUS) => false
   | (STAR) => false
@@ -131,6 +133,7 @@ SpecTokens = struct
   | (KW_where) => false
   | (KW_value) => false
   | (KW_try) => false
+  | (KW_tokentype) => false
   | (KW_tokens) => false
   | (KW_start) => false
   | (KW_refcell) => false
@@ -165,19 +168,19 @@ SpecTokens
   fun lift f (vspan, v) = (vspan, f v)
   fun mapFst f (fst, snd) = (f fst, snd)
 
-  val trimQuotes = 
+  val trimQuotes =
         Substring.string o
 	(Substring.triml 1) o
-	(Substring.trimr 1) o 
+	(Substring.trimr 1) o
 	Substring.full
 
 
 fun File_PROD_1_SUBRULE_1_PROD_1_ACT (sm, fileName, FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   (liftSpan := (fn (p1, p2) => ((fileName, StreamPos.lineNo sm p1,
-				                StreamPos.colNo  sm p1), 
-				     (fileName, StreamPos.lineNo sm p2,
-				                StreamPos.colNo  sm p2)))
-       )
+							 StreamPos.colNo  sm p1),
+					      (fileName, StreamPos.lineNo sm p2,
+							 StreamPos.colNo  sm p2)))
+	  )
 fun File_PROD_1_ACT (sm, SR1, SR2, fileName, SR1_SPAN : (Lex.pos * Lex.pos), SR2_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   (map (mapFst (!liftSpan)) (List.concat SR2)) : GS.grammar
 fun Decl_PROD_1_ACT (ID, KW_name, ID_SPAN : (Lex.pos * Lex.pos), KW_name_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
@@ -198,19 +201,21 @@ fun Decl_PROD_8_ACT (ChangeList, KW_change, ChangeList_SPAN : (Lex.pos * Lex.pos
   (map (lift GS.CHANGE) ChangeList) : (StreamPos.span * GS.decl) list
 fun Decl_PROD_9_ACT (Code, KW_defs, Code_SPAN : (Lex.pos * Lex.pos), KW_defs_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ([ (FULL_SPAN, GS.DEFS Code) ]) : (StreamPos.span * GS.decl) list
-fun Decl_PROD_10_ACT (COLON, KW_tokens, ConstrList, COLON_SPAN : (Lex.pos * Lex.pos), KW_tokens_SPAN : (Lex.pos * Lex.pos), ConstrList_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  (map (lift GS.TOKEN) ConstrList) : (StreamPos.span * GS.decl) list
-fun Decl_PROD_11_ACT (SR, STRING, KW_import, SR_SPAN : (Lex.pos * Lex.pos), STRING_SPAN : (Lex.pos * Lex.pos), KW_import_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
+fun Decl_PROD_10_ACT (QualID, KW_tokentype, QualID_SPAN : (Lex.pos * Lex.pos), KW_tokentype_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
+  ([ (FULL_SPAN, GS.TOKENTYPE QualID)]) : (StreamPos.span * GS.decl) list
+fun Decl_PROD_11_ACT (COLON, KW_tokens, ConstrList, COLON_SPAN : (Lex.pos * Lex.pos), KW_tokens_SPAN : (Lex.pos * Lex.pos), ConstrList_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
+  (List.map (lift GS.TOKEN) ConstrList) : (StreamPos.span * GS.decl) list
+fun Decl_PROD_12_ACT (SR, STRING, KW_import, SR_SPAN : (Lex.pos * Lex.pos), STRING_SPAN : (Lex.pos * Lex.pos), KW_import_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ([ (FULL_SPAN, GS.IMPORT{
 		      filename = trimQuotes STRING,
 		      dropping = map (mapFst (!liftSpan)) (getOpt (SR, []))
 		    }) ]) : (StreamPos.span * GS.decl) list
-fun Decl_PROD_12_ACT (EQ, ID, Ty, Code, COLON, KW_refcell, EQ_SPAN : (Lex.pos * Lex.pos), ID_SPAN : (Lex.pos * Lex.pos), Ty_SPAN : (Lex.pos * Lex.pos), Code_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), KW_refcell_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
+fun Decl_PROD_13_ACT (EQ, ID, Ty, Code, COLON, KW_refcell, EQ_SPAN : (Lex.pos * Lex.pos), ID_SPAN : (Lex.pos * Lex.pos), Ty_SPAN : (Lex.pos * Lex.pos), Code_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), KW_refcell_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   ([ (FULL_SPAN, GS.REFCELL (ID, Ty, Code)) ]) : (StreamPos.span * GS.decl) list
-fun Decl_PROD_13_ACT (SR, COLON, TyAnn, KW_nonterms, SR_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), TyAnn_SPAN : (Lex.pos * Lex.pos), KW_nonterms_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
+fun Decl_PROD_14_ACT (SR, COLON, TyAnn, KW_nonterms, SR_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), TyAnn_SPAN : (Lex.pos * Lex.pos), KW_nonterms_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   (map (lift GS.NONTERM) (TyAnn::SR)) : (StreamPos.span * GS.decl) list
-fun Decl_PROD_14_ACT (ID, COLON, AltList, Formals, ID_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), AltList_SPAN : (Lex.pos * Lex.pos), Formals_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
-  (map (fn (span, alt) => 
+fun Decl_PROD_15_ACT (ID, COLON, AltList, Formals, ID_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), AltList_SPAN : (Lex.pos * Lex.pos), Formals_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
+  (map (fn (span, alt) =>
 		      (span, GS.RULE {
 			lhs = Atom.atom ID,
 			formals = getOpt(Formals, []),
@@ -234,12 +239,12 @@ fun TyAnn_PROD_1_ACT (ID, SR, ID_SPAN : (Lex.pos * Lex.pos), SR_SPAN : (Lex.pos 
   (FULL_SPAN, (Atom.atom ID, SR))
 fun Alt_PROD_1_ACT (SR1, SR2, NamedItem, KW_try, SR1_SPAN : (Lex.pos * Lex.pos), SR2_SPAN : (Lex.pos * Lex.pos), NamedItem_SPAN : (Lex.pos * Lex.pos), KW_try_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   (FULL_SPAN, GS.RHS {
-        items = NamedItem,
-	try = isSome KW_try,
-	predicate = SR1,
-	action = SR2,
-	loc = (!liftSpan) FULL_SPAN
-      })
+		      items = NamedItem,
+		      try = isSome KW_try,
+		      predicate = SR1,
+		      action = SR2,
+		      loc = (!liftSpan) FULL_SPAN
+		    })
 fun NamedItem_PROD_1_ACT (SR, Item, SR_SPAN : (Lex.pos * Lex.pos), Item_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
   (SR, Item)
 fun Item_PROD_1_SUBRULE_1_PROD_1_ACT (STAR, PrimItem, STAR_SPAN : (Lex.pos * Lex.pos), PrimItem_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan) = 
@@ -302,17 +307,51 @@ fun mkliftSpan_REFC() : (AntlrStreamPos.span -> GrammarSyntax.span) ref = ref (f
     structure Err = AntlrErrHandler(
       structure Tok = Tok
       structure Lex = Lex)
+
+(* replace functor with inline structure for better optimization
     structure EBNF = AntlrEBNF(
       struct
 	type strm = Err.wstream
 	val getSpan = Err.getSpan
       end)
+*)
+    structure EBNF =
+      struct
+	fun optional (pred, parse, strm) = 
+	      if pred strm
+		then let
+		  val (y, span, strm') = parse strm
+		  in 
+		    (SOME y, span, strm')
+		  end
+		else (NONE, Err.getSpan strm, strm)
+
+	fun closure (pred, parse, strm) = let
+	      fun iter (strm, (left, right), ys) = 
+		    if pred strm
+		      then let
+			val (y, (_, right'), strm') = parse strm
+			in iter (strm', (left, right'), y::ys)
+			end
+		      else (List.rev ys, (left, right), strm)
+	      in
+		iter (strm, Err.getSpan strm, [])
+	      end
+
+	fun posclos (pred, parse, strm) = let
+	      val (y, (left, _), strm') = parse strm
+	      val (ys, (_, right), strm'') = closure (pred, parse, strm')
+	      in
+		(y::ys, (left, right), strm'')
+	      end
+      end
 
     fun mk lexFn = let
 val liftSpan_REFC = UserCode.mkliftSpan_REFC()
 fun getS() = {liftSpan = !liftSpan_REFC}
 fun putS{liftSpan} = (liftSpan_REFC := liftSpan)
-fun unwrap (ret, strm, repairs) = (ret, strm, repairs, getS())        val (eh, lex) = Err.mkErrHandler {get = getS, put = putS}
+fun unwrap (ret, strm, repairs) = (ret, strm, repairs, getS())
+        val (eh, lex) = Err.mkErrHandler {get = getS, put = putS}
 	fun fail() = Err.failure eh
 	fun tryProds (strm, prods) = let
 	  fun try [] = fail()
@@ -348,6 +387,10 @@ fun matchID strm = (case (lex(strm))
  of (Tok.ID(x), span, strm') => (x, span, strm')
   | _ => fail()
 (* end case *))
+fun matchCODE strm = (case (lex(strm))
+ of (Tok.CODE(x), span, strm') => (x, span, strm')
+  | _ => fail()
+(* end case *))
 fun matchOF strm = (case (lex(strm))
  of (Tok.OF, span, strm') => ((), span, strm')
   | _ => fail()
@@ -366,10 +409,6 @@ fun matchARROW strm = (case (lex(strm))
 (* end case *))
 fun matchEQ strm = (case (lex(strm))
  of (Tok.EQ, span, strm') => ((), span, strm')
-  | _ => fail()
-(* end case *))
-fun matchCODE strm = (case (lex(strm))
- of (Tok.CODE(x), span, strm') => (x, span, strm')
   | _ => fail()
 (* end case *))
 fun matchQUERY strm = (case (lex(strm))
@@ -446,6 +485,10 @@ fun matchKW_value strm = (case (lex(strm))
 (* end case *))
 fun matchKW_try strm = (case (lex(strm))
  of (Tok.KW_try, span, strm') => ((), span, strm')
+  | _ => fail()
+(* end case *))
+fun matchKW_tokentype strm = (case (lex(strm))
+ of (Tok.KW_tokentype, span, strm') => ((), span, strm')
   | _ => fail()
 (* end case *))
 fun matchKW_tokens strm = (case (lex(strm))
@@ -1265,45 +1308,53 @@ fun Decl_NT (strm) = let
                 FULL_SPAN, strm')
             end
       fun Decl_PROD_10 (strm) = let
+            val (KW_tokentype_RES, KW_tokentype_SPAN, strm') = matchKW_tokentype(strm)
+            val (QualID_RES, QualID_SPAN, strm') = QualID_NT(strm')
+            val FULL_SPAN = (#1(KW_tokentype_SPAN), #2(QualID_SPAN))
+            in
+              (UserCode.Decl_PROD_10_ACT (QualID_RES, KW_tokentype_RES, QualID_SPAN : (Lex.pos * Lex.pos), KW_tokentype_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
+                FULL_SPAN, strm')
+            end
+      fun Decl_PROD_11 (strm) = let
             val (KW_tokens_RES, KW_tokens_SPAN, strm') = matchKW_tokens(strm)
-            fun Decl_PROD_10_SUBRULE_1_NT (strm) = let
+            fun Decl_PROD_11_SUBRULE_1_NT (strm) = let
                   val (COLON_RES, COLON_SPAN, strm') = matchCOLON(strm)
                   val FULL_SPAN = (#1(COLON_SPAN), #2(COLON_SPAN))
                   in
                     ((), FULL_SPAN, strm')
                   end
-            fun Decl_PROD_10_SUBRULE_1_PRED (strm) = (case (lex(strm))
+            fun Decl_PROD_11_SUBRULE_1_PRED (strm) = (case (lex(strm))
                    of (Tok.COLON, _, strm') => true
                     | _ => false
                   (* end case *))
-            val (COLON_RES, COLON_SPAN, strm') = EBNF.optional(Decl_PROD_10_SUBRULE_1_PRED, Decl_PROD_10_SUBRULE_1_NT, strm')
+            val (COLON_RES, COLON_SPAN, strm') = EBNF.optional(Decl_PROD_11_SUBRULE_1_PRED, Decl_PROD_11_SUBRULE_1_NT, strm')
             val (ConstrList_RES, ConstrList_SPAN, strm') = ConstrList_NT(strm')
             val FULL_SPAN = (#1(KW_tokens_SPAN), #2(ConstrList_SPAN))
             in
-              (UserCode.Decl_PROD_10_ACT (COLON_RES, KW_tokens_RES, ConstrList_RES, COLON_SPAN : (Lex.pos * Lex.pos), KW_tokens_SPAN : (Lex.pos * Lex.pos), ConstrList_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
+              (UserCode.Decl_PROD_11_ACT (COLON_RES, KW_tokens_RES, ConstrList_RES, COLON_SPAN : (Lex.pos * Lex.pos), KW_tokens_SPAN : (Lex.pos * Lex.pos), ConstrList_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
                 FULL_SPAN, strm')
             end
-      fun Decl_PROD_11 (strm) = let
+      fun Decl_PROD_12 (strm) = let
             val (KW_import_RES, KW_import_SPAN, strm') = matchKW_import(strm)
             val (STRING_RES, STRING_SPAN, strm') = matchSTRING(strm')
-            fun Decl_PROD_11_SUBRULE_1_NT (strm) = let
+            fun Decl_PROD_12_SUBRULE_1_NT (strm) = let
                   val (KW_dropping_RES, KW_dropping_SPAN, strm') = matchKW_dropping(strm)
                   val (SymList_RES, SymList_SPAN, strm') = SymList_NT(strm')
                   val FULL_SPAN = (#1(KW_dropping_SPAN), #2(SymList_SPAN))
                   in
                     ((SymList_RES), FULL_SPAN, strm')
                   end
-            fun Decl_PROD_11_SUBRULE_1_PRED (strm) = (case (lex(strm))
+            fun Decl_PROD_12_SUBRULE_1_PRED (strm) = (case (lex(strm))
                    of (Tok.KW_dropping, _, strm') => true
                     | _ => false
                   (* end case *))
-            val (SR_RES, SR_SPAN, strm') = EBNF.optional(Decl_PROD_11_SUBRULE_1_PRED, Decl_PROD_11_SUBRULE_1_NT, strm')
+            val (SR_RES, SR_SPAN, strm') = EBNF.optional(Decl_PROD_12_SUBRULE_1_PRED, Decl_PROD_12_SUBRULE_1_NT, strm')
             val FULL_SPAN = (#1(KW_import_SPAN), #2(SR_SPAN))
             in
-              (UserCode.Decl_PROD_11_ACT (SR_RES, STRING_RES, KW_import_RES, SR_SPAN : (Lex.pos * Lex.pos), STRING_SPAN : (Lex.pos * Lex.pos), KW_import_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
+              (UserCode.Decl_PROD_12_ACT (SR_RES, STRING_RES, KW_import_RES, SR_SPAN : (Lex.pos * Lex.pos), STRING_SPAN : (Lex.pos * Lex.pos), KW_import_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
                 FULL_SPAN, strm')
             end
-      fun Decl_PROD_12 (strm) = let
+      fun Decl_PROD_13 (strm) = let
             val (KW_refcell_RES, KW_refcell_SPAN, strm') = matchKW_refcell(strm)
             val (ID_RES, ID_SPAN, strm') = matchID(strm')
             val (COLON_RES, COLON_SPAN, strm') = matchCOLON(strm')
@@ -1312,76 +1363,77 @@ fun Decl_NT (strm) = let
             val (Code_RES, Code_SPAN, strm') = Code_NT(strm')
             val FULL_SPAN = (#1(KW_refcell_SPAN), #2(Code_SPAN))
             in
-              (UserCode.Decl_PROD_12_ACT (EQ_RES, ID_RES, Ty_RES, Code_RES, COLON_RES, KW_refcell_RES, EQ_SPAN : (Lex.pos * Lex.pos), ID_SPAN : (Lex.pos * Lex.pos), Ty_SPAN : (Lex.pos * Lex.pos), Code_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), KW_refcell_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
+              (UserCode.Decl_PROD_13_ACT (EQ_RES, ID_RES, Ty_RES, Code_RES, COLON_RES, KW_refcell_RES, EQ_SPAN : (Lex.pos * Lex.pos), ID_SPAN : (Lex.pos * Lex.pos), Ty_SPAN : (Lex.pos * Lex.pos), Code_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), KW_refcell_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
                 FULL_SPAN, strm')
             end
-      fun Decl_PROD_13 (strm) = let
+      fun Decl_PROD_14 (strm) = let
             val (KW_nonterms_RES, KW_nonterms_SPAN, strm') = matchKW_nonterms(strm)
-            fun Decl_PROD_13_SUBRULE_1_NT (strm) = let
+            fun Decl_PROD_14_SUBRULE_1_NT (strm) = let
                   val (COLON_RES, COLON_SPAN, strm') = matchCOLON(strm)
                   val FULL_SPAN = (#1(COLON_SPAN), #2(COLON_SPAN))
                   in
                     ((), FULL_SPAN, strm')
                   end
-            fun Decl_PROD_13_SUBRULE_1_PRED (strm) = (case (lex(strm))
+            fun Decl_PROD_14_SUBRULE_1_PRED (strm) = (case (lex(strm))
                    of (Tok.COLON, _, strm') => true
                     | _ => false
                   (* end case *))
-            val (COLON_RES, COLON_SPAN, strm') = EBNF.optional(Decl_PROD_13_SUBRULE_1_PRED, Decl_PROD_13_SUBRULE_1_NT, strm')
+            val (COLON_RES, COLON_SPAN, strm') = EBNF.optional(Decl_PROD_14_SUBRULE_1_PRED, Decl_PROD_14_SUBRULE_1_NT, strm')
             val (TyAnn_RES, TyAnn_SPAN, strm') = TyAnn_NT(strm')
-            fun Decl_PROD_13_SUBRULE_2_NT (strm) = let
+            fun Decl_PROD_14_SUBRULE_2_NT (strm) = let
                   val (BAR_RES, BAR_SPAN, strm') = matchBAR(strm)
                   val (TyAnn_RES, TyAnn_SPAN, strm') = TyAnn_NT(strm')
                   val FULL_SPAN = (#1(BAR_SPAN), #2(TyAnn_SPAN))
                   in
                     ((TyAnn_RES), FULL_SPAN, strm')
                   end
-            fun Decl_PROD_13_SUBRULE_2_PRED (strm) = (case (lex(strm))
+            fun Decl_PROD_14_SUBRULE_2_PRED (strm) = (case (lex(strm))
                    of (Tok.BAR, _, strm') => true
                     | _ => false
                   (* end case *))
-            val (SR_RES, SR_SPAN, strm') = EBNF.closure(Decl_PROD_13_SUBRULE_2_PRED, Decl_PROD_13_SUBRULE_2_NT, strm')
+            val (SR_RES, SR_SPAN, strm') = EBNF.closure(Decl_PROD_14_SUBRULE_2_PRED, Decl_PROD_14_SUBRULE_2_NT, strm')
             val FULL_SPAN = (#1(KW_nonterms_SPAN), #2(SR_SPAN))
             in
-              (UserCode.Decl_PROD_13_ACT (SR_RES, COLON_RES, TyAnn_RES, KW_nonterms_RES, SR_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), TyAnn_SPAN : (Lex.pos * Lex.pos), KW_nonterms_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
+              (UserCode.Decl_PROD_14_ACT (SR_RES, COLON_RES, TyAnn_RES, KW_nonterms_RES, SR_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), TyAnn_SPAN : (Lex.pos * Lex.pos), KW_nonterms_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
                 FULL_SPAN, strm')
             end
-      fun Decl_PROD_14 (strm) = let
+      fun Decl_PROD_15 (strm) = let
             val (ID_RES, ID_SPAN, strm') = matchID(strm)
-            fun Decl_PROD_14_SUBRULE_1_NT (strm) = let
+            fun Decl_PROD_15_SUBRULE_1_NT (strm) = let
                   val (Formals_RES, Formals_SPAN, strm') = Formals_NT(strm)
                   val FULL_SPAN = (#1(Formals_SPAN), #2(Formals_SPAN))
                   in
                     ((Formals_RES), FULL_SPAN, strm')
                   end
-            fun Decl_PROD_14_SUBRULE_1_PRED (strm) = (case (lex(strm))
+            fun Decl_PROD_15_SUBRULE_1_PRED (strm) = (case (lex(strm))
                    of (Tok.LP, _, strm') => true
                     | _ => false
                   (* end case *))
-            val (Formals_RES, Formals_SPAN, strm') = EBNF.optional(Decl_PROD_14_SUBRULE_1_PRED, Decl_PROD_14_SUBRULE_1_NT, strm')
+            val (Formals_RES, Formals_SPAN, strm') = EBNF.optional(Decl_PROD_15_SUBRULE_1_PRED, Decl_PROD_15_SUBRULE_1_NT, strm')
             val (COLON_RES, COLON_SPAN, strm') = matchCOLON(strm')
             val (AltList_RES, AltList_SPAN, strm') = AltList_NT(strm')
             val FULL_SPAN = (#1(ID_SPAN), #2(AltList_SPAN))
             in
-              (UserCode.Decl_PROD_14_ACT (ID_RES, COLON_RES, AltList_RES, Formals_RES, ID_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), AltList_SPAN : (Lex.pos * Lex.pos), Formals_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
+              (UserCode.Decl_PROD_15_ACT (ID_RES, COLON_RES, AltList_RES, Formals_RES, ID_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), AltList_SPAN : (Lex.pos * Lex.pos), Formals_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), liftSpan_REFC),
                 FULL_SPAN, strm')
             end
       in
         (case (lex(strm))
-         of (Tok.ID(_), _, strm') => Decl_PROD_14(strm)
-          | (Tok.KW_refcell, _, strm') => Decl_PROD_12(strm)
-          | (Tok.KW_tokens, _, strm') => Decl_PROD_10(strm)
-          | (Tok.KW_change, _, strm') => Decl_PROD_8(strm)
-          | (Tok.KW_value, _, strm') => Decl_PROD_6(strm)
-          | (Tok.KW_entry, _, strm') => Decl_PROD_4(strm)
-          | (Tok.KW_header, _, strm') => Decl_PROD_2(strm)
-          | (Tok.KW_name, _, strm') => Decl_PROD_1(strm)
-          | (Tok.KW_start, _, strm') => Decl_PROD_3(strm)
-          | (Tok.KW_keywords, _, strm') => Decl_PROD_5(strm)
-          | (Tok.KW_prefer, _, strm') => Decl_PROD_7(strm)
+         of (Tok.ID(_), _, strm') => Decl_PROD_15(strm)
+          | (Tok.KW_refcell, _, strm') => Decl_PROD_13(strm)
+          | (Tok.KW_tokens, _, strm') => Decl_PROD_11(strm)
           | (Tok.KW_defs, _, strm') => Decl_PROD_9(strm)
-          | (Tok.KW_import, _, strm') => Decl_PROD_11(strm)
-          | (Tok.KW_nonterms, _, strm') => Decl_PROD_13(strm)
+          | (Tok.KW_prefer, _, strm') => Decl_PROD_7(strm)
+          | (Tok.KW_keywords, _, strm') => Decl_PROD_5(strm)
+          | (Tok.KW_start, _, strm') => Decl_PROD_3(strm)
+          | (Tok.KW_name, _, strm') => Decl_PROD_1(strm)
+          | (Tok.KW_header, _, strm') => Decl_PROD_2(strm)
+          | (Tok.KW_entry, _, strm') => Decl_PROD_4(strm)
+          | (Tok.KW_value, _, strm') => Decl_PROD_6(strm)
+          | (Tok.KW_change, _, strm') => Decl_PROD_8(strm)
+          | (Tok.KW_tokentype, _, strm') => Decl_PROD_10(strm)
+          | (Tok.KW_import, _, strm') => Decl_PROD_12(strm)
+          | (Tok.KW_nonterms, _, strm') => Decl_PROD_14(strm)
           | _ => fail()
         (* end case *))
       end
@@ -1416,6 +1468,7 @@ fun File_NT (fileName_RES, sm_RES) (strm) = let
               | (Tok.KW_refcell, _, strm') => true
               | (Tok.KW_start, _, strm') => true
               | (Tok.KW_tokens, _, strm') => true
+              | (Tok.KW_tokentype, _, strm') => true
               | (Tok.KW_value, _, strm') => true
               | (Tok.ID(_), _, strm') => true
               | _ => false

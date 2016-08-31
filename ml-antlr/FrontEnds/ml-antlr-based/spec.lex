@@ -16,7 +16,7 @@ val comStart : int ref = ref 0		(* start line of current comment *)
 type lex_result = Tok.token
 
 fun err (lineNo, colNo, msg) = Err.errMsg [
-      "Lexical error [", Int.toString lineNo, ".", Int.toString colNo, "]: ", msg
+	"Lexical error [", Int.toString lineNo, ".", Int.toString colNo, "]: ", msg
       ]
 
 fun eof () = (
@@ -52,7 +52,7 @@ fun dec (ri as ref i) = (ri := i-1)
  * of a parenthesized SML code fragment and the opening "(".  On most tokens it
  * behaves like INITIAL so that the parser's error correction can respond.
  *)
-%states STRING COM PRECODE CODE CONSTR;
+%states STRING COM PRECODE CODE PRECONSTR CONSTR;
 
 %name SpecLex;
 
@@ -74,13 +74,14 @@ fun dec (ri as ref i) = (ri := i-1)
 <INITIAL,PRECODE>"%refcell"		=> (YYBEGIN CONSTR; Tok.KW_refcell);
 <INITIAL,PRECODE>"%start"		=> (Tok.KW_start);
 <INITIAL,PRECODE>"%token"("s")?		=> (YYBEGIN CONSTR; Tok.KW_tokens);
+<INITIAL,PRECODE>"%tokentype"		=> (YYBEGIN CONSTR; Tok.KW_tokentype);
 <INITIAL,PRECODE>"%try"			=> (Tok.KW_try);
 <INITIAL,PRECODE>"%value"		=> (YYBEGIN PRECODE; Tok.KW_value);
 <INITIAL,PRECODE>"%where"       	=> (YYBEGIN PRECODE; Tok.KW_where);
 
-<INITIAL,PRECODE>"|"	=> (Tok.BAR); 
-<INITIAL,PRECODE>"@"	=> (YYBEGIN PRECODE; Tok.AT); 
-<INITIAL,PRECODE>"$"	=> (Tok.DOLLAR); 
+<INITIAL,PRECODE>"|"	=> (Tok.BAR);
+<INITIAL,PRECODE>"@"	=> (YYBEGIN PRECODE; Tok.AT);
+<INITIAL,PRECODE>"$"	=> (Tok.DOLLAR);
 <INITIAL,PRECODE>"+"	=> (Tok.PLUS);
 <INITIAL,PRECODE>"*"	=> (Tok.STAR);
 <INITIAL,PRECODE>"?"	=> (Tok.QUERY);
@@ -99,29 +100,29 @@ fun dec (ri as ref i) = (ri := i-1)
 		    ignore(continue() before YYBEGIN INITIAL);
 		    Tok.STRING (getText()));
 
-<INITIAL>"(*" 
-	=> (comLvl := 1; comStart := !yylineno; YYBEGIN COM; 
+<INITIAL>"(*"
+	=> (comLvl := 1; comStart := !yylineno; YYBEGIN COM;
 	    ignore(continue() before YYBEGIN INITIAL);
 	    continue());
 <CONSTR>"(*"
-	=> (comLvl := 1; comStart := !yylineno; YYBEGIN COM; 
+	=> (comLvl := 1; comStart := !yylineno; YYBEGIN COM;
 	    ignore(continue() before YYBEGIN CONSTR);
 	    continue());
-<PRECODE>"(*" 
-	=> (comLvl := 1; comStart := !yylineno; YYBEGIN COM; 
+<PRECODE>"(*"
+	=> (comLvl := 1; comStart := !yylineno; YYBEGIN COM;
 	    ignore(continue() before YYBEGIN PRECODE);
 	    continue());
 <CODE>"(*"
-	=> (comLvl := 1; comStart := !yylineno; YYBEGIN COM; 
+	=> (comLvl := 1; comStart := !yylineno; YYBEGIN COM;
 	    ignore(continue() before YYBEGIN CODE);
 	    continue());
 
-<COM>"(*" 
+<COM>"(*"
 	=> (comLvl := !comLvl+1; continue());
-<COM>"*)"        
-	=> (comLvl := !comLvl-1; 
-	    if (!comLvl = 0) 
-	      then (Tok.BOGUS) 
+<COM>"*)"
+	=> (comLvl := !comLvl-1;
+	    if (!comLvl = 0)
+	      then (Tok.BOGUS)
 	      else continue());
 <COM>.|{eol}
 	=> (continue());
@@ -133,11 +134,11 @@ fun dec (ri as ref i) = (ri := i-1)
 
 <CODE>"("	=> (addText yytext;  (* NOTE: the initial "(" is consumed in the PRECODE state *)
 		    inc pcount; continue());
-<CODE>")"	=> (dec pcount; 
+<CODE>")"	=> (dec pcount;
 		    if !pcount = 0
 		      then (YYBEGIN INITIAL; Tok.CODE (getText()))
 		      else (addText yytext; continue()));
-<CODE>"\""	=> (addText yytext; YYBEGIN STRING; 
+<CODE>"\""	=> (addText yytext; YYBEGIN STRING;
 		    ignore(continue() before YYBEGIN CODE);
 		    continue());
 <CODE>[^()"]+	=> (addText yytext; continue());
@@ -160,7 +161,7 @@ fun dec (ri as ref i) = (ri := i-1)
 <CONSTR>{tyvar} => (Tok.TYVAR yytext);
 <CONSTR>{qualid}=> (Tok.IDDOT yytext);
 <CONSTR>{int}	=> (Tok.INT yytext);
-<CONSTR>"|"	=> (Tok.BAR); 
+<CONSTR>"|"	=> (Tok.BAR);
 <CONSTR>"*"	=> (Tok.STAR);
 <CONSTR>":"	=> (Tok.COLON);
 <CONSTR>","	=> (Tok.COMMA);
@@ -176,6 +177,6 @@ fun dec (ri as ref i) = (ri := i-1)
 <CONSTR>"="	=> (YYBEGIN PRECODE; Tok.EQ);
 
 .	=> (err (!yylineno, !yycolno,
-		 concat["illegal character '", 
+		 concat["illegal character '",
 			String.toCString yytext, "'"]);
 	    continue());
