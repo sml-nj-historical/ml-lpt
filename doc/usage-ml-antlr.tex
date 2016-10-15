@@ -39,12 +39,17 @@ where \texttt{file} is the name of the input \ulex{} specification, and where \t
 
 \vskip 12pt
 \begin{tabular}{lp{0.65\textwidth}}
-  \texttt{--dot} & generate DOT output (for graphviz; see \texttt{http://www.graphviz.org}).  The produced file will be named \texttt{file.dot}, where \texttt{file} is the input file. \\
+  \texttt{--dot} & generate DOT output (for graphviz; see \texttt{http://www.graphviz.org}).
+    The generated file will be named \texttt{file.dot}, where \texttt{file} is the input file. \\
   \\
   \texttt{--latex} & generate a simple \LaTeX version of the grammar, named \texttt{file.tex}. \\
   \\
-  \texttt{--unit-actions} & ignore the action code in the grammar, and instead return \texttt{()} for every production.
-\end{tabular}
+  \texttt{--unit-actions} & ignore the action code in the grammar, and instead return \texttt{()}
+    for every production. \\
+  \\
+  \texttt{--debug} & ignore the action code in the grammar, and instead print the
+    left-hand-side of the production.
+\end{tabular}%
 
 \vskip 10pt \noindent
 The output file will be called \texttt{file.sml}.

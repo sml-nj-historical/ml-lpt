@@ -1,6 +1,6 @@
 (* main.sml
  *
- * COPYRIGHT (c) 2006 
+ * COPYRIGHT (c) 2006
  * John Reppy (http://www.cs.uchicago.edu/~jhr)
  * Aaron Turon (http://www.cs.uchicago.edu/~adrassi)
  * All rights reserved.
@@ -33,9 +33,19 @@ val _ = app (Err.debug o Prod.toString) prods
             grm
           end
 
-    fun process() = let
+    fun process () = let
 	  val _ = Err.anyErrors := false
 	  val file = !Options.fname
+	(* check that the input file exists *)
+	  val _ = if OS.FileSys.access(file, [OS.FileSys.A_READ])
+		then ()
+		else (
+		  Err.errMsg [
+		      "ml-antlr: file \"", String.toString file,
+		      "\" does not exist or is unreadable"
+		    ];
+		  raise Err.Abort)
+	(* process the grammar *)
 	  val grm = checkPT (ParseFile.parse file)
 	  val gla = GLA.mkGLA grm
 	  val pm = ComputePredict.mkPM (grm, gla)
@@ -49,27 +59,28 @@ val _ = app (Err.debug o Prod.toString) prods
 	      else OS.Process.success
 	  end
  	  handle Err.Abort => OS.Process.failure
-	  | ex => (
-	    Err.errMsg [
-		"uncaught exception ", General.exnName ex,
-		" [", exnMessage ex, "]"
-	      ];
-	    List.app (fn s => Err.errMsg ["  raised at ", s]) (SMLofNJ.exnHistory ex);
-	    OS.Process.failure)
+	       | ex => (
+		   Err.errMsg [
+		       "uncaught exception ", General.exnName ex,
+		       " [", exnMessage ex, "]"
+		     ];
+		   List.app (fn s => Err.errMsg ["  raised at ", s]) (SMLofNJ.exnHistory ex);
+		   OS.Process.failure)
 
-    fun main (_, args) = 
-	  (app Options.procArg args;
-	   if String.size (!Options.fname) = 0 then
-	     (Err.errMsg ["usage: ml-antlr [--dot] [--latex] file"]; OS.Process.failure)
-	   else process())
+    fun main (_, args) =
+	  if Options.processArgs args
+	    then (
+	      Err.errMsg [Options.usage];
+	      OS.Process.failure)
+	    else process()
 
   (* these functions are for debugging in the interactive loop *)
     fun load file = let
           val grm = checkPT (ParseFile.parse file)
 	  val gla = GLA.mkGLA grm
-    in
-      (grm, gla)
-    end
+	  in
+	    (grm, gla)
+	  end
 
     fun getNT (LLKSpec.Grammar {nterms, ...}) name =
 	  hd (List.filter (fn nt => Nonterm.qualName nt = name) nterms)

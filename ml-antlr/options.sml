@@ -1,6 +1,6 @@
 (* options.sml
  *
- * COPYRIGHT (c) 2007 Fellowship of SML/NJ
+ * COPYRIGHT (c) 2007-2016 Fellowship of SML/NJ
  *
  * Processing of command line arguments
  *)
@@ -15,16 +15,21 @@ structure Options =
     val texOutput : bool ref		= ref false
     val fname : string ref		= ref ""
 
-    fun procArg arg = 
-	  (case arg
-	    of "--dot"    => dotOutput := true
-	     | "--latex"  => texOutput := true
-	     | "--unit-actions" => actStyle := ActUnit
-	     | file	  => 
-	         if String.size (!fname) > 0 
-		 then 
-		   raise Fail "Only one input file may be specified\n"
-		 else fname := file
-	   (* end case *))
+  (* process the command line arguments; return true if there is an error *)
+    fun processArgs args = let
+	  fun procArg "--dot" = (dotOutput := true; false)
+	    | procArg "--latex" = (texOutput := true; false)
+	    | procArg "--unit-actions" = (actStyle := ActUnit; false)
+	    | procArg "--debug" = (actStyle := ActDebug; false)
+	    | procArg _ = true
+	  in
+	    case List.filter procArg args
+	     of [file] => (fname := file; false)
+	      | _ => true (* error: exactly one file should be specified *)
+	    (* end case *)
+	  end
+
+  (* usage message *)
+    val usage = "usage: ml-antlr [--dot] [--latex] [--unit-actions | --debug] <file>"
 
   end
