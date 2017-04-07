@@ -25,7 +25,9 @@ structure ComputePredict :
 
     val debugPredict = false
 
-    fun debug s = if debugPredict then print (s ^ "\n") else ()
+    fun debug s = if debugPredict
+          then TextIO.output(TextIO.stdErr, s ^ "\n")
+          else ()
     fun debugs ss = debug (concat ss)
 
     fun mapi f l = let

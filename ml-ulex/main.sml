@@ -15,22 +15,24 @@ structure Main =
     structure Lex = LexGen
     structure LO = LexOutputSpec
 
+  (* print debug messages, etc to stdErr *)
+    fun errPrint msg = TextIO.output (TextIO.stdErr, String.concat msg)
+
     val name = "ml-ulex"
-    fun debug s = (print s; print "\n")
 
   (* count the total number of DFA states *)
     fun numStates (LO.Spec{dfa, ...}) = List.length dfa
 
-    fun status s = debug ("[" ^ name ^ ": " ^ s ^ "]")
+    fun status s = errPrint ["[", name, ": ", s, "]\n"]
 
     fun frontEnd () = let
 	  val fname = !Options.fname
           val _ = if (String.size fname = 0)
 		  then (
-		    print (concat[
+		    errPrint [
 			"No input file specified\n  usage:  ",
 			name, " ", Options.args, " file\n"
-		      ]);
+		      ];
 		    OS.Process.exit OS.Process.failure)
 		  else ()
 	  val _ = status "parsing"
@@ -46,11 +48,11 @@ structure Main =
 		       else inSpec
 	  val _ = status "DFA gen"
 	  val outSpec = Lex.gen inSpec
-	  val _ = (debug (concat [" ", Int.toString (numStates outSpec),
-				  " states in full DFA"]))
-	  val _ = if !Options.dump then
-		    (status "DFA dump";
-		     DumpOutput.output (outSpec, !Options.fname))
+	  val _ = errPrint [" ", Int.toString (numStates outSpec), " states in full DFA\n"]
+	  val _ = if !Options.dump
+		  then (
+		    status "DFA dump";
+		    DumpOutput.output (outSpec, !Options.fname))
 		  else ()
 	  in
 	    outSpec
@@ -69,7 +71,7 @@ structure Main =
 	    else SMLFunOutput.output (outSpec, !Options.fname);
 	  if !Options.match
 	    then (
-	      debug "-- Interactive matching (blank line to quit) --";
+	      errPrint ["-- Interactive matching (blank line to quit) --\n"];
 	      Match.output (outSpec, !Options.fname))
 	    else ())
 

@@ -79,7 +79,7 @@ structure ExpandFile :> sig
     fun expandTemplate {src, dst, hooks} = (let
 	  val dstStrm = TIO.openOut dst
 		handle ex => (
-		  TIO.output(TIO.stdOut, concat[
+		  TIO.output(TIO.stdErr, concat[
 		      "Error: unable to open output file \"",
 		      dst, "\"\n"
 		    ]);

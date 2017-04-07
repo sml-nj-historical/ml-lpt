@@ -285,7 +285,7 @@ structure GLA :>
 	  val graph = GRAPH ("dump", nodes, edges, [ATTR ("rankdir", "LR")])
 	  val out = TextIO.openOut (fname ^ ".dot")
           in 
-            print (" writing " ^ fname ^ ".dot\n");
+            TextIO.output (TextIO.stdErr, concat[" writing ", fname, ".dot\n"]);
             writeGraph (out, graph)
 	    before TextIO.closeOut out
           end

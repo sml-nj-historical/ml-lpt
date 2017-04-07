@@ -65,17 +65,18 @@ structure Err =
 	then ()
 	else (
 	  leftRecurs := name::(!leftRecurs);
-	  print (String.concat 
-	    ["Left recursion detected: ", name, " -> ", name, " ...\n"]))
+	  warning ["Left recursion detected: ", name, " -> ", name, " ..."])
 
     val printDebug = ref true
 
   (* print a debugging message *)
-    fun debug s = if !printDebug then (print s; print "\n") else ()
+    fun debug s = if !printDebug
+          then (TextIO.output(TextIO.stdErr, s); TextIO.output(TextIO.stdErr, "\n"))
+          else ()
     fun debugs ss = debug (concat ss)
 
   (* print a status message *)
-    fun status s = print (concat ["[ml-antlr: ", s, "]\n"])
+    fun status s = TextIO.output(TextIO.stdErr, concat ["[ml-antlr: ", s, "]\n"])
     fun statuss ss = status (concat ss)
 
   end
