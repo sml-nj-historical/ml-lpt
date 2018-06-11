@@ -1,6 +1,6 @@
 (* reg-exp-fn.sml
  *
- * COPYRIGHT (c) 2005 
+ * COPYRIGHT (c) 2005
  * John Reppy (http://www.cs.uchicago.edu/~jhr)
  * Aaron Turon (adrassi@gmail.com)
  * All rights reserved.
@@ -8,7 +8,7 @@
  * Regular expression representation and manipulation.
  *
  * The main points here are to:
- *   (1) make it easy for an RE parser to construct 
+ *   (1) make it easy for an RE parser to construct
  *       RE expressions
  *   (2) canonicalize REs for effective comparison
  *   (3) implement the RE derivatives algorithm
@@ -23,19 +23,19 @@ structure RegExp : REG_EXP =
     structure W = Word
 
   (* symbols (i.e., words) *)
-    structure Sym = 
+    structure Sym =
       struct
 
         type point = W.word
 
 	val compare = W.compare
-	val minPt : W.word = 0w0 
+	val minPt : W.word = 0w0
 	val maxPt = W.notb 0w0
 
-	fun succ (w : W.word) = 
+	fun succ (w : W.word) =
 	      if w = W.notb 0w0 then w
 	      else w + 0w1
-	fun pred (w : W.word) = 
+	fun pred (w : W.word) =
 	      if w = 0w0 then w
 	      else w - 0w1
 
@@ -44,7 +44,7 @@ structure RegExp : REG_EXP =
       end
 
     structure SymSet = IntervalSetFn(Sym)
-    
+
     type symbol = Sym.point
     type sym_set = SymSet.set
 
@@ -71,8 +71,7 @@ structure RegExp : REG_EXP =
 	    | cmpOp (AND, _) = LESS
 	    | cmpOp (_, AND) = GREATER
 	    | cmpOp (XOR, XOR) = EQUAL
-	  fun compareList (res1, res2) = 
-	        List.collate compare (res1, res2)
+	  fun compareList (res1, res2) = List.collate compare (res1, res2)
 	  in
 	    case (re1, re2)
 	     of (Epsilon, Epsilon) => EQUAL
@@ -112,7 +111,7 @@ structure RegExp : REG_EXP =
 
   (* canonical constructors *)
 
-    fun mkSymSet c = 
+    fun mkSymSet c =
 	  if SIS.isEmpty c then None
 	  else if SIS.isUniverse c then Any
 	  else SymSet c
@@ -142,12 +141,12 @@ structure RegExp : REG_EXP =
           fun isSIS (SymSet _) = true
 	    | isSIS _ = false
 	  val (siss, res) = List.partition isSIS inRes
-	  in case siss
+	  in
+            case siss
 	      of []   => inRes
 	       | [re] => inRes
 	       | sis::siss' => let
-		   fun wrapmop (SymSet s1, SymSet s2) = 
-		         SymSet (mop (s1, s2))
+		   fun wrapmop (SymSet s1, SymSet s2) = SymSet (mop (s1, s2))
 		     | wrapmop _ = raise Fail "BUG: wrapmop: SymSet expected"
 		   val merged = List.foldl wrapmop sis siss'
 		   fun reinsert (re1, []) = [re1]
@@ -156,8 +155,10 @@ structure RegExp : REG_EXP =
 			  | EQUAL => raise Fail "BUG: mergeSIS: only one SymSet expected"
 			  | GREATER => re::(reinsert (re1, res))
 			(* end case *))
-		   in reinsert (merged, res)
+		   in
+                     reinsert (merged, res)
 	           end
+            (* end case *)
 	  end
 
     fun mkOr (re1, re2) = let
@@ -235,7 +236,7 @@ structure RegExp : REG_EXP =
 	    case (re1, re2)
 	     of (None, _) => re2
 	      | (_, None) => re1
-	      | (SymSet s1, SymSet s2) => 
+	      | (SymSet s1, SymSet s2) =>
 		  mkSymSet (SIS.intersect (
 		      SIS.union (s1, s2),
 		      SIS.complement (SIS.intersect (s1, s2))
@@ -268,9 +269,10 @@ structure RegExp : REG_EXP =
 	  fun highReps 0 = Epsilon
 	    | highReps 1 = mkOpt re
 	    | highReps n = mkConcat (mkOpt re, highReps (n-1))
-          in 
-            if high < low then raise Subscript
-            else mkConcat (lowReps low, highReps (high - low))
+          in
+            if high < low
+              then raise Subscript
+              else mkConcat (lowReps low, highReps (high - low))
           end
 
     fun mkAtLeast (re, 0) = mkClosure re
@@ -279,38 +281,34 @@ structure RegExp : REG_EXP =
     fun isNone None = true
       | isNone _    = false
 
-    fun symToString w = 
-	if !Options.lexCompat
-	then "#\"" ^ (Char.toString (Char.chr (W.toInt w))) ^ "\"" 
-	     handle Overflow => raise Fail "(BUG) RegExp: symToString on a nonascii character"
-	else "0wx" ^ W.toString w
+    fun symToString w = if !Options.lexCompat
+	  then concat["#\"", Char.toString (Char.chr (W.toInt w)), "\""]
+	    handle Overflow => raise Fail "(BUG) RegExp: symToString on a nonascii character"
+	  else "0wx" ^ W.toString w
 
     fun SISToString s = let
-          fun c2s c = 
-	        if (c < 0w128) then
-	          Char.toString (Char.chr (W.toInt c))
-		else
-		  String.concat ["\\u", W.toString c]
-	  fun f (a, b) = 
-	        if a=b then c2s a
+          fun c2s c = if (c < 0w128)
+		then Char.toString (Char.chr (W.toInt c))
+		else "\\u" ^ W.toString c
+	  fun f (a, b) = if (a = b)
+                then c2s a
 	        else concat[c2s a, "-", c2s b]
-	(* we want to describe the interval set as concisely as possible, 
+	(* we want to describe the interval set as concisely as possible,
 	 * so we compare the number of intervals in the set to the number
 	 * of intervals in its complement, and use the smaller of the two.
 	 *)
 	  val intervals = SIS.intervals s
 	  val intervals' = SIS.intervals (SIS.complement s)
-	  val (neg, rngs) = 
-	        if List.length intervals <= List.length intervals'
+	  val (neg, rngs) = if List.length intervals <= List.length intervals'
 		then ("", intervals)
 		else ("^", intervals')
-	  val str = neg ^ (String.concat (List.map f (rngs)))
+	  val str = neg ^ (String.concatWithMap "" f rngs)
           in
 	    if String.size str <= 1
-	    then str
-	    else "[" ^ str ^ "]"
+	      then str
+	      else concat["[", str, "]"]
           end
-    
+
     fun toString re = let
           fun opToString OR = "|"
 	    | opToString AND = "&"
@@ -407,17 +405,17 @@ structure RegExp : REG_EXP =
   (* yields the smallest partitioning of the alphabet that
    * "respects" the given sets.  if S is one of the sets
    * returned by compress, then it must be either disjoint
-   * with or a subset of each of the sets in the sets 
+   * with or a subset of each of the sets in the sets
    * parameter.  see the implementation notes for more detail.
    *)
     fun compress sets = let
         (* performs partition of a set againt a list of sets,
          * assuming the list of sets is pairwise disjoint.
          *)
-          fun part1 (set, []) = 
+          fun part1 (set, []) =
 	        if SIS.isEmpty set then []
 		else [set]
-            | part1 (set1, set2 :: ss) = 
+            | part1 (set1, set2 :: ss) =
 	        if SIS.isEmpty set1 then
 		  set2 :: ss
 		else let
@@ -440,9 +438,9 @@ structure RegExp : REG_EXP =
           end
 *)
 
-    fun cross (s1, s2) = 
-	SISSet.foldl (fn (s1elem, accum) => 
-          SISSet.foldl (fn (s2elem, accum) => 
+    fun cross (s1, s2) =
+	SISSet.foldl (fn (s1elem, accum) =>
+          SISSet.foldl (fn (s2elem, accum) =>
 	      SISSet.add (accum, SIS.intersect (s1elem, s2elem)))
 	    accum s2)
 	  SISSet.empty s1
@@ -458,43 +456,41 @@ structure RegExp : REG_EXP =
 	    | ds (Closure re) = ds re
 	    | ds (Concat []) = trivial
 	    | ds (Concat [re]) = ds re
-	    | ds (Concat (re::res)) = 
-	        if nullable re then
-		  cross (ds re, ds (Concat res))
+	    | ds (Concat (re::res)) = if nullable re
+                then cross (ds re, ds (Concat res))
 		else ds re
 	    | ds (Op(rator, res)) = foldl cross trivial (map ds res)
 	    | ds (Not re) = ds re
-	  val sets = Vector.foldl 
+	  val sets = Vector.foldl
 		       (fn (re, sets) => cross (ds re, sets))
-		       trivial res
+		         trivial res
 (*	  val sets' = compress sets *)
 	  fun classes ([], classMap) = Map.listItemsi classMap
 	    | classes (set::sets, classMap) = let
 	      (* use first element as representative of the equiv class *)
-	        val (rep, _) = List.hd (SIS.intervals set) 
+	        val (rep, _) = List.hd (SIS.intervals set)
 	        val derivs = Vector.map (derivative rep) res
-                in case Map.find (classMap, derivs)
-		    of NONE =>
-		         classes (sets, Map.insert(classMap, derivs, set))
-		     | SOME set' => let
-			 val map' = Map.insert(classMap, 
-					       derivs,
-					       SIS.union (set, set'))
-		         in classes (sets, map')
-		         end  
+                in
+		  case Map.find (classMap, derivs)
+		   of NONE => classes (sets, Map.insert(classMap, derivs, set))
+		    | SOME set' => let
+			val map' = Map.insert(classMap, derivs, SIS.union (set, set'))
+			in
+			  classes (sets, map')
+			end
+		  (* end case *)
 		end
 	  fun classes ([], ls) = ls
-	    | classes (set::sets, ls) = 
-	        if SIS.isEmpty set then
-		  classes (sets, ls)
+	    | classes (set::sets, ls) = if SIS.isEmpty set
+		then classes (sets, ls)
 		else let
-	          val (rep, _) = List.hd (SIS.intervals set) 
+	          val (rep, _) = List.hd (SIS.intervals set)
 	          val derivs = Vector.map (derivative rep) res
 	          in
 (*		    print (SISToString set ^ "\n"); *)
 		    (derivs, set)::classes (sets, ls)
 	          end
-          in 
+          in
 (*            classes (sets', Map.empty) *)
 (*            print "\n"; *)
             classes (SISSet.listItems sets, [])
