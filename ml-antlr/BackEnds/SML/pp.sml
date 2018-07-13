@@ -1,4 +1,10 @@
-structure MLPP = 
+(* pp.sml
+ *
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+structure MLPP =
 struct
   structure PP = TextIOPP
   structure ABS = MLABS
@@ -13,13 +19,13 @@ struct
 	  end
 
     fun ppAtomList (ppStrm, als) = ppList {
-            lb = fn ppStrm => (PP.openVBox ppStrm (PP.Abs 0); 
+            lb = fn ppStrm => (PP.openVBox ppStrm (PP.Abs 0);
                                PP.string ppStrm "("),
 	    rb = fn ppStrm => (PP.closeBox ppStrm; PP.string ppStrm ")"),
 	    sep = fn ppStrm => (PP.string ppStrm ", "),
 	    item = fn (ppStrm, a) => ppAtom (ppStrm, a)
 	  } (ppStrm, als)
- 
+
     fun ppNullaryConsList(ppStrm, als) = ppList {
             lb = fn ppStrm => (PP.openVBox ppStrm (PP.Abs 0)),
 	    rb = fn ppStrm => (PP.closeBox ppStrm),
@@ -34,7 +40,7 @@ struct
 	  ])
 
     fun ppTyFormals(ppStrm, als) = ppList {
-            lb = fn ppStrm => (PP.openVBox ppStrm (PP.Abs 0); 
+            lb = fn ppStrm => (PP.openVBox ppStrm (PP.Abs 0);
                                PP.string ppStrm "["),
 	    rb = fn ppStrm => (PP.closeBox ppStrm; PP.string ppStrm "] "),
 	    sep = fn ppStrm => (PP.string ppStrm ", "),
@@ -64,7 +70,7 @@ struct
       | ppBar _ _ = raise Fail "empty list"
 (*
     fun ppConst (ppStrm, const)
-      = case const of 
+      = case const of
 	    ABS.C_INT i => PP.string ppStrm (Int.toString i)
 	  | ABS.C_REAL r => PP.string ppStrm (Real.toString r)
 	  | ABS.C_STRING s => PP.string ppStrm s
@@ -75,7 +81,7 @@ struct
       = PP.string ppStrm "orelse"
 *)
     fun ppType (ppStrm, ty)
-      = case ty of 
+      = case ty of
 	    ABS.T_VAR var => ppAtom (ppStrm, var)
 	  | ABS.T_TUPLE tys_nonempty
 	    => ppList {lb= fn ppStrm => (),
@@ -100,7 +106,7 @@ struct
 	  | ABS.T_PAREN t => (PP.string ppStrm "(";
 			      ppType (ppStrm, t);
 			      PP.string ppStrm ")")
-			     
+
     fun ppTypeBinding (ppStrm, ABS.TypeBind andlist)
       = let fun try (ppStrm, (varlist, Type))
 	      = (ppAtomList (ppStrm, varlist);
@@ -113,7 +119,7 @@ struct
     fun ppDatatypeBinding (ppStrm, ABS.DatatypeBind andlist)
       = let fun trybar (ppStrm, (id, ty))
 	      = (ppAtom (ppStrm, id);
-		 case ty 
+		 case ty
 		  of NONE => ()
 		   | SOME ty => (PP.string ppStrm " of ";
 				 ppType (ppStrm, ty)))
@@ -128,7 +134,7 @@ struct
 
     fun ppSimpleDecl (ppStrm, simple_decl)
       = case simple_decl
-	  of ABS.D_VAL val_andlist 
+	  of ABS.D_VAL val_andlist
 	     => let
 		 fun ppVal (ppStrm, (pattern, exp))
 		   = (ppPat (ppStrm, pattern);
@@ -138,7 +144,7 @@ struct
 		 PP.string ppStrm "val ";
 		 ppAnd ppVal (ppStrm, val_andlist)
 	     end
-	   | ABS.D_FUN fun_andlist 
+	   | ABS.D_FUN fun_andlist
 	     => (PP.string ppStrm "fun ";
 		 ppAnd ppFunDecl (ppStrm, fun_andlist))
 	   | ABS.D_TYPE typebinding
@@ -174,13 +180,13 @@ struct
 	      = (ppPat (ppStrm, pattern);
 		 PP.string ppStrm "=> ";
 		 ppExp (ppStrm, exp))
-	in ppBar try (ppStrm, matchlist)	
+	in ppBar try (ppStrm, matchlist)
 	end
 
     and ppFunDecl (ppStrm, ABS.FUN barlist)
       = let fun trybar (ppStrm, (fun_heading, tyop, exp))
-	      = (ppFunHeading (ppStrm, fun_heading); 
-		 case tyop of 
+	      = (ppFunHeading (ppStrm, fun_heading);
+		 case tyop of
 		     NONE => ()
 		   | SOME ty => (PP.string ppStrm ": ";
 				 ppType (ppStrm, ty));
@@ -199,7 +205,7 @@ struct
 
     and ppSigna (ppStrm, ABS.SG s)
 	(* fix this *)
-      = case s of 
+      = case s of
 	    ABS.SP_EMPTY => ()
 
     and ppStruc (ppStrm, ABS.ST_STRUCT object_decl)
@@ -207,7 +213,7 @@ struct
 	 ppObject (ppStrm, object_decl);
 	 PP.string ppStrm "end")
 
-    and ppObject (ppStrm, object_decl) 
+    and ppObject (ppStrm, object_decl)
       = case object_decl
 	  of ABS.DECL r => ppDecl (ppStrm, r)
 	   | ABS.STRUCTURE (SOME sg, st)
@@ -230,9 +236,9 @@ struct
     and ppFile (ppStrm, ABS.OBJECT r) = (
           PP.openHBox ppStrm;
           ppObject (ppStrm, r);
-	  PP.closeBox ppStrm) 
+	  PP.closeBox ppStrm)
 
-    and ppExp (ppStrm, e) 
+    and ppExp (ppStrm, e)
       = let
 	  fun str s = PP.string ppStrm s
 	  fun sp () = PP.space ppStrm 1
@@ -240,20 +246,20 @@ struct
 	  fun hbox () = PP.openHBox ppStrm
 	  fun vbox () = PP.openVBox ppStrm (PP.Abs 2)
 	  fun close () = PP.closeBox ppStrm
-	  fun letBody (true, pp) 
+	  fun letBody (true, pp)
 	    = (nl();
 	       str "in";
 	       vbox(); nl(); pp(); close();
 	       nl();
 	       str "end")
 	    | letBody (false, pp) = pp()
-	  fun ppE (inLet, prevFn, e) 
+	  fun ppE (inLet, prevFn, e)
 	    = (case e
 		of (ABS.ML_Var x) => letBody(inLet, fn () => str x)
 		 | (ABS.ML_Int n) => letBody(inLet, fn () => str(IntInf.toString n))
-		 | (ABS.ML_Cmp (cop, e1, e2)) 
-		   => letBody(inLet, 
-			      fn () 
+		 | (ABS.ML_Cmp (cop, e1, e2))
+		   => letBody(inLet,
+			      fn ()
 				 => (
 				     ppExp' e1;
 				     sp();
@@ -265,8 +271,8 @@ struct
 					    | ABS.GEQ => ">=");
 				     sp();
 				     ppExp' e2))
-		 | (ABS.ML_Bool (bop, e1, e2)) 
-		   => letBody(inLet, 
+		 | (ABS.ML_Bool (bop, e1, e2))
+		   => letBody(inLet,
 			      fn () => (
 					ppExp' e1;
 					sp();
@@ -276,15 +282,15 @@ struct
 					sp();
 					ppExp' e2))
 		 | (ABS.ML_Case(arg, pl)) =>
-		   letBody(inLet, 
+		   letBody(inLet,
 			   fn () => (
 				     hbox();
 				     str "(case"; sp(); str "("; ppExp' arg; str ")";
 				     close();
 				     doCases (false, true, pl);
 				     nl(); str "(* end case *))"))
-		 | (ABS.ML_App(f, args)) => 
-		   letBody(inLet, 
+		 | (ABS.ML_App(f, args)) =>
+		   letBody(inLet,
 			   fn () => (
 				     hbox();
 				     str f; str "(";
@@ -296,8 +302,8 @@ struct
 				     (* end case *);
 				     str ")";
 				     close()))
-		 | (ABS.ML_If(e1, e2, e3 as ABS.ML_If _)) => 
-		   letBody(inLet, 
+		 | (ABS.ML_If(e1, e2, e3 as ABS.ML_If _)) =>
+		   letBody(inLet,
 			   fn () => (
 				     PP.openVBox ppStrm (PP.Abs 0);
 				     vbox();
@@ -310,8 +316,8 @@ struct
 				     ppExp' e3;
 				     close();
 				     close()))
-		 | (ABS.ML_If(e1, e2, e3)) => 
-		   letBody(inLet, 
+		 | (ABS.ML_If(e1, e2, e3)) =>
+		   letBody(inLet,
 			   fn () => (
 				     vbox();
 				     hbox(); str "if"; sp(); ppExp' e1; close(); nl();
@@ -339,7 +345,7 @@ struct
 			     pp();
 			     close())
 		   end
-		 | (ABS.ML_Funs([], e)) => 
+		 | (ABS.ML_Funs([], e)) =>
 		   ppE (inLet, false, e)
 		 | (ABS.ML_Funs((f, params, body)::fs, e)) => let
 		       fun pp prefix = (
@@ -389,7 +395,7 @@ struct
 			     close())
 		   end
 		 | (ABS.ML_Tuple[]) => letBody(inLet, fn () => str "()")
-		 | (ABS.ML_Tuple(e::r)) => 
+		 | (ABS.ML_Tuple(e::r)) =>
 		   letBody (inLet, fn () => (
 					     PP.openBox ppStrm (PP.Abs 2);
 					     str "(";
@@ -398,7 +404,7 @@ struct
 					     str ")";
 					     close()))
 		 | (ABS.ML_List[]) => letBody(inLet, fn () => str "[]")
-		 | (ABS.ML_List(e::r)) => 
+		 | (ABS.ML_List(e::r)) =>
 		   letBody (inLet, fn () => (
 					     PP.openBox ppStrm (PP.Abs 2);
 					     str "[";
@@ -410,13 +416,13 @@ struct
 							     str "!(";
 							     ppExp' e;
 							     str ")"))
-		 | (ABS.ML_RefPut (e1, e2)) => 
+		 | (ABS.ML_RefPut (e1, e2)) =>
 		   letBody(inLet, fn () => (
 					    ppExp' e1;
 					    str " := ";
 					    ppExp' e2))
-		 | (ABS.ML_Raw toks) => 
-		   letBody(inLet, 
+		 | (ABS.ML_Raw toks) =>
+		   letBody(inLet,
 			   fn () => (hbox(); app (fn (ABS.Tok s) => str s) toks; close()))
 		 | (ABS.ML_Handle (exp, cases)) =>
 		   (
@@ -426,14 +432,14 @@ struct
 		   (* end case *))
 	  and ppExp' e = ppE (false, false, e)
 	  and doCases (_,_, []) = ()
-	    | doCases (isExn, isFirst, (p, e)::r) = 
+	    | doCases (isExn, isFirst, (p, e)::r) =
 	      (
 	       nl();
 	       (* NOTE: the following seems to trigger a bug in the PP library (bad indent) *)
 	       PP.openHOVBox ppStrm (PP.Abs 6);
  	       hbox();
 	       if isFirst
-	       then if isExn 
+	       then if isExn
 		    then (sp(); sp(); sp())
 		    else (sp(); str "of")
 	       else (PP.space ppStrm 2; str "|");
@@ -475,7 +481,7 @@ struct
 				     app (fn p => (str ","; sp(); pp p)) r;
 				     str ")")
 	  | pp (ABS.ML_ListPat []) = str "[]"
-	  | pp (ABS.ML_ListPat (p::r)) 
+	  | pp (ABS.ML_ListPat (p::r))
 	    = (str "["; pp p;
 	       app (fn p => (str ","; sp(); pp p)) r;
 	       str "]")
@@ -486,5 +492,5 @@ struct
     in
 	hbox(); pp p; close()
     end
-    
+
 end
