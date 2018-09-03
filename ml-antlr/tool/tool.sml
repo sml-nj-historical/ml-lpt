@@ -5,7 +5,7 @@
  *)
 structure AntlrTool = struct
     val _ = Tools.registerStdShellCmdTool {
-	      tool = "MLAntlr",
+	      tool = "ML-Antlr",
 	      class = "ml-antlr",
 	      cmdStdPath = fn () => ("ml-antlr", []),
 	      template = NONE,
